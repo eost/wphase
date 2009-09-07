@@ -283,9 +283,7 @@ get_i_master(file, keys, n, eq)
   for (i=0 ; i<n ; i++)
     {
       fflush(stdout);
-      if (strncmp("DMAX",keys[i],strlen(keys[i]))==0)
-	nl++; 
-      else if (strncmp("DMIN",keys[i],strlen(keys[i]))==0){
+      if (strncmp("DMIN",keys[i],strlen(keys[i]))==0){
 	eq->dmin = 0. ;
 	nl++; }
     }
@@ -324,7 +322,8 @@ get_i_master(file, keys, n, eq)
 	    else if (strncmp(&line[nb2],"DMAX",4)==0){
 	      nb2+= 4+nb_blank(&line[nb2+4])+1              ;
 	      tmp = sscanf ((&line[nb2]), "%lf", &eq->dmax) ;
-	      check_scan(1, tmp, file, i_file)              ;}
+	      check_scan(1, tmp, file, i_file)              ;
+	      nl++ ;  }
 	    else if (strncmp(&line[nb2],"filt_order",10)==0){
 	      nb2+= 10+nb_blank(&line[nb2+10])+1                ;
 	      tmp = sscanf ((&line[nb2]), "%d", &eq->filtorder) ;
