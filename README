@@ -1,0 +1,296 @@
+
+                W phase inversion
+		=================
+
+       Z.Duputel, L.Rivera and H.Kanamori
+
+
+#########################
+## Dependencies
+
+> C standard libraries
+> rdseed 
+> (optional) libmseed if miniseed files are used.
+> (optional) generic mapping toolbox (GMT) for plots only
+> (optional) python for Centroid grid searches or quasi real-time
+             routines (python modules 'scipy' and 'pylab' are also
+             requested).  
+
+
+#########################
+## Building/Installing 
+
+Please add the following environnement variables to the '.tcshrc' (or
+'.cshrc'/'.bashrc' depending on your shell) file in your home directory: 
+>setenv WPHASE_HOME 'path to W phase inversion directory' 
+>setenv GF_PATH 'path to Green's Functions data base' 
+>setenv RDSEED 'path to the rdseed executable'
+>setenv GMT_BIN 'path to GMT binaries' (optional)
+
+Before compiling, check the C and fortran compilers which are
+assigned to CC and FC in '$WP_HOME/src/Makefile'.  
+
+First, run the script configure.csh in WP_HOME. 
+Then a simple 'make' in $WP_HOME/src/ should build the whole package.
+To enable miniseed reading (with libmseed dependencies) you can also 
+use 'make with_miniseed'.
+
+
+#########################
+## CSH Scipts --
+
+Basic scripts are gathered in $WP_HOME/bin:
+
+Extracting data (to SAC files) and response (to PZ files), Rough
+screening by distance:
+>'extract.csh' : using SEED file as input (rdseed required)
+>'extract_only_Z.csh' : extract only vertical components
+>'extract_only_H.csh' : extract only horizontal components
+>'extract_lite.csh' : only extracts response from PZfiles (data have
+                      to be already extracted)
+>'extract_qrt.csh' : input are miniseed files (1 file per channel) and
+                     dataless files (libmseed and rdseed required).
+
+Computing Green's functions (GFs):
+>'calc_fast_synths.csh' : for all components
+>'calc_fast_synths_only_Z.csh' : only for vertical components
+>'recalc_fast_synths.csh' : compute GFs for grid search (??to be modified??)
+
+Deconvolving Data, Convolve Green's functions and Filtering:
+>'prepare_wp.csh' : for all components
+>'prepare_wp_only_Z.csh' : only for vertical components
+>'reprepare_wp_ts.csh' : reprepare for time-shift grid search
+>'reprepare_wp_xy.csh' : reprepare for centroïd position grid-search 
+
+
+RUNA : run all routines and wpinversion using a screening on rms deviations:
+>'RUNA.csh' : input is seed 
+>'RUNA_only_Z.csh' : only for vertical components
+>'RUNA_only_H.csh' : only for horizontal components
+>'RUNA_lite.csh' : if data is already extracted
+>'RUNA_qrt.csh' : input is miniseed (1 file per channel) and dataless
+                  files (libmseed and rdseed required). 
+
+
+Cleaning the run directory :
+>'clean_run.csh' : keep only 'i_master*' and 'CMTSOLUTION*'
+>'clean_run_lite.csh' : keep 'i_master*', 'CMTSOLUTION*' and raw data
+                        in sac files 
+
+#########################
+## Python Scripts 
+
+Python scripts are used for CENTROID GRID-SEARCHES and QUASI REAL-TIME
+MONITORING. You can found them in $WP_HOME/bin:
+
+
+GRID SEARCH:
+>'wp_grid_search.py' : help is available using the option '-h'
+
+
+QUASI REAL-TIME MONITORING:
+>'trigger_neic_emsc.py' : based on a triggering using emsc and neic
+			  rss feeds. Input files are miniseed files
+			  (extraction using extract_qrt.csh).
+			  It is necessary to configure properly the 
+			  RUNQRT, DATADIR and DATALESS global
+			  variables which correspond to run, miniseed
+			  and dataless directories respectively.
+This script can be executed every minute using the cron daemon. This
+solution require to define the environment variable "WP_HOME" at the
+begining at the crontab used to execute trigger_neic_emsc.py
+example of crontab if $SHELL == /bin/sh:
+	WP_HOME=/home/zac/wphase_pack4
+	# m h  dom mon dow   command
+	  * *   *   *   *    /usr/bin/python $WP_HOME/trigger_neic_emsc.py > $WP_HOME/run_qrt/trig_out
+
+
+
+#########################
+## Plot routines 
+
+All these routines require GMT:
+
+Comparision of observed and predicted data vector:
+>'make_cwp_all.gmt' : all components (one graph per component
+>'make_cwp.gmt LHX' : display only channels 'LHX' where X is 
+                      Z, L or T
+
+Comparision of observed and predicted seismograms with a map:
+>'traces_6t_global.gmt' : global scale
+>'traces_6t_regional.gmt' : regional scale
+
+Maps:
+>'map_global.gmt'
+>'map_regional.gmt'
+
+
+
+#########################
+## Input files 
+
+USING SEED FILE(S):
+> i_master
+example:
+	EVNAME:  Tokachi-oki
+	SEED:    /home/zac/DATA/tokachi-oki.NIED.seed
+	DMIN:    5
+	DMAX:   12
+	CMTFILE: CMTSOLUTION
+	
+	# data deconvolution
+	filt_order: 4
+	filt_cf1:   0.001666
+	filt_cf2:   0.005
+	filt_pass:  1
+	IDEC_2:  2  200   0.1
+	IDEC_3:  0.001   0.1  100  0.03
+
+	# Green's functions
+	GFDIR:    ./GF         (optional)
+	WP_WIN:  0. 15. 12.
+
+if more than 1 seed file is used, they can be specified using several
+lines following the syntax:
+	SEED:  'path to seed file'
+DMIN and DMAX are the distances used for distance screening.
+WP_WIN are the parameters used for the time windowing.
+
+
+> cmtfile
+It must strictly respect follow the CMTSOLUTION format
+
+example:
+	 JMA 2003  9 25 19 50 07.42  41.7790  144.0780  28.2 8.0 8.0 HOKKAIDO, JAPAN REGION
+	event name:    092503C
+	time shift:     32.1000
+	half duration:  32.1000
+	latitude:       41.7790
+	longitude:     144.0780
+	depth:          28.2000
+	Mrr:       7.770000e+27
+	Mtt:      -4.110000e+27
+	Mpp:      -3.660000e+27
+	Mrt:       1.320000e+28
+	Mrp:       2.590000e+28
+	Mtp:      -6.620000e+27
+
+The first line of this file is the PDE. 
+* The first 4 characters of this line (including the first white space
+  in the example above) generaly indicates the agency which provide the
+  origin time, the hypocenter location and preliminary magnitude
+  estimates.  In the present version, it must be one of the following:
+	' PDE'
+	' MLI'
+	' ISC'
+	' REB'
+	' SWE'
+	' HSW'
+	' JMA'
+	'PDEW'
+	'SWEQ'
+  This restriction allows to check if the first line of cmtfile is a PDE
+  line. 
+* Characters from 6 to 27 correspond to the PDE origin time
+* Characters from 29 to 52 are the PDE latitude, longitude and
+  depth. This hypocenter location will be used to define the time window
+  in order to select the part of the waveform which will be inverted 
+* Characters from 54 to 60 are PDE magnitude estimates
+  The rest of the line provides some details on epicenter location
+  (region, country, ...)
+
+The second line, 'event name' correspond to the event id
+Lines 3 and 4 are the parameters of the STF.
+lines 5, 6 and 7 are the 'latitude', 'longitude' and 'depth' of the
+centroïd wich will be used for the rotation of horizontal components
+and for the computation of synthetic Green's functions and data.
+
+The last 6 lines are optional, they correspond to a moment tensor
+solution (e.g. a reference GCMT for a comparision with the Wphase
+inversion). RUNA.csh, RUNA_only_Z.csh and RUNA_only_H.csh all consider
+a reference solution in cmtfiles. It is possible to remove this
+dependency by editing these scripts and removing the '-ref' option
+when calling wpinversion (see wpinversion --help).
+
+
+USING MINISEED FILES (*_qrt scripts):
+
+>i_master
+Paths to miniseed and dataless have to be specified in the i_master
+using the following syntax.
+	SEED: 'miniseed_dir' 
+	DATALESS: 'dataless_dir'
+
+* All miniseed files must be located directly in (or in subdirectories
+  of the) path specified by 'SEED: (...)' in i_master. Only one miniseed
+  file is allowed per LH? channel (i.e. LHZ,LHN or LHE)  and it must
+  match the following pattern : *LH?.'yyyy'.'jday' where 'yyyy' is the
+  year (using 4 numbers and 'jday' is the julian day.
+
+* Dataless filenames locates directly in the directory specifies by
+  'DATALESS: (...)' must have the following format: 'net'.dataless
+  where 'net' is the network code.
+
+example:
+	EVNAME:     Bougainville_region_Papua_New_Guinea
+	SEED:       /home/zac/DATA/BUD/
+	DATALESS:   /home/zac/DATA/dataless/
+	DMIN:       10.00
+	DMAX:       88.00
+	CMTFILE:    CMTSOLUTION
+
+	filt_order: 4
+	filt_cf1:   0.00670
+	filt_cf2:   0.02000
+	filt_pass:  1
+	IDEC_2:  2  200  0.1
+	IDEC_3:  0.001  0.1  100  0.03
+
+	GFDIR:   ./GF
+	WP_WIN:    15.0
+
+> cmtfile : same format as using seed file
+
+Paths to miniseed and dataless have to be specified in
+		     the i_master using the following syntax
+				SEED: 'miniseed_dir' and
+		     		DATALESS: 'dataless_dir'
+		     dataless files must be named
+
+#########################
+## Output files
+
+After inversion, several output products are available:
+> wcmtfile at the CMTSOLUTION format and corresponding to the W phase
+  inversion.
+> wpinv.pgm is a simple beach-ball corresponding the solution obtained.
+> refinv.pgn is the beach-ball corresponging to the reference solution
+  if used).
+> p_wpinversion is a post script file giving details on the inversion
+  result. 
+> predicted_data is a text file containing observed and predicted data. 
+	* The first column correspond to observed data
+	* The second column correspond to predicted data from
+	  inversion of W phase
+	* The Last column is optional and correspond to predicted data
+	  corresponding to the reference solution specified in the cmtfile.
+> predicted_data_? (where ? is L,T or Z) is similar to predicted_data
+  but after separating each component.
+
+Centroid Grid-searches:
+> After grid-searches, output files are the same as above except that
+  the filenames are preceded by 'ts_' for time-shift grid-search and 
+  'xy_' for centroid position grid-search
+> RMS deviation obtained during the grid-search are ploted in png
+  files 'grid_search_ts.png' and 'grid_search_xy.png'
+
+Comparition of predicted and observed data using gmt routines:
+> CWP*W*.ps : comparision for the Wphase inversion for each component 
+> CWP*R*.ps : comparision for the reference solution for each component 
+> page_6t*.ps : comparision of individual synthetic seismograms (over a
+               (larger time window) with a map of epicenter and stations.
+
+#########################
+
+
+Report bugs to: <zacharie.duputel@eost.u-strasbg.fr>

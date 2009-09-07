@@ -1,0 +1,10 @@
+#!/bin/csh -f
+
+source $WPHASE_HOME/bin/WP_HEADER.CSH
+
+${BIN}/make_cwp.gmt LHZ
+${BIN}/make_cwp.gmt LHL
+${BIN}/make_cwp.gmt LHT
+
+
+${RM} -f _tmp_XYW _tmp_XYR _tmp_XY1 _tmp_stats _tmp_stat_posit _tmp_stat_names _tmp_minmax o_wpinversion_LHL o_wpinversion_LHZ o_wpinversion_LHT

@@ -1,0 +1,42 @@
+./recalc_fast_synths.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./reprepare_wp_xy.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./traces_6t_regional.gmt:source $WP_HOME/bin/WP_HEADER.CSH
+./extract_qrt.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./RUNA_qrt.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./RUNA_qrt.csh:set BIN     = $WP_HOME/bin
+./RUNA.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./RUNA.csh:set BIN     = $WP_HOME/bin
+./#changeWPHOME.csh#:temp1=WP_HOME
+./#changeWPHOME.csh#:find ./ -name "*.*" -exec grep WP_HOME \{\} \+ | sed -i 's/change
+./clean_run_lite.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./map_regional.gmt:source $WP_HOME/bin/WP_HEADER.CSH
+./map_global.gmt:source $WP_HOME/bin/WP_HEADER.CSH
+./trigger_neic_emsc.py:WPHOME = os.path.expandvars('$WP_HOME')
+./wp_grid_search.py:WPHOME = os.path.expandvars('$WP_HOME')
+./make_cwp_only_T.gmt:source $WP_HOME/bin/WP_HEADER.CSH
+./calc_fast_synths.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./changeWPHOME.csh:temp1=WP_HOME
+./changeWPHOME.csh:find ./ -name "*.*" -exec grep WP_HOME \{\} \+
+./extract_only_H.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./prepare_wp.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./prepare_wp_only_Z.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./calc_fast_synths_only_Z.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./make_cwp_all.gmt:source $WP_HOME/bin/WP_HEADER.CSH
+./traces_6t_global.gmt:source $WP_HOME/bin/WP_HEADER.CSH
+./make_cwp_only_L.gmt:source $WP_HOME/bin/WP_HEADER.CSH
+./extract_lite.csh:source $WP_HOME/bin/WP_HEADER.CSH
+Fichier binaire ./wp_grid_search.pyc concorde
+./extract_only_Z.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./RUNA_only_Z.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./RUNA_only_Z.csh:set BIN     = $WP_HOME/bin
+./clean_run.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./reprepare_wp_ts.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./make_cwp_only_Z.gmt:source $WP_HOME/bin/WP_HEADER.CSH
+./WP_HEADER.CSH:set      wp_home = $WP_HOME
+./WP_HEADER.CSH:setenv   WP_HOME   $wp_home
+./WP_HEADER.CSH:set BIN                  = $WP_HOME/bin
+./extract.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./RUNA_only_H.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./RUNA_only_H.csh:set BIN     = $WP_HOME/bin
+./RUNA_lite.csh:source $WP_HOME/bin/WP_HEADER.CSH
+./RUNA_lite.csh:set BIN     = $WP_HOME/bin
