@@ -49,12 +49,12 @@ def wpinversion_50(ftable,eq):
 	freqs = [ftable[2][i],ftable[3][i]]
 	
 	eq.wcmtfile(dir+cmtpde,hd,hd)
-	eq.wimaster(DATDIR,10.,50.,freqs,cmtpde,dir+'i_master',DATALESS=DATALESS)
+	eq.wimaster(DATDIR,freqs,cmtpde,dir+'i_master',10.,50.,DATALESS=DATALESS)
 	os.chdir(dir)
 	eq.affiche('PDErsstrig50')
 	os.system(RUNALL)
 	[ts_opt,hd_opt]=fast_grid_search_ts(DATDIR,10.,50.,cmtpde,freqs,eq,hd,hd,out='ts_gs_log')
-	grid_search_xy(dir,10.,50.,cmtpde,freqs,eq,ts_opt,hd_opt,out='xy_gs_log')
+	grid_search_xy(dir,cmtpde,freqs,eq,ts_opt,hd_opt,10.,50.,out='xy_gs_log')
 	os.chdir('../')
 
 
@@ -78,12 +78,12 @@ def wpinversion_90(ftable,eq):
 	freqs = [ftable[2][i],ftable[3][i]]
 	
 	eq.wcmtfile(dir+cmtpde,hd,hd)
-	eq.wimaster(DATDIR,10.,88.,freqs,cmtpde,dir+'i_master',DATALESS=DATALESS,)
+	eq.wimaster(DATDIR,10.,88.,freqs,cmtpde,dir+'i_master',10.,50.,DATALESS=DATALESS,)
 	os.chdir(dir)
 	eq.affiche('PDErsstrig90')
 	os.system(RUNALL)
 	[ts_opt,hd_opt]=fast_grid_search_ts(dir,10.,90.,cmtpde,freqs,eq,hd,hd,out='ts_gs_log')
-	grid_search_xy(DATDIR,10.,90.,cmtpde,freqs,eq,ts_opt,hd_opt,out='xy_gs_log')
+	grid_search_xy(DATDIR,cmtpde,freqs,eq,ts_opt,hd_opt,10.,90.,out='xy_gs_log')
 	os.chdir('../')		
 
 def main(argv=None):

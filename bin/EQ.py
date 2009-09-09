@@ -99,8 +99,8 @@ class EarthQuake:
 		self.hd    = float(fid.readline().strip('\n').split()[2])
 		fid.close
 		
-	def wimaster(self,DATADIR,DMIN,DMAX,ftable,cmtfile,i_master,gf_dir='./GF',wpwin=[15.],DATALESS=''):
-		#for i in xrange(len(ftable[0])):
+	def wimaster(self,DATADIR,ftable,cmtfile,i_master,DMIN=0.0,DMAX=90.0,gf_dir='./GF',wpwin=[15.],DATALESS=''):
+		# for i in xrange(len(ftable[0])):
 		#	if self.mag >= ftable[0][i] and self.mag < ftable[1][i]:
 		#		break;
 		fid = open(i_master, 'wt')
