@@ -19,6 +19,7 @@ set tmp      = `${GREP} GFDIR   i_tmp`
 if ! $status then
         set gf_dir   = `echo $tmp | ${HEAD} -1 | ${CUT} -d: -f2`
 endif
+set CMTFILE  = `${GREP} CMTFILE i_tmp | ${HEAD} -1 | ${CUT} -d: -f2`
 ${RM} -f i_tmp
 
 ################################################

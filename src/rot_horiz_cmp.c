@@ -10,6 +10,7 @@
 #include "rwtextfiles.h"  /* rwtextfiles.c          */
 #include "read_i_files.h"
 
+
 typedef struct
 {
   int fad;
@@ -40,9 +41,8 @@ main(int argc, char *argv[])
   str_quake_params eq ;
   structopt opt ;
 
-
   /* Input params */
-  get_params(argc, argv, &scr_lst, &o_lst, &o_dir, &eq, &opt) ;
+  get_params(argc, argv, &scr_lst, &o_lst, &o_dir, &eq,&opt) ;
 
 
   /* Allocate data tabs     */
@@ -82,12 +82,12 @@ main(int argc, char *argv[])
 	  rdatsac(i_fil, &hdr1, x_in1, &ierror) ;
 	  if (opt.fad)
 	    {
-	      distaz(eq.pde_evla, eq.pde_evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, &hdr1.baz, &hdr1.gcarc, &nerr) ;
+	      distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, &hdr1.baz, &hdr1.gcarc, &nerr) ;
 	      az   = (double) hdr1.az    ;
 	      xdeg = (double) hdr1.gcarc ;
 	    }
 	  fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
-		  o_fil,sta,net,cmp,stla,stlo,stel,az,xdeg);
+		  o_fil,sta,net,cmp,stla,stlo,stel,az,xdeg) ;
 	  whdrsac(  o_fil, &hdr1) ;
 	  wdatsac(  o_fil, &hdr1, x_in1) ;
 	  free((void*)o_fil) ;
@@ -100,10 +100,10 @@ main(int argc, char *argv[])
 	  else if (strcmp(cmp, "LHN") == 0)
 	    ind = 1;
 	  else {
-	    fprintf(stderr,"Warning (rot_hoziz_cmp) : unknown component %s in file %s\n", cmp, i_fil);
+	    fprintf(stderr,"Warning (rot_horiz_cmp) : unknown component %s in file %s\n", cmp, i_fil);
 	    continue ; }
 	  if (flag != 0) 
-	    fprintf(stderr,"Warning (rot_hoziz_cmp): incomplete channels for sta %s to perform rotation (horizontal data rejected)\n", prev_sta) ;
+	    fprintf(stderr,"Warning (rot_horiz_cmp): incomplete channels for sta %s to perform rotation (horizontal data rejected)\n", prev_sta) ;
 	  flag = 1 ;
 	  strcpy(h_fil[ind],i_fil) ;
 	  strcpy(  prev_sta,  sta) ;
@@ -114,20 +114,20 @@ main(int argc, char *argv[])
 	  if (strcmp(cmp, "LHE") == 0) 
 	    {
 	      if (ind == 0) {
-		fprintf(stderr,"Warning (rot_hoziz_cmp) : %s redundancy for sta %s\n", cmp, prev_sta);
+		fprintf(stderr,"Warning (rot_horiz_cmp) : %s redundancy for sta %s\n", cmp, prev_sta);
 		continue ;  }
 	      ind = 0;
 	    }
 	  else if (strcmp(cmp, "LHN") == 0)
 	    {
 	      if (ind == 1) {
-		fprintf(stderr,"Warning (rot_hoziz_cmp) : %s redundancy for sta %s\n", cmp, prev_sta);
+		fprintf(stderr,"Warning (rot_horiz_cmp) : %s redundancy for sta %s\n", cmp, prev_sta);
 		continue ;  }
 	      ind = 1;	      
 	    }
 	  else
 	    {
-	      fprintf(stderr,"Warning (rot_hoziz_cmp) : unknown component %s in file %s\n", 
+	      fprintf(stderr,"Warning (rot_horiz_cmp) : unknown component %s in file %s\n", 
 		      cmp, i_fil);
 	      continue ;
 	    }
@@ -143,7 +143,8 @@ main(int argc, char *argv[])
       rhdrsac(h_fil[1], &hdr2, &ierror) ;
       if (opt.fad)
 	{
-	  distaz(eq.pde_evla, eq.pde_evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, &hdr1.baz, &hdr1.gcarc, &nerr) ;
+	  distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, 
+		 &hdr1.baz, &hdr1.gcarc, &nerr) ;
 	  hdr2.dist  = hdr1.dist     ;	  
 	  hdr2.az    = hdr1.az       ;
 	  hdr2.baz   = hdr1.baz      ;
@@ -151,7 +152,6 @@ main(int argc, char *argv[])
 	  az   = (double) hdr1.az    ;
 	  xdeg = (double) hdr1.gcarc ;
 	}
-
       hdproto = &hdr1 ;
       if (hdr1.npts > hdr2.npts) 
 	hdproto = &hdr2 ;
@@ -210,7 +210,7 @@ disphelp(char **argv)
   fprintf(stderr,"  o_sac_list      output sac files list\n");
   fprintf(stderr,"  o_dir           output directory for sac files\n");
   fprintf(stderr,"optional parameters :\n");
-  fprintf(stderr,"  -icmtf   cmtfile   recompute azimuths and epicentral distances using cmtfile\n") ;
+  fprintf(stderr,"  -icmtf   cmtfile   use centroid location in cmtfile\n") ;
   fprintf(stderr,"  -h, --help         display this help and exit\n\nReport bugs to: <zacharie.duputel@eost.u-strasbg.fr>\n") ;
   exit(0);
 }
@@ -271,7 +271,7 @@ get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq, structopt *
 
   /* Default values */
   opt->fad = 0 ;
-  k = 0;
+  k = 0        ;
   for (i=0; i<numarg2; i++)
     {
       j = i+numarg1+1;
@@ -318,7 +318,13 @@ get_params(int argc, char **argv, char **scr_lst, char **o_lst, char **o_dir,
   strcpy(*o_dir, argv[3])      ;
 
   get_opt(numarg1,numarg2,argv,eq,opt) ;
-  
   if (opt->fad)
-    get_cmtf(eq,0) ;
+    {
+      printf("Using centroid location in %s : \n",eq->cmtfile);
+      printf("      corresponding azim. and ep. distances \n");
+      printf("      will be used and writen in sac headers \n");
+      get_cmtf(eq,1) ;
+    }
+  else
+    printf("Using source location of sac headers\n");
 }

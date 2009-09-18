@@ -64,3 +64,5 @@ ${CP} p_wpinversion.th_${th} p_wpinversion
 ${CP} LOG/wpinversion.th_${th}.log LOG/wpinversion.log
 
 
+echo "\nOutput files: o_wpinversion WCMTSOLUTION p_wpinversion"
+echo "              fort.15 fort.15_LHZ fort.15_LHL fort.15_LHT"

@@ -42,7 +42,6 @@ main(int argc, char *argv[])
   struct tree *datfil ;
   /* Set input files */
 
-
   if(argc<5){
     fprintf (stderr, "*** ERROR (input parameters : 4 params needed (%d given))\n", argc-1) ;
     fprintf (stderr, "Syntax : %s i_coeffs(input) i_master i_scr_data_list(input) o_scr_data_list(output)\n", argv[0]) ;
@@ -83,7 +82,6 @@ main(int argc, char *argv[])
   get_filt_params(i_master, &eq)               ;
   get_id_dec(decfile, &n, &ids, &c1, &c2, &c3) ;
 
-  
   /* Open Data File Lists */
   i_sacf = openfile_rt(i_sacfile,&nsac) ;
   o_sacf = openfile_wt(o_sacfile)       ;

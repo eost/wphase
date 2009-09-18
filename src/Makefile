@@ -194,4 +194,4 @@ clean:
 	cd FAST_SYNTH; make clean
 
 cleanexe:
-	\rm -f $(EXE) $(BIN)/trim_sac_files_qrt\
+	\rm -f $(EXE) $(BIN)/trim_sac_files_qrt fast_synth fast_synth_only_Z

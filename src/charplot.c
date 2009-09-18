@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "proto_alloc.h"
+
 int 
 pnodal(char **figure, double s, double d, int rx, int ry, char pnod)
 {
@@ -35,13 +37,13 @@ charplot(double *M, double s1, double d1, double s2, double d2,
   double  x, y, z, amp     ;
   char    **figure         ;
   
-  figure = (char **)calloc(2*ry+1, sizeof(char*));
-  
+  /* figure = (char **)malloc(2*ry+1, sizeof(char*)); */
+  figure = char_calloc2(2*ry+1,2*rx+1) ;
   jxP = 0; jyP=0; jxT=0; jyT=0;
   aP = M[0]; aT = M[0]; 	
   for(jy = ry; jy >= -ry; jy--)
     {
-      figure[ry+jy] = (char *)calloc(2*rx+1, sizeof(char));
+      /* figure[ry+jy] = (char *)calloc(2*rx+1, sizeof(char)); */
       for(jx = -rx; jx <= rx; jx++)
 	{
 	  radius = hypot((double)jx, (double)jy*(double)rx/(double)ry);
@@ -84,21 +86,28 @@ charplot(double *M, double s1, double d1, double s2, double d2,
 	  if(jy >= -ry  &&  jy <= ry && jx >= -rx  &&  jx <= rx) 
 	    figure[ry+jy][rx+jx] = W;
       figure[ry+jyT][rx+jxT] = 'T';
-      figure[ry+jyP][rx+jxP] = 'P'; 
+      figure[ry+jyP][rx+jxP] = 'P';
+      /* 	Printing    */
+      for(jy = -ry; jy <= ry; jy++)
+	{
+	  for(jx = -rx; jx <= rx; jx++)
+	    fprintf(stream,"%c", figure[ry+jy][rx+jx]);
+	  fprintf(stream,"\n");
+    }
     }
   else            /* Nodal planes */
     {  
       pnodal(figure, s1*M_PI/180. , d1*M_PI/180. , rx, ry, pnod) ;
       pnodal(figure, s2*M_PI/180. , d2*M_PI/180. , rx, ry, pnod) ; 
+      /* 	Printing    */
+      for(jy = -ry; jy <= ry; jy++)
+	{
+	  for(jx = -rx; jx <= rx; jx++)
+	    fprintf(stream,"%c%c", figure[ry+jy][rx+jx],sep);
+	  fprintf(stream,"\n");
+	}
     }
   
-  /* 	Printing    */
-  for(jy = -ry; jy <= ry; jy++)
-    {
-      for(jx = -rx; jx <= rx; jx++)
-	fprintf(stream,"%c%c", figure[ry+jy][rx+jx],sep);
-      fprintf(stream,"\n");
-    }
   return(1);
 }
 

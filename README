@@ -193,8 +193,8 @@ The first line of this file is the PDE.
   line. 
 * Characters from 6 to 27 correspond to the PDE origin time
 * Characters from 29 to 52 are the PDE latitude, longitude and
-  depth. This hypocenter location will be used to define the time window
-  in order to select the part of the waveform which will be inverted 
+  depth. This preliminary location will be used to define a large 
+  time-window for a first selection of the waveform to be inverted.
 * Characters from 54 to 60 are PDE magnitude estimates
   The rest of the line provides some details on epicenter location
   (region, country, ...)
@@ -204,7 +204,8 @@ Lines 3 and 4 are the parameters of the STF.
 lines 5, 6 and 7 are the 'latitude', 'longitude' and 'depth' of the
 centroïd wich will be used for the rotation of horizontal components
 and for the computation of synthetic Green's functions and data.
-
+This location will also be used to define precisely which part of the 
+waveform will be inverted.
 The last 6 lines are optional, they correspond to a moment tensor
 solution (e.g. a reference GCMT for a comparision with the Wphase
 inversion). RUNA.csh, RUNA_only_Z.csh and RUNA_only_H.csh all consider

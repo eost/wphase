@@ -24,10 +24,10 @@ add_slash(char *c)
 /*                if flag = 1 :     +|evname                          */
 /*                                   |t-shift                         */
 /*                                   |half-dur                        */
-/*                if flag = 2 :     +|ref lat                         */
+/*                                   |ref lat                         */
 /*                                   |ref lon                         */
 /*                                   |ref dep                         */
-/*                                   |ref mom                         */
+/*                if flag = 2 :     +|ref mom                         */
 /* Output : eq : parameters in a structure                            */
 /*          eq->vm is a pointer on 2 arrays (allocated before calling */
 /*                 this routine if flag=2)                            */
@@ -71,9 +71,12 @@ get_cmtf(eq, flag)
 	nb2 = nb;
       else
 	continue ;
-      if (strncmp(&line[nb2],"PDE",3)==0 || strncmp(&line[nb2],"MLI",3)==0 || 
-	  strncmp(&line[nb2],"ISC",3)==0 || strncmp(&line[nb2],"REB",3)==0 || 
-	  strncmp(&line[nb2],"SWE",3)==0 || strncmp(&line[nb2],"HSW",3)==0 || 
+      if (strncmp(&line[nb2],"PDE",3)==0 || 
+	  strncmp(&line[nb2],"MLI",3)==0 || 
+	  strncmp(&line[nb2],"ISC",3)==0 || 
+	  strncmp(&line[nb2],"REB",3)==0 || 
+	  strncmp(&line[nb2],"SWE",3)==0 || 
+	  strncmp(&line[nb2],"HSW",3)==0 || 
 	  strncmp(&line[nb2],"JMA",3)==0)
 	{
 	  strcpy(eq->pdeline,line);
@@ -100,35 +103,36 @@ get_cmtf(eq, flag)
 	    nb2+= 10+nb_blank(line+10)+1 ;
 	    tmp1 = sscanf (&line[nb2], "%s", eq->evid) ;
 	    check_scan(1, tmp1, eq->cmtfile, cmtfile) ;
-	    nl++;   }
+	    nl++; }
 	  else if (strncmp(&line[nb2],"time shift",10)==0){
 	    nb2+= 10+nb_blank(line+10)+1 ;
 	    tmp1 = sscanf (&line[nb2], "%lf", &eq->ts) ;
 	    check_scan(1, tmp1, eq->cmtfile, cmtfile) ;
-	    nl++;	}
+	    nl++; }
 	  else if (strncmp(&line[nb2],"half duration",13)==0){
 	    nb2+= 13+nb_blank(line+13)+1 ;
 	    tmp1 = sscanf (&line[nb2], "%lf", &eq->hd) ;
 	    check_scan(1, tmp1, eq->cmtfile, cmtfile) ;
-	    nl++;	}
-	  else if (flag == 2)
+	    nl++; }
+	  else if (strncmp(&line[nb2],"latitude",8)==0){
+	    nb2+= 8+nb_blank(line+8)+1 ;
+	    tmp1 = sscanf (&line[nb2], "%lf\n", &eq->evla) ;
+	    check_scan(1, tmp1, eq->cmtfile, cmtfile)    ;
+	    nl++; }     
+	  else if (strncmp(&line[nb2],"longitude",9)==0){
+	    nb2+= 9+nb_blank(line+9)+1 ;
+	    tmp1 = sscanf (&line[nb2], "%lf\n", &eq->evlo) ;
+	    check_scan(1, tmp1, eq->cmtfile, cmtfile)    ;
+	    nl++; }     
+	  else if (strncmp(&line[nb2],"depth",5)==0){
+	    nb2+= 5+nb_blank(line+5)+1 ;
+	    tmp1 = sscanf (&line[nb2], "%lf", &eq->evdp) ;
+	    check_scan(1, tmp1, eq->cmtfile, cmtfile)    ;
+	    nl++; }
+
+	  if (flag == 2)
 	    {
-	      if (strncmp(&line[nb2],"latitude",8)==0){
-		nb2+= 8+nb_blank(line+8)+1 ;
-		tmp1 = sscanf (&line[nb2], "%lf", &eq->evla) ;
-		check_scan(1, tmp1, eq->cmtfile, cmtfile)    ;
-		nl++;    }     
-	      else if (strncmp(&line[nb2],"longitude",9)==0){
-		nb2+= 9+nb_blank(line+9)+1 ;
-		tmp1 = sscanf (&line[nb2], "%lf", &eq->evlo) ;
-		check_scan(1, tmp1, eq->cmtfile, cmtfile)    ;
-		nl++;    }     
-	      else if (strncmp(&line[nb2],"depth",5)==0){
-		nb2+= 5+nb_blank(line+5)+1 ;
-		tmp1 = sscanf (&line[nb2], "%lf", &eq->evdp) ;
-		check_scan(1, tmp1, eq->cmtfile, cmtfile)    ;
-		nl++;    }
-	      else if (strncmp(&line[nb2],"Mrr",3)==0){
+	      if (strncmp(&line[nb2],"Mrr",3)==0){
 		nb2    += 3+nb_blank(line+3)+1 ;
 		tmp1    = sscanf (&line[nb2], "%lf", &eq->vm[1][0]) ;
 		eq->vm[1][0] /= (double)POW;
@@ -167,21 +171,19 @@ get_cmtf(eq, flag)
 	    }
 	}
     }
-
   fclose(cmtfile);
 
   if (flag == 1){
-    strcpy(eq->cmtfile, "NO REF. SOL. USED (PDE only)") ;
-    eq->evla = eq->evlo = eq->evdp = 0.0     ;}  
+    strcpy(eq->cmtfile, "NO REF. SOL. USED") ;}  
 
   /* Memory Freeing */
   free((void *)line) ;  
   
   /* Check if nl is correct */
-  if ((flag == 1 && nl < 4) || (flag == 2 && nl < 13)){
+  if ((flag == 1 && nl < 7) || (flag == 2 && nl < 13)){
     fprintf(stderr,"ERROR: reading cmtfile %s (field(s) are missing)\n",eq->cmtfile) ;
     exit(1);}
-  else if ((flag == 1 && nl > 4) || (flag == 2 && nl > 13)){
+  else if ((flag == 1 && nl > 7) || (flag == 2 && nl > 13)){
     fprintf(stderr,"ERROR: reading cmtfile %s (field(s) redundancy)\n",eq->cmtfile) ;
     exit(1);}
   else if (!flag && nl < 1) {
@@ -275,15 +277,15 @@ get_i_master(file, keys, n, eq)
     fclose(i_file) ;
     exit(1) ; }
 
-  /* Initialize GFDIR  */
-  /* strcpy(eq->gf_dir,"./GF/");  */
-
-  /* Initialize DMIN and DMAX */
+  /* Initialize DMIN and GFDIR */
   nl = 0;
   for (i=0 ; i<n ; i++)
     {
       fflush(stdout);
-      if (strncmp("DMIN",keys[i],strlen(keys[i]))==0){
+      if (strncmp("GFDIR",keys[i],strlen(keys[i]))==0){
+	strcpy(eq->gf_dir,"./GF/");
+	nl++; }
+      else if (strncmp("DMIN",keys[i],strlen(keys[i]))==0){
 	eq->dmin = 0. ;
 	nl++; }
     }
@@ -361,8 +363,8 @@ get_i_master(file, keys, n, eq)
 	      nb2+= 5+nb_blank(&line[nb2+5])+1            ;
 	      tmp = sscanf (&line[nb2], "%s", eq->gf_dir) ;
 	      check_scan(1, tmp, file, i_file)            ;
-	      add_slash(eq->gf_dir);
-	      nl++;   }
+	      add_slash(eq->gf_dir);}
+	      
 	    else if (strncmp(&line[nb2],"WP_WIN",6)==0) {
 	      nb2+= 6+nb_blank(&line[nb2+6])+1       ;
 	      decode_wp_win(&line[nb2], eq->wp_win4) ;

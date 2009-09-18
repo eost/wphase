@@ -53,6 +53,7 @@ main(int argc, char *argv[])
 
   printf("       delay,  half_width\n");
   printf("%12.4f %12.4f\n", eq.ts, eq.hd);
+
   /* TREATING SYNTHETICS */
   count = 0;
   for ( i = 0; i<ngfcomp; i++)

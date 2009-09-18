@@ -9,7 +9,6 @@
 # 2009/07/26 -- Centoid grid searches
 
 import os,shutil,sys,time,calendar
-import scipy as sp
 
 from EQ import *
 from wp_grid_search import *
@@ -53,8 +52,12 @@ def wpinversion_50(ftable,eq):
 	os.chdir(dir)
 	eq.affiche('PDErsstrig50')
 	os.system(RUNALL)
-	[ts_opt,hd_opt]=fast_grid_search_ts(DATDIR,10.,50.,cmtpde,freqs,eq,hd,hd,out='ts_gs_log')
-	grid_search_xy(dir,cmtpde,freqs,eq,ts_opt,hd_opt,10.,50.,out='xy_gs_log')
+	[ts_opt,hd_opt]=fast_grid_search_ts(DATDIR,cmtpde,freqs,eq,hd,hd,[15.],0,10.,50.,'ts_gs_log')
+	os.system('cat ts_gs_log | mail -s \"wpinv50deg: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
+		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
+	grid_search_xy(DATDIR,cmtpde,freqs,eq,ts_opt,hd_opt,[15.],0,10.,50.,'xy_gs_log')
+	os.system('cat xy_gs_log | mail -s \"wpinv50deg: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
+		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
 	os.chdir('../')
 
 
@@ -78,12 +81,16 @@ def wpinversion_90(ftable,eq):
 	freqs = [ftable[2][i],ftable[3][i]]
 	
 	eq.wcmtfile(dir+cmtpde,hd,hd)
-	eq.wimaster(DATDIR,10.,88.,freqs,cmtpde,dir+'i_master',10.,50.,DATALESS=DATALESS,)
+	eq.wimaster(DATDIR,freqs,cmtpde,dir+'i_master',10.,87.,DATALESS=DATALESS)
 	os.chdir(dir)
 	eq.affiche('PDErsstrig90')
 	os.system(RUNALL)
-	[ts_opt,hd_opt]=fast_grid_search_ts(dir,10.,90.,cmtpde,freqs,eq,hd,hd,out='ts_gs_log')
-	grid_search_xy(DATDIR,cmtpde,freqs,eq,ts_opt,hd_opt,10.,90.,out='xy_gs_log')
+	[ts_opt,hd_opt]=fast_grid_search_ts(DATDIR,cmtpde,freqs,eq,hd,hd,[15.],0,10.,87.,'ts_gs_log')
+	os.system('cat ts_gs_log | mail -s \"wpinv90deg: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
+		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
+	grid_search_xy(DATDIR,cmtpde,freqs,eq,ts_opt,hd_opt,[15.],0,10.,87.,'xy_gs_log')
+	os.system('cat xy_gs_log | mail -s \"wpinv90deg: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
+		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
 	os.chdir('../')		
 
 def main(argv=None):
@@ -136,13 +143,7 @@ def main(argv=None):
 	#                (database 'eqs' is useless?)
  	flag = 2 
  	while(flag):
- 	    rd = sp.rand()
- 	    if rd <= 0.5:
-  	        eqs = r_emsc_feeds(urlemsc,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag,eqs)
- 		eqs = r_neic_feeds(urlneic,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag,eqs)
- 		flag = 0
- 	    elif rd > 0.5:
- 		eqs = r_neic_feeds(urlneic,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag,eqs)
+		eqs = r_neic_feeds(urlneic,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag,eqs)
 		eqs = r_emsc_feeds(urlemsc,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag,eqs)		
  		flag = 0
 

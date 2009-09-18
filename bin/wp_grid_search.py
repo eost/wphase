@@ -74,20 +74,22 @@ def add_coor(coor,lat,lon):
 	coor.append([lat,lon])
 	return coor
 
-def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,out='stdout'):
-	if out == 'stdout':
+def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
+	if fileout == 'stdout':
 		fid = sys.stdout
+		flag = 0
 	else:
-		fid = open(out,'w')
+		fid = open(fileout,'w')
+		flag = 1
 
 	o_file = 'grid_search_xy_out'
 	if os.access(o_file,os.F_OK):
 		os.remove(o_file)
-	out     = grep(r'^W_cmt_err:', 'LOG/wpinversion.log')			
-	rmsini  = float(out[0].strip('\n').split()[1])
-	nrmsini = float(out[0].strip('\n').split()[2])
+# 	out     = grep(r'^W_cmt_err:', 'LOG/wpinversion.log')			
+# 	rmsini  = float(out[0].strip('\n').split()[1])
+# 	nrmsini = float(out[0].strip('\n').split()[2])
 	format = '%03d %03d %8.2f %8.2f %8.2f %8.2f %8.2f %12.7f %12.7f\n'
-
+	
 	fid.write('CENTROID POSITION GRID SEARCH\n')
 
 	# Initialize variables
@@ -96,10 +98,10 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	
 	Nit  = 2
 	dx   = 0.8
-	lat1 = eq.lat - 2.0
-	lat2 = eq.lat + 2.0
-	lon1 = eq.lon - 2.0
-	lon2 = eq.lon + 2.0
+	lat1 = eq.lat - 2.4
+	lat2 = eq.lat + 2.4
+	lon1 = eq.lon - 2.4
+	lon2 = eq.lon + 2.4
 
 	#n    = (lat2-lat1)/dx+1#######################################
 
@@ -129,27 +131,31 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 		rmsopt.append(1.e10)
 		latopt.append(lat2)
 		lonopt.append(lon1)
+# 	rmsopt[0] = rmsini ;
+# 	rmsopt[0] = rmsini ;
+# 	latopt[0] = eq.lat ;
+# 	latopt[0] = eq.lon ;
 	ncel = 0
 	tmp_table  = open('_tmp_xy_table', 'w')	
-	for it in xrange(Nit):
-		if it != 0:
-			dx = dx/2.
-			coor = []
-			for i in xrange(Nopt[it]):
-				add_coor(coor,latopt[i]+dx,lonopt[i]-dx)
-				add_coor(coor,latopt[i]+dx,lonopt[i])
-				add_coor(coor,latopt[i]+dx,lonopt[i]+dx)
-				add_coor(coor,latopt[i]   ,lonopt[i]+dx)
-				add_coor(coor,latopt[i]-dx,lonopt[i]+dx)
-				add_coor(coor,latopt[i]-dx,lonopt[i])
-				add_coor(coor,latopt[i]-dx,lonopt[i]-dx)
-				add_coor(coor,latopt[i]   ,lonopt[i]-dx)
+ 	for it in xrange(Nit):
+ 		if it != 0:
+ 			dx = dx/2.
+ 			coor = []
+ 			for i in xrange(Nopt[it]):
+ 				add_coor(coor,latopt[i]+dx,lonopt[i]-dx)
+ 				add_coor(coor,latopt[i]+dx,lonopt[i])
+ 				add_coor(coor,latopt[i]+dx,lonopt[i]+dx)
+ 				add_coor(coor,latopt[i]   ,lonopt[i]+dx)
+ 				add_coor(coor,latopt[i]-dx,lonopt[i]+dx)
+ 				add_coor(coor,latopt[i]-dx,lonopt[i])
+ 				add_coor(coor,latopt[i]-dx,lonopt[i]-dx)
+ 				add_coor(coor,latopt[i]   ,lonopt[i]-dx)
 
-		fid.write('Iteration %d:\n' % (it+1))
-		for cds in coor:
-			eq_gs.lat = cds[0]
-			eq_gs.lon = cds[1]
-			eq_gs.wcmtfile(cmttmp,ts,hd)
+ 		fid.write('Iteration %d:\n' % (it+1))
+ 		for cds in coor:
+ 			eq_gs.lat = cds[0]
+ 			eq_gs.lon = cds[1]
+ 			eq_gs.wcmtfile(cmttmp,ts,hd)
 			os.system(RECALCSYN_XY+' > LOG/_log_py_recalsyn_xy')
 			os.system(REPREPARE_XY+' > LOG/_log_py_reprepare_xy')
 			os.system(WPINV_XY+' > LOG/_log_py_wpinv_xy')
@@ -175,8 +181,8 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	tmp_table.close()
 	tmp_table = open('_tmp_xy_table', 'r')
 	out_table = open(o_file, 'w')
-	out_table.write('%8.3f %8.3f %12.7f\n'%(   eq.lat,    eq.lon, rmsopt[0]))
 	out_table.write('%8.3f %8.3f %12.7f\n'%(latopt[0], lonopt[0], rmsopt[0]))
+	out_table.write('%8.3f %8.3f %12.7f\n'%(   eq.lat,    eq.lon, rmsopt[0]))	
        	out_table.write(tmp_table.read())
        	out_table.close()
        	tmp_table.close()
@@ -189,22 +195,31 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	os.system(REPREPARE_XY+'> LOG/_log_py_reprepare_xy')
 	if flagref:
 		addrefsol(cmtpde,cmttmp)
-		os.system(WPINV_XY+' -ref')
+		if flag:
+			fid.close()
+			os.system(WPINV_XY+' -ref >> '+fileout)
+		else:
+			os.system(WPINV_XY+' -ref')
+
 	else:
-		os.system(WPINV_XY)
+		if flag:
+			fid.close()
+			os.system(WPINV_XY+' >> '+fileout)
+		else:
+			os.system(WPINV_XY)	
 
-	######### USE MATPLOT LIB ######### 
-	plot_xy(o_file,'grid_search_xy.png')
-	
+	# Set Mww
+	out  = grep(r'^Wmag:', 'LOG/_xy_wpinversion.log')
+	eq.mag = float(out[0].split()[1]) ;
 
 
-
-
-def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,out='stdout'):
-	if out == 'stdout':
+def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
+	if fileout == 'stdout':
 		fid = sys.stdout
+		flag = 0
 	else:
-		fid = open(out,'w')
+		fid = open(fileout,'w')
+		flag = 1
 
 	o_file = 'grid_search_ts_out'
 	if os.access(o_file,os.F_OK):
@@ -217,21 +232,20 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 	fid.write('CENTROID TIME DELAY GRID SEARCH\n')
 	Nit = 3
 	Sts = [4.,4.,2.,1.]
-	
-	# if eq.mag <= 7.0:
-	# 	ts1 = 4.
-	# 	ts2 = 20.
-	# elif eq.mag <8.0:
-	# 	ts1 = 8.
-	# 	ts2 = 48.
-	# else:
-	# 	ts1 = 14. 
-	# 	ts2 = 56.
-	
+
 	ts1 = 1.
 	ts2 = tsini*3.
 	if ts2 > 60.:
-		ts2 = 60.
+		ts2 = 60.	
+	if eq.mag <= 7.0:
+		ts1 =  1. 
+		ts2 = 20. 
+	elif eq.mag <8.0:
+	      	ts1 =  8. 
+		ts2 = 48. 
+	else: 
+	  	ts1 = 14. 
+		ts2 = 56. 	
 
 	lat = eq.lat
 	lon = eq.lon
@@ -267,7 +281,6 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 		fid.write('iteration %d (%f<=ts<=%f)\n'% (j+1,ts1,ts2))
 		ts = ts1
 		while ts < ts2+sts:
-			flag = 0
 			eq.wcmtfile(cmttmp,ts,ts)
 			os.system(REPREPARE_TS+' > LOG/_log_py_reprepare_ts')
 			os.system(WPINV_TS+' > LOG/_log_py_wpinv_ts')
@@ -292,8 +305,8 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 	tmp_table.close()
 	tmp_table = open('_tmp_ts_table','r')
 	out_table = open(o_file,'w')
+	out_table.write('%5.1f%12.7f\n'%(tsopt, rmsopt))	
 	out_table.write('%5.1f%12.7f\n'%( tsini, rmsini))
-	out_table.write('%5.1f%12.7f\n'%(tsopt, rmsopt))
 	out_table.write(tmp_table.read())
 	out_table.close()
 	tmp_table.close()
@@ -303,25 +316,37 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 	os.system(REPREPARE_TS)
 	if flagref:
 		addrefsol(cmtpde,cmttmp)
-		os.system(WPINV_TS+' -ref')
+		if flag:
+			fid.close()	
+			os.system(WPINV_TS+' -ref >> '+fileout)
+		else:
+			os.system(WPINV_TS+' -ref')
 	else:
-		os.system(WPINV_TS)
+		if flag:
+			fid.close()	
+			os.system(WPINV_TS+' >> '+fileout)
+		else:
+			os.system(WPINV_TS)
 
-	######### USE MATPLOTLIB #########
-	plot_ts(o_file,'grid_search_ts.png')
+	# Set Mww
+	out  = grep(r'^Wmag:', 'LOG/_ts_wpinversion.log')
+	eq.mag = float(out[0].split()[1]) ;
+
 	return [tsopt,tsopt]
 
-def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,out='stdout'):
+def fast_grid_search_ts_old(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,out='stdout'):
 	if out == 'stdout':
 		fid = sys.stdout
+		flag = 0
 	else:
 		fid = open(out,'w')
+		flag = 1
 
 	o_file = 'grid_search_ts_out'
 	if os.access(o_file,os.F_OK):
 		os.remove(o_file)
 		
-	out     = grep(r'^W_cmt_err:', 'LOG/wpinversion.log')			
+	out     = grep(r'^W_cmt_err:', 'LOG/wpinversion.log') 
 	rmsini  = float(out[0].strip('\n').split()[1])
 	nrmsini = float(out[0].strip('\n').split()[2])
 	format     = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
@@ -382,7 +407,6 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 		fid.write('iteration %d (%f<=ts<=%f)\n'% (j+1,ts1+tsini,ts2+tsini))
 		ts = ts1
 		while ts < ts2+sts:
-			flag = 0
 			os.system(WPINV_TS+' -dts %4.1f > LOG/_log_py_wpinv_ts'% ts)
 			out  = grep(r'^W_cmt_err:', 'LOG/_ts_wpinversion.log')			
 			rms  = float(out[0].strip('\n').split()[1])
@@ -405,16 +429,13 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 	tmp_table.close()
 	tmp_table = open('_tmp_ts_table', 'r')
 	out_table = open(o_file,'w')
+	out_table.write('%5.1f%12.7f\n'%(tsopt+tsini, rmsopt))	
 	out_table.write('%5.1f%12.7f\n'%(tsini, rmsini))
-	out_table.write('%5.1f%12.7f\n'%(tsopt+tsini, rmsopt))
 	out_table.write(tmp_table.read())
 	out_table.close()
 	tmp_table.close()
 	os.remove('_tmp_ts_table')
 
-	if os.access('ts_SYNTH',os.F_OK):
-		shutil.rmtree('ts_SYNTH')
-	os.mkdir('ts_SYNTH')
 	eq.wcmtfile(cmttmp,tsopt+tsini,tsopt+tsini)
 	os.system(REPREPARE_TS)
 	if flagref:
@@ -424,9 +445,92 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 		os.system(WPINV_TS)
 		
 
-	######### USE MATPLOTLIB #########
-	plot_ts(o_file,'grid_search_ts.png')
+	if flag:
+		fid.close()
+
+	# Set Mww
+	out  = grep(r'^Wmag:', 'LOG/_ts_wpinversion.log')
+	eq.mag = float(out[0].split()[1]) ;
+
 	return [tsopt+tsini,tsopt+tsini]
+
+
+def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
+	if fileout == 'stdout':
+		fid  = sys.stdout
+		flag = 0
+	else:
+		fid = open(fileout,'w')
+		flag = 1
+
+	o_file = 'grid_search_ts_out'
+	if os.access(o_file,os.F_OK):
+		os.remove(o_file)
+
+	out     = grep(r'^W_cmt_err:', 'LOG/wpinversion.log') 
+	rmsini  = float(out[0].strip('\n').split()[1])
+	nrmsini = float(out[0].strip('\n').split()[2])
+	format  = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
+	fid.write('FAST CENTROID TIME DELAY GRID SEARCH\n')		
+	Nit = 3
+	sts = 4.
+	# 	ts1 = 1.
+	# 	ts2 = tsini*2.	
+	# 	if ts2 > 60.:
+	# 		ts2 = 60.	
+	if eq.mag <= 7.0:
+		ts1 =  1. 
+		ts2 = 20. 
+	elif eq.mag <8.0:
+	      	ts1 =  8. 
+		ts2 = 48. 
+	else: 
+	  	ts1 = 14. 
+		ts2 = 56. 
+	fid.write('  ts1 = %5.1f sec, step = %5.1f sec, ts2 = %5.1f sec \n'%(ts1,sts,ts2))  	
+	lat = eq.lat
+	lon = eq.lon
+	dep = eq.dep
+	
+	cmttmp = cmtref+'_ts_tmp'
+	eq.wimaster(datdir,ftable,cmttmp,'ts_i_master',dmin ,dmax,'ts_GF',wpwin)
+	eq.wcmtfile(cmttmp,tsini,hdini)
+	
+	if os.access('ts_SYNTH',os.F_OK):
+		shutil.rmtree('ts_SYNTH')
+	os.mkdir('ts_SYNTH')
+	if os.access('ts_GF',os.F_OK):
+		shutil.rmtree('ts_GF')
+	shutil.copytree('GF','./ts_GF')
+	if flag:
+		fid.close()
+		os.system(WPINV_TS+' -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion >> %s'% (ts1,sts,ts2,o_file,fileout))
+	else:
+		os.system(WPINV_TS+' -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,o_file))
+	tmp_table = open(o_file, 'r')
+	tsopt, rmsopt = map(float,tmp_table.readline().strip('\n').split())
+ 	tmp_table.close()
+
+ 	eq.wcmtfile(cmttmp,tsopt,tsopt)
+ 	os.system(REPREPARE_TS)
+ 	if flagref:
+ 		addrefsol(cmtpde,cmttmp)
+		if flag:
+			os.system(WPINV_TS+' -ref >> '+fileout)
+		else:
+			os.system(WPINV_TS+' -ref')
+ 	else:
+		if flag:
+			os.system(WPINV_TS+' >> '+fileout)
+		else:
+			os.system(WPINV_TS)
+
+	# Set Mww
+	out  = grep(r'^Wmag:', 'LOG/_ts_wpinversion.log')
+	eq.mag = float(out[0].split()[1]) ;
+	
+	return [tsopt,tsopt]
+
 
 
 def usage():

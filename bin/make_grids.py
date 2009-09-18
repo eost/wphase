@@ -32,8 +32,8 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.png',mksmin=1.,mksm
 	fid.close()
 	
 	# get lat,lon,rms
-	latpde, lonpde, rmspde = map(float,L[0].strip('\n').split())
-	latopt, lonopt, rmsopt = map(float,L[1].strip('\n').split())
+	latopt, lonopt, rmsopt = map(float,L[0].strip('\n').split())	
+	latpde, lonpde, rmspde = map(float,L[1].strip('\n').split())
 	for l in L[2:]:
             tmp = l.strip('\n').split()
             lat.append(float(tmp[4]))
@@ -71,8 +71,8 @@ def plot_ts(ifile='grid_search_ts_out',ofile='grid_search_ts.png'):
 	fid= open(ifile,'r')
 	L=fid.readlines()
 	fid.close()
-	tsini,rmsini = map(float,L[0].strip('\n').split())
-	tsopt,rmsopt = map(float,L[1].strip('\n').split())
+	tsopt,rmsopt = map(float,L[0].strip('\n').split())
+	tsini,rmsini = map(float,L[1].strip('\n').split())	
 	ts  = []
 	rms = []
 	for l in L[2:]:

@@ -104,16 +104,17 @@ hdr_alloc(sachdr *hdr)
   strcpy(hdr->kinst,"-12345  ");
 }
 
-
 /*********************************************/
 /* Allocates memory for a tab of sac headers */
 void 
 hdr_tab(sachdr **hdr, int n)
 {
   int i;
-  if (((*hdr) = (sachdr*) malloc (n * sizeof(sachdr))) == NULL){
-    fprintf(stderr,"FATAL ERROR: Out of memory");
-    exit(1);    }
+  if (((*hdr) = (sachdr*) malloc (n * sizeof(sachdr))) == NULL)
+    {
+      fprintf(stderr,"FATAL ERROR: Out of memory");
+      exit(1);    
+    }
   for(i=0; i<n; i++)
     hdr_alloc(&((*hdr)[i])) ;
 }

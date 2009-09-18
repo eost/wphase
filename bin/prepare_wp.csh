@@ -15,11 +15,14 @@ else
         ${ECHO} "Error: file  i_master not available"
         exit
 endif
+
 set gf_dir   = "./GF"
 set tmp      = `${GREP} GFDIR   i_tmp`
 if ! $status then
         set gf_dir   = `echo $tmp | ${HEAD} -1 | ${CUT} -d: -f2`
 endif
+
+set CMTFILE  = `${GREP} CMTFILE i_tmp | ${HEAD} -1 | ${CUT} -d: -f2`
 ${RM} -f i_tmp
 
 ################################################
@@ -37,7 +40,7 @@ $REC_DEC_FILT coeffs_rec_lut i_master scr_dat_fil_list dec_bp_dat_fil_list >> ${
 ################################################
 # Rotation of data horizontal components (from E/N to L/T)
 ${ECHO} "Rotation of horizontal components...               ( >! ${LOG}/_log_rot_data )"
-$ROT_HORIZ_CMP dec_bp_dat_fil_list rot_dec_bp_dat_fil_list ${DATA} >! ${LOG}/_log_rot_data
+$ROT_HORIZ_CMP dec_bp_dat_fil_list rot_dec_bp_dat_fil_list ${DATA} -icmtf ${CMTFILE} >! ${LOG}/_log_rot_data
 
 ################################################
 # Synthetics preparatio:convolution and filter #

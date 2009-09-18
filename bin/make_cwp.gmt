@@ -6,8 +6,14 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 set my_argv = ($ARGV)
 if ($#my_argv < 1) then
     set CHAN  = LHZ
+    set o_wpfile = o_wpinversion
+    set predfile = fort.15
+    set isref = 0
 else
     set CHAN = $my_argv[1]
+    set o_wpfile = $my_argv[2]
+    set predfile = $my_argv[3]
+    set isref    = $my_argv[4]
 endif
 
 $GMTSET PAPER_MEDIA letter+
@@ -47,16 +53,16 @@ set titleW = "$evname   (${CHAN}, $cfreq1 Hz - $cfreq2 Hz, n = $forder, W )"
 set titleR = "$evname   (${CHAN}, $cfreq1 Hz - $cfreq2 Hz, n = $forder, R )"
 
 
-${GREP} ${CHAN} o_wpinversion > o_wpinversion_${CHAN}
+${GREP} ${CHAN} $o_wpfile > ${o_wpfile}_${CHAN}
 if $status then
-    ${ECHO} "WARNING: No channel ${CHAN} in o_wpinversion"
-    ${RM} -f o_wpinversion_${CHAN}
+    ${ECHO} "WARNING: No channel ${CHAN} in ${o_wpfile}"
+    ${RM} -f ${o_wpfile}_${CHAN}
     exit
 endif
 
-${CAT} o_wpinversion_${CHAN} | ${CUT} -d/ -f2 | ${CUT} -d. -f1 >! _tmp_stat_names    #Fragile
+${CAT} ${o_wpfile}_${CHAN} | ${CUT} -d/ -f2 | ${CUT} -d. -f1 >! _tmp_stat_names    #Fragile
 ${RM} -f _tmp_stat_posit
-set np = `${CAT} o_wpinversion_${CHAN} | ${AWK} '{print $5 - $4}'`
+set np = `${CAT} ${o_wpfile}_${CHAN} | ${AWK} '{print $5 - $4}'`
 set c = 0
 foreach n ( $np )
     set cb = $c
@@ -68,8 +74,9 @@ ${PASTE} _tmp_stat_names _tmp_stat_posit >! _tmp_stats
 
 ${AWK} '{print $1*1000}' fort.15_${CHAN} | ${CAT} -n >! _tmp_XY1
 ${AWK} '{print $2*1000}' fort.15_${CHAN} | ${CAT} -n >! _tmp_XYW
-${AWK} '{print $3*1000}' fort.15_${CHAN} | ${CAT} -n >! _tmp_XYR
-
+if ($isref != "0") then
+    ${AWK} '{print $3*1000}' fort.15_${CHAN} | ${CAT} -n >! _tmp_XYR
+endif
 ${AWK} '{print $2}' _tmp_XY1| $PSHISTOGRAM -I -W1 |& ${TAIL} -1| ${CUT} -d: -f3| ${AWK} '{print $1,$2}' >! _tmp_minmax
 
 set ymin      = `${AWK} '{print 1.1*$1}' _tmp_minmax`
@@ -85,16 +92,18 @@ $PSTEXT -JX25/1  -R0/$length/0/1 -N $K2 -G1 -Xa2c -Ya15c        >> $PSW
 ${CAT} _tmp_XY1 | $PSXY -JX25/16 -R$reg_trace -W$black $XY1 $K2 -B5000:sec:/${ticks}:mm:SWne >> $PSW
 ${CAT} _tmp_XYW | $PSXY -JX25/16 -R$reg_trace -W$red   $XY1 $K3 -B0/0SWne >> $PSW
 
-echo "Creating $PSR"
-${ECHO} 1 0 20 0 7 BC $titleR |\
-$PSTEXT -JX1   -R0/1/0/1 -N  $K1 -G1 -Xa13.5c -Ya19.c  >! $PSR
-${AWK} '{print $2, "1 16 90 7 MC", $1}' _tmp_stats |\
-$PSTEXT -JX25/1  -R0/$length/0/1 -N $K2 -G1 -Xa2c -Ya15c        >> $PSR
-${CAT} _tmp_XY1 | $PSXY -JX25/16 -R$reg_trace -W$black $XY1 $K2 -B5000:sec:/${ticks}:mm:SWne >> $PSR
-${CAT} _tmp_XYR | $PSXY -JX25/16 -R$reg_trace -W$red   $XY1 $K3 -B0/0SWne >> $PSR
-
+if ($isref != "0") then
+    echo "Creating $PSR"
+    ${ECHO} 1 0 20 0 7 BC $titleR |\
+    $PSTEXT -JX1   -R0/1/0/1 -N  $K1 -G1 -Xa13.5c -Ya19.c  >! $PSR
+    ${AWK} '{print $2, "1 16 90 7 MC", $1}' _tmp_stats |\
+    $PSTEXT -JX25/1  -R0/$length/0/1 -N $K2 -G1 -Xa2c -Ya15c        >> $PSR
+    ${CAT} _tmp_XY1 | $PSXY -JX25/16 -R$reg_trace -W$black $XY1 $K2 -B5000:sec:/${ticks}:mm:SWne >> $PSR
+    ${CAT} _tmp_XYR | $PSXY -JX25/16 -R$reg_trace -W$red   $XY1 $K3 -B0/0SWne >> $PSR
+    ${PS2PDF} CWP_R_${CHAN}.ps
+    ${RM} -f _tmp_XYR
+endif
+    
 ${PS2PDF} CWP_W_${CHAN}.ps
-${PS2PDF} CWP_R_${CHAN}.ps
 ${RM} -f i_tmp
-${RM} -f _tmp_XYW _tmp_XYR _tmp_XY1 _tmp_stats _tmp_stat_posit _tmp_stat_names _tmp_minmax o_wpinversion_Z
-
+${RM} -f _tmp_XYW _tmp_XY1 _tmp_stats _tmp_stat_posit _tmp_stat_names _tmp_minmax ${o_wpfile}_${CHAN}
