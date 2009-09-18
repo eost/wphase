@@ -38,8 +38,8 @@ export FC
 export CFLAGS
 export LDFLAGS
 
-EXE = $(BIN)/rec_dec_filt_v1\
-      $(BIN)/syn_conv_filt_v1\
+EXE = $(BIN)/rec_dec_filt\
+      $(BIN)/syn_conv_filt\
       $(BIN)/make_resp_lookup_table\
       $(BIN)/trim_sac_files\
       $(BIN)/FAST\
@@ -88,15 +88,15 @@ rot_horiz_cmp.o:rot_horiz_cmp.c
 
 # Recursive Filtering
 
-$(BIN)/rec_dec_filt_v1: rec_dec_filt_v1.o butterworth_sin.o      \
+$(BIN)/rec_dec_filt: rec_dec_filt.o butterworth_sin.o      \
 	rwsacs.o proto_alloc.o rwtextfiles.o complex.o read_i_files.o sort_tree.o 
-	${CC} ${LDFLAGS} rec_dec_filt_v1.o butterworth_sin.o  sort_tree.o \
-	rwsacs.o proto_alloc.o rwtextfiles.o complex.o read_i_files.o -o  $(BIN)/rec_dec_filt_v1 -lm
+	${CC} ${LDFLAGS} rec_dec_filt.o butterworth_sin.o  sort_tree.o \
+	rwsacs.o proto_alloc.o rwtextfiles.o complex.o read_i_files.o -o  $(BIN)/rec_dec_filt -lm
 
-$(BIN)/syn_conv_filt_v1: syn_conv_filt_v1.o butterworth_sin.o rwsacs.o \
+$(BIN)/syn_conv_filt: syn_conv_filt.o butterworth_sin.o rwsacs.o \
 	proto_alloc.o rwtextfiles.o complex.o read_i_files.o syn_conv_sub.o
-	${CC} ${LDFLAGS} syn_conv_filt_v1.o butterworth_sin.o syn_conv_sub.o \
-	rwsacs.o proto_alloc.o rwtextfiles.o complex.o read_i_files.o -o  $(BIN)/syn_conv_filt_v1 -lm
+	${CC} ${LDFLAGS} syn_conv_filt.o butterworth_sin.o syn_conv_sub.o \
+	rwsacs.o proto_alloc.o rwtextfiles.o complex.o read_i_files.o -o  $(BIN)/syn_conv_filt -lm
 
 
 $(BIN)/synth_v5: synth_v5.o butterworth_sin.o rwsacs.o \
@@ -105,11 +105,11 @@ $(BIN)/synth_v5: synth_v5.o butterworth_sin.o rwsacs.o \
 	rwsacs.o proto_alloc.o rwtextfiles.o complex.o read_i_files.o -o  $(BIN)/synth_v5 -lm
 
 
-rec_dec_filt_v1.o: rec_dec_filt_v1.c
-	${CC} ${CFLAGS} -c rec_dec_filt_v1.c 
+rec_dec_filt.o: rec_dec_filt.c
+	${CC} ${CFLAGS} -c rec_dec_filt.c 
 
-syn_conv_filt_v1.o: syn_conv_filt_v1.c
-	${CC} ${CFLAGS} -c syn_conv_filt_v1.c 
+syn_conv_filt.o: syn_conv_filt.c
+	${CC} ${CFLAGS} -c syn_conv_filt.c 
 
 syn_conv_sub.o: syn_conv_sub.c
 	${CC} ${CFLAGS} -c syn_conv_sub.c 
@@ -194,4 +194,4 @@ clean:
 	cd FAST_SYNTH; make clean
 
 cleanexe:
-	\rm -f $(EXE) $(BIN)/trim_sac_files_qrt fast_synth fast_synth_only_Z
+	\rm -f $(EXE) $(BIN)/trim_sac_files_qrt $(BIN)/fast_synth $(BIN)/fast_synth_only_Z

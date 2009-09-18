@@ -30,8 +30,8 @@ set TRIM_SAC_FILES	 = \$BIN/trim_sac_files
 set TRIM_SAC_FILES_QRT	 = \$BIN/trim_sac_files_qrt
 set MAKE_RESP_TABLE      = \$BIN/make_resp_lookup_table
 
-set REC_DEC_FILT         = \$BIN/rec_dec_filt_v1
-set SYN_CONV_FILT        = \$BIN/syn_conv_filt_v1
+set REC_DEC_FILT         = \$BIN/rec_dec_filt
+set SYN_CONV_FILT        = \$BIN/syn_conv_filt
 set ROT_HORIZ_CMP        = \$BIN/rot_horiz_cmp
 
 set FAST_SYNTH_Z         = \$BIN/fast_synth_only_Z
