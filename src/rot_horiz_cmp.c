@@ -83,8 +83,9 @@ main(int argc, char *argv[])
 	  if (opt.fad)
 	    {
 	      distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, &hdr1.baz, &hdr1.gcarc, &nerr) ;
-	      az   = (double) hdr1.az    ;
-	      xdeg = (double) hdr1.gcarc ;
+	      az   = (double) hdr1.az     ;
+	      xdeg = (double) hdr1.gcarc  ;
+	      hdr1.evdp = (float) eq.evdp ;
 	    }
 	  fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
 		  o_fil,sta,net,cmp,stla,stlo,stel,az,xdeg) ;
@@ -151,6 +152,8 @@ main(int argc, char *argv[])
 	  hdr2.gcarc = hdr1.gcarc    ;
 	  az   = (double) hdr1.az    ;
 	  xdeg = (double) hdr1.gcarc ;
+	  hdr1.evdp = (float) eq.evdp ;
+	  hdr2.evdp = (float) eq.evdp ;
 	}
       hdproto = &hdr1 ;
       if (hdr1.npts > hdr2.npts) 
