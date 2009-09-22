@@ -100,7 +100,7 @@ void w_log_header(char **argv, structopt *opt, str_quake_params *eq, double *wp_
 		  FILE *o_log) ;
 void write_cmtf(char *filename, str_quake_params *eq, double *vm, int flag) ;
 void w_o_saclst(char *o_saclst, int *ns, char **sacfiles, sachdr *hd_synt,
-		double **rms, structopt *opt) ;
+		double **rms, structopt *opt, int flag) ;
 void get_gap(sachdr *hd_synt, int *ns, double *gap) ;
 int charplot(double *M, double s1, double d1, double s2, double d2, 
 	     char D, char P, char W, char B, char sep, char pnod, 
@@ -191,7 +191,7 @@ main(int argc, char *argv[])
   rms = double_calloc2(nsac, 2*flag) ;
   calc_rms(&nsac, hd_synt, data, dcalc, rms, global_rms, &opt, flag)  ;
   get_gap(hd_synt, &nsac, &gap) ;
-  w_o_saclst(opt.o_saclst, &nsac, sacfiles, hd_synt, rms, &opt) ; 
+  w_o_saclst(opt.o_saclst, &nsac, sacfiles, hd_synt, rms, &opt, flag) ; 
 
   /* Time-shift grid search */
   if (opt.dts_step > 0)
@@ -436,7 +436,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
       fprintf(ps,"(GCMT, Mw= %5.2f ) show\n", Mwb)      ;
       fprintf(ps, "%15.6f %15.6f moveto\n", -1.1, -1.6) ;
       /* fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/(*M0a),mc) ;*/
-      fprintf(ps,"(ratio = %15.6f ;  epsilon = %15.6f) show\n",M0b/(*M0a),mc) ;
+      fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/(*M0a),mc) ;
       fprintf(ps,".5 .5 .9 setrgbcolor\n") ;
       prad_pat(TMb, ps)        ;
       pnod_pat(&s1b, &d1b, ps) ;
@@ -483,7 +483,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
     fprintf(o_log,"R_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3b[0], eval3b[1], eval3b[2])           ;
     fprintf(o_log,"R_cmt_err:          %-12.8f %-12.8f\n", 1000.*global_rms[2], global_rms[2]/global_rms[3])  ;
     fprintf(o_log,"Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b)                           ;
-    fprintf(o_log,"ratio = %5.2f ;  epsilon = %6.3f\n",M0b/(*M0a),mc) ;}
+    fprintf(o_log,"ratio = %12.8f ;  epsilon = %12.8f\n",M0b/(*M0a),mc) ;}
   
   
 
@@ -645,8 +645,8 @@ get_gap(hd_synt, ns, gap)
 
 
 void 
-w_o_saclst(o_saclst, ns, sacfiles, hd_synt, rms, opt) 
-     int    *ns   ;
+w_o_saclst(o_saclst, ns, sacfiles, hd_synt, rms, opt, flag) 
+     int    *ns, flag ;
      double **rms ;
      char *o_saclst, **sacfiles ;
      sachdr *hd_synt ; 
@@ -656,17 +656,32 @@ w_o_saclst(o_saclst, ns, sacfiles, hd_synt, rms, opt)
   FILE *o_sac ;
 
   o_sac = openfile_wt(o_saclst);
-
   n0 = 0;
-  for(i=0; i<*ns; i++){
-    fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f\n",
-	    sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
-	    (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
-	    rms[i][0]/rms[i][1], 
-	    opt->p2p[i], opt->avg[i]);
-    n0 += hd_synt[i].npts ;
-  }
+  for(i=0; i<*ns; i++)
+    {
+      fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f\n",
+	      sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
+	      (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
+	      rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i]);
+      n0 += hd_synt[i].npts ;
+    }
   fclose(o_sac);
+  
+  if (flag == 2)
+    {
+      o_sac = openfile_wt("_tmp_o_saclst_for_cmppond");
+      n0 = 0;
+      for(i=0; i<*ns; i++)
+	{
+	  fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f %15.8f %15.8f\n",
+		  sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
+		  (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
+		  rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i],rms[i][2],rms[i][2]/rms[i][3]);
+	  n0 += hd_synt[i].npts ;
+	}
+      fclose(o_sac);
+    }
+
 }
 
 
@@ -721,7 +736,11 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
      structopt *opt            ;
 {
   int    i, j, n0, f2;
-  
+
+  int    nZ=0,nL=0,nT=0;
+  double rmsZ=0, rmsL=0, rmsT=0;
+  double nrmsZ=0, nrmsL=0, nrmsT=0;
+
   f2  = 2*flag;
   n0 = 0 ;
   for(i=0 ; i<*ns ; i++)
@@ -733,9 +752,53 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
 	  rms[i][j] = opt->wgt[i] * sqrt(rms[i][j]/(double)hd_synt[i].npts); 
 	}
       n0 += hd_synt[i].npts ;
+      if (flag == 2)
+	{
+	  if (!strncmp(hd_synt[i].kcmpnm,"LHZ",3))
+	    {
+	      rmsZ  += rms[i][2]   ;
+	      nrmsZ += rms[i][3]   ;
+	      nZ    += hd_synt[i].npts ;
+	    }
+	  if (!strncmp(hd_synt[i].kcmpnm,"LHL",3))
+	    {
+	      rmsL  += rms[i][2];
+	      nrmsL += rms[i][3];
+	      nL    += hd_synt[i].npts ;
+	    }
+	  if (!strncmp(hd_synt[i].kcmpnm,"LHT",3))
+	    {
+	      rmsT  += rms[i][2];
+	      nrmsT += rms[i][3];
+	      nT    += hd_synt[i].npts ;
+	    }
+	}
     }
   for(j=0; j<f2; j++)
     global_rms[j] = sqrt(global_rms[j]/n0) ;
+  
+  if (flag == 2)
+    {
+      rmsZ  = sqrt(rmsZ/(double)nZ)  ; 
+      nrmsZ = sqrt(nrmsZ/(double)nZ) ;     
+      rmsL  = sqrt(rmsL/(double)nL)  ; 
+      nrmsL = sqrt(nrmsL/(double)nL) ;     
+      rmsT  = sqrt(rmsT/(double)nT)  ; 
+      nrmsT = sqrt(nrmsT/(double)nT) ; 
+      printf("##################################################\n");
+      printf("LHZ_rms : %15.6e mm (%15.6f)\n",rmsZ,rmsZ/nrmsZ);
+      printf("LHL_rms : %15.6e mm (%15.6f)\n",rmsL,rmsL/nrmsL);
+      printf("LHT_rms : %15.6e mm (%15.6f)\n",rmsT,rmsT/nrmsT);
+      rmsL = rmsZ/rmsL ;      
+      rmsT = rmsZ/rmsT ;
+      nrmsL = nrmsL*rmsL/nrmsZ ;
+      nrmsT = nrmsT*rmsT/nrmsZ ;
+      printf("(LHZ_rms/LHT_rms) : %15.6e mm (%15.6f)\n",rmsL,nrmsL);
+      printf("(LHZ_rms/LHT_rms) : %15.6e mm (%15.6f)\n",rmsT,nrmsT);
+      printf("(LHZ_rms/LHL_rms)^2 : %15.6e mm (%15.6f)\n",rmsL*rmsL,nrmsL*nrmsL);
+      printf("(LHZ_rms/LHT_rms)^2 : %15.6e mm (%15.6f)\n",rmsT*rmsT,nrmsT*nrmsT);
+    }
+
 }
 
 
@@ -1096,8 +1159,10 @@ residual_moment(vm, ma, mb, mc)
 
   mt2sm(vm[0], ma) ;
   mt2sm(vm[1], mb) ;
-  for(i=0 ; i<6 ; i++) {
-    vmc[i] = vm[1][i]/(*mb) - vm[0][i]/(*ma); }
+  for(i=0 ; i<6 ; i++) 
+    {
+      vmc[i] = vm[1][i]/(*mb) - vm[0][i]/(*ma); 
+    }
   mt2sm(vmc, mc) ;
   free((void*)vmc) ;
 }
@@ -1600,6 +1665,7 @@ screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
 	  hd_synt[newn]  = hd_synt[j] ;
 	  opt->p2p[newn] = opt->p2p[j] ;
 	  opt->avg[newn] = opt->avg[j] ;
+	  opt->wgt[newn] = opt->wgt[j] ;
 	  newn++ ;	  
 	}
       else
@@ -1648,6 +1714,7 @@ screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
 	  hd_synt[newn]  = hd_synt[j]  ;
 	  opt->p2p[newn] = opt->p2p[j] ;
 	  opt->avg[newn] = opt->avg[j] ;
+	  opt->wgt[newn] = opt->wgt[j] ;
 	  newn++ ;
 	}
       else 
