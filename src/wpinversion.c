@@ -738,19 +738,14 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
   int    i, j, n0, f2;
 
   int    nZ=0,nL=0,nT=0;
-  double rmsZ=0, rmsL=0, rmsT=0;
-  double nrmsZ=0, nrmsL=0, nrmsT=0;
+  double  rmsZ=0,  rmsL=0,  rmsT=0 ;
+  double nrmsZ=0, nrmsL=0, nrmsT=0 ;
 
   f2  = 2*flag;
   n0 = 0 ;
   for(i=0 ; i<*ns ; i++)
     {
       calc_rms_sub(hd_synt[i].npts, data[i], dcalc[i], rms[i], flag) ;
-      for(j=0 ; j<f2 ; j++) 
-	{
-	  global_rms[j] += rms[i][j] ;
-	  rms[i][j] = opt->wgt[i] * sqrt(rms[i][j]/(double)hd_synt[i].npts); 
-	}
       n0 += hd_synt[i].npts ;
       if (flag == 2)
 	{
@@ -773,6 +768,11 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
 	      nT    += hd_synt[i].npts ;
 	    }
 	}
+      for(j=0 ; j<f2 ; j++) 
+	{
+	  global_rms[j] += opt->wgt[i]*rms[i][j] ;
+	  rms[i][j] = opt->wgt[i] * sqrt(rms[i][j]/(double)hd_synt[i].npts); 
+	}
     }
   for(j=0; j<f2; j++)
     global_rms[j] = sqrt(global_rms[j]/n0) ;
@@ -793,7 +793,7 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
       rmsT = rmsZ/rmsT ;
       nrmsL = nrmsL*rmsL/nrmsZ ;
       nrmsT = nrmsT*rmsT/nrmsZ ;
-      printf("(LHZ_rms/LHT_rms) : %15.6e mm (%15.6f)\n",rmsL,nrmsL);
+      printf("(LHZ_rms/LHL_rms) : %15.6e mm (%15.6f)\n",rmsL,nrmsL);
       printf("(LHZ_rms/LHT_rms) : %15.6e mm (%15.6f)\n",rmsT,nrmsT);
       printf("(LHZ_rms/LHL_rms)^2 : %15.6e mm (%15.6f)\n",rmsL*rmsL,nrmsL*nrmsL);
       printf("(LHZ_rms/LHT_rms)^2 : %15.6e mm (%15.6f)\n",rmsT*rmsT,nrmsT*nrmsT);
@@ -915,7 +915,7 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
       file = get_gf_filename(opt->osacdir, hd_synt[s].kstnm, hd_synt[s].knetwk, 
 			     hd_synt[s].kcmpnm, "synth.sac") ;
       whdrsac(file, &hd_synt[s])          ;
-      wdatsac(file, &hd_synt[s], data[s]) ;
+      wdatsac(file, &hd_synt[s], d[s][0]) ;
       /* Memory Freeing */
       free((void*)file) ;
     }
