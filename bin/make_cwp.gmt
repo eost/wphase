@@ -60,7 +60,7 @@ if $status then
     exit
 endif
 
-${CAT} ${o_wpfile}_${CHAN} | ${CUT} -d/ -f2 | ${CUT} -d. -f1 >! _tmp_stat_names    #Fragile
+${CAT} ${o_wpfile}_${CHAN} | ${CUT} -d/ -f2 | ${CUT} -d. -f1,3 >! _tmp_stat_names    #Fragile
 ${RM} -f _tmp_stat_posit
 set np = `${CAT} ${o_wpfile}_${CHAN} | ${AWK} '{print $5 - $4}'`
 set c = 0
@@ -72,10 +72,10 @@ end
 set length = $c
 ${PASTE} _tmp_stat_names _tmp_stat_posit >! _tmp_stats
 
-${AWK} '{print $1*1000}' fort.15_${CHAN} | ${CAT} -n >! _tmp_XY1
-${AWK} '{print $2*1000}' fort.15_${CHAN} | ${CAT} -n >! _tmp_XYW
+${AWK} '{print $1*1000}' ${predfile}_${CHAN} | ${CAT} -n >! _tmp_XY1
+${AWK} '{print $2*1000}' ${predfile}_${CHAN} | ${CAT} -n >! _tmp_XYW
 if ($isref != "0") then
-    ${AWK} '{print $3*1000}' fort.15_${CHAN} | ${CAT} -n >! _tmp_XYR
+    ${AWK} '{print $3*1000}' ${predfile}_${CHAN} | ${CAT} -n >! _tmp_XYR
 endif
 ${AWK} '{print $2}' _tmp_XY1| $PSHISTOGRAM -I -W1 |& ${TAIL} -1| ${CUT} -d: -f3| ${AWK} '{print $1,$2}' >! _tmp_minmax
 
@@ -106,4 +106,4 @@ endif
     
 ${PS2PDF} CWP_W_${CHAN}.ps
 ${RM} -f i_tmp
-${RM} -f _tmp_XYW _tmp_XY1 _tmp_stats _tmp_stat_posit _tmp_stat_names _tmp_minmax ${o_wpfile}_${CHAN}
+#${RM} -f _tmp_XYW _tmp_XY1 _tmp_stats _tmp_stat_posit _tmp_stat_names _tmp_minmax 
