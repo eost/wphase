@@ -6,8 +6,8 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract_only_Z.csh
 set CALC    = ${BIN}/calc_fast_synths_only_Z.csh
-#set PREPARE = ${BIN}/prepare_wp_only_Z.csh
 set PREPARE = ${BIN}/prepare_wp.csh
+#set PREPARE = ${BIN}/prepare_wp_norot.csh
 set WPINVER = ${BIN}/wpinversion
 
 
@@ -35,7 +35,8 @@ ${RM} -f i_tmp
 # ${CP} -f /home/zac/WP6/run_test_martinique07/*.dec.bp.int DATA/
 # ${CP} -rf /home/zac/WP6/run_test_martinique07/GF ./
 
-$WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} -ref -nt
+$WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
+  	 -pdata fort.15.noth -ref -nt -med
 
 ${CP} p_wpinversion p_wpinversion.noth
 ${CP} o_wpinversion o_wpinversion.noth

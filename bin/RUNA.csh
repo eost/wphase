@@ -51,7 +51,7 @@ ${RM} -f i_tmp
 
 
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-	 -wl ${wL} -wt ${wT} -wz ${wZ} -ref -nt -med
+	 -pdata fort.15.noth ${wL} -wt ${wT} -wz ${wZ} -ref -nt -med
 
 ${CP} p_wpinversion p_wpinversion.noth
 ${CP} o_wpinversion o_wpinversion.noth
