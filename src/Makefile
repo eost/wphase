@@ -44,8 +44,10 @@ EXE = $(BIN)/rec_dec_filt\
       $(BIN)/trim_sac_files\
       $(BIN)/FAST\
       $(BIN)/wpinversion\
+      $(BIN)/wpinversion_norot\
       $(BIN)/synth_v5\
       $(BIN)/rot_horiz_cmp\
+      $(BIN)/change_sac_headers\
       $(BIN)/saclst
 
 all : $(EXE)
@@ -61,6 +63,14 @@ $(BIN)/wpinversion:wpinversion.o rwsacs.o proto_alloc.o rwtextfiles.o \
 
 wpinversion.o:wpinversion.c
 	$(CC) $(CFLAGS) -c wpinversion.c
+
+$(BIN)/wpinversion_norot:wpinversion_norot.o rwsacs.o proto_alloc.o rwtextfiles.o \
+	travel_times.o jacobi.o charplot.o read_i_files.o
+	$(CC) $(LDFLAGS) wpinversion_norot.o rwsacs.o proto_alloc.o rwtextfiles.o \
+	travel_times.o jacobi.o charplot.o read_i_files.o -o $(BIN)/wpinversion_norot -lm
+
+wpinversion_norot.o:wpinversion_norot.c
+	$(CC) $(CFLAGS) -c wpinversion_norot.c
 
 jacobi.o:jacobi.c
 	$(CC) $(CFLAGS) -c jacobi.c
@@ -84,6 +94,15 @@ $(BIN)/rot_horiz_cmp: rot_horiz_cmp.o proto_alloc.o rwsacs.o \
 
 rot_horiz_cmp.o:rot_horiz_cmp.c
 	$(CC) $(CFLAGS) -c rot_horiz_cmp.c
+
+
+$(BIN)/change_sac_headers: change_sac_headers.o proto_alloc.o rwsacs.o \
+	rwtextfiles.o read_i_files.o distaz.o 
+	$(CC) $(LDFLAGS) change_sac_headers.o proto_alloc.o rwsacs.o \
+	rwtextfiles.o read_i_files.o distaz.o -o $(BIN)/change_sac_headers -lm
+
+change_sac_headers.o:change_sac_headers.c
+	$(CC) $(CFLAGS) -c change_sac_headers.c
 
 
 # Recursive Filtering

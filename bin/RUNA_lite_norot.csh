@@ -6,20 +6,20 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 
 set my_argv = ($ARGV)
 if ($#my_argv < 1) then
-    set wL = 1.
-    set wT = 1.
+    set wN = 1.
+    set wE = 1.
     set wZ = 1.
 else
-    set wL = $my_argv[1]
-    set wT = $my_argv[2]
+    set wN = $my_argv[1]
+    set wE = $my_argv[2]
     set wZ = $my_argv[3]
 endif
 
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract_lite.csh
-set CALC    = ${BIN}/calc_fast_synths.csh
-set PREPARE = ${BIN}/prepare_wp.csh
-set WPINVER = ${BIN}/wpinversion
+set CALC    = ${BIN}/calc_fast_synths_rot.csh
+set PREPARE = ${BIN}/prepare_wp_norot.csh
+set WPINVER = ${BIN}/wpinversion_norot
 
 
 ${RM} -rf SYNTH
@@ -43,7 +43,7 @@ endif
 ${RM} -f i_tmp
 
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-	 -wl ${wL} -wt ${wT} -wz ${wZ} -nt -med
+	-wn ${wN} -we ${wE} -wz ${wZ} -nt -med
 
 ${CP} -f p_wpinversion p_wpinversion.noth
 ${CP} -f o_wpinversion o_wpinversion.noth
@@ -57,8 +57,8 @@ foreach th ($ths)
 
     $WPINVER  -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
     -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
-    -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir} \
-    -wl ${wL} -wt ${wT} -wz ${wZ} -nt -old 
+    -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir}\
+    -wn ${wN} -we ${wE} -wz ${wZ} -nt -old 
 
     ${CP} -f o_wpinv.th_$th o_wpinversion        
     set NBSTA = `${CAT} o_wpinversion | ${WC}  -l`

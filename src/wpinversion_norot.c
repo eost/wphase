@@ -36,7 +36,7 @@ typedef struct
   double op_pa, p2p_med, p2p_low, p2p_high ;
   double dts_min,dts_step,dts_max, dts_val ; 
   double  ntr_val, ref_val ;
-  double *rms_in, *p2p,*avg, *wgt,wZ,wL,wT ;
+  double *rms_in, *p2p,*avg, *wgt,wZ,wN,wE ;
   char   i_master[FSIZE], i_saclst[FSIZE]  ;
   char   o_saclst[FSIZE], log[FSIZE]       ; 
   char   o_cmtf[FSIZE], p_data[FSIZE]      ;
@@ -763,13 +763,13 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
 		  nrmsZ += rms[i][3]   ;
 		  nZ    += hd_synt[i].npts ;
 		}
-	      if (!strncmp(hd_synt[i].kcmpnm,"LHL",3))
+	      if (!strncmp(hd_synt[i].kcmpnm,"LHN",3))
 		{
 		  rmsL  += rms[i][2];
 		  nrmsL += rms[i][3];
 		  nL    += hd_synt[i].npts ;
 		}
-	      if (!strncmp(hd_synt[i].kcmpnm,"LHT",3))
+	      if (!strncmp(hd_synt[i].kcmpnm,"LHE",3))
 		{
 		  rmsT  += rms[i][2];
 		  nrmsT += rms[i][3];
@@ -797,16 +797,16 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
       printf("##################################################\n");
       printf("Ref. solution misfits:\n");
       printf("LHZ_rms : %15.6e mm (%15.6f)\n",rmsZ,rmsZ/nrmsZ);
-      printf("LHL_rms : %15.6e mm (%15.6f)\n",rmsL,rmsL/nrmsL);
-      printf("LHT_rms : %15.6e mm (%15.6f)\n",rmsT,rmsT/nrmsT);
+      printf("LHN_rms : %15.6e mm (%15.6f)\n",rmsL,rmsL/nrmsL);
+      printf("LHE_rms : %15.6e mm (%15.6f)\n",rmsT,rmsT/nrmsT);
       rmsL = rmsZ/rmsL ;      
       rmsT = rmsZ/rmsT ;
       nrmsL = nrmsL*rmsL/nrmsZ ;
       nrmsT = nrmsT*rmsT/nrmsZ ;
-      printf("(LHZ_rms/LHL_rms) : %15.6e mm (%15.6f)\n",rmsL,nrmsL);
-      printf("(LHZ_rms/LHT_rms) : %15.6e mm (%15.6f)\n",rmsT,nrmsT);
-      printf("(LHZ_rms/LHL_rms)^2 : %15.6e mm (%15.6f)\n",rmsL*rmsL,nrmsL*nrmsL);
-      printf("(LHZ_rms/LHT_rms)^2 : %15.6e mm (%15.6f)\n",rmsT*rmsT,nrmsT*nrmsT);
+      printf("(LHZ_rms/LHN_rms) : %15.6e mm (%15.6f)\n",rmsL,nrmsL);
+      printf("(LHZ_rms/LHE_rms) : %15.6e mm (%15.6f)\n",rmsT,nrmsT);
+      printf("(LHZ_rms/LHN_rms)^2 : %15.6e mm (%15.6f)\n",rmsL*rmsL,nrmsL*nrmsL);
+      printf("(LHZ_rms/LHE_rms)^2 : %15.6e mm (%15.6f)\n",rmsT*rmsT,nrmsT*nrmsT);
     }
 
 }
@@ -868,7 +868,7 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
 {
   int  i, j, k, s, N        ;
   char *fZ, *fL, *fT, *file ;
-  FILE *o_dat, *o_Z, *o_L, *o_T, *ocmp ;
+  FILE *o_dat, *o_Z, *o_N, *o_E, *ocmp ;
 
   /* Allocating memory */
   fZ = char_alloc(FSIZE) ;
@@ -880,36 +880,36 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
   strcpy(fL,opt->p_data) ;
   strcpy(fT,opt->p_data) ;
   strcat(fZ,"_LHZ") ;
-  strcat(fL,"_LHL") ;
-  strcat(fT,"_LHT") ;
+  strcat(fL,"_LHN") ;
+  strcat(fT,"_LHE") ;
   
   /* Opening files */
   o_dat = openfile_wt(opt->p_data) ;
   o_Z = openfile_wt(fZ) ;
-  o_L = openfile_wt(fL) ;
-  o_T = openfile_wt(fT) ;
+  o_N = openfile_wt(fL) ;
+  o_E = openfile_wt(fT) ;
 
   for( s=0 ; s< *nsac ; s++)
     {
       if (hd_synt[s].kcmpnm[2] == 'Z')
 	ocmp = o_Z ;
-      else if (hd_synt[s].kcmpnm[2] == 'L')
-	ocmp = o_L ;
-      else if (hd_synt[s].kcmpnm[2] == 'T')
-	ocmp = o_T ;
+      else if (hd_synt[s].kcmpnm[2] == 'N')
+	ocmp = o_N ;
+      else if (hd_synt[s].kcmpnm[2] == 'E')
+	ocmp = o_E ;
       else 
 	{
 	  fprintf(stderr,"ERROR : invalid component\n") ;
 	  fclose(o_dat) ;
 	  fclose(o_Z)   ;
-	  fclose(o_L)   ;
-	  fclose(o_T)   ;
+	  fclose(o_N)   ;
+	  fclose(o_E)   ;
 	  exit(1)       ; 
 	}
-      N = hd_synt[s].npts ;	  
-      d[s] = double_calloc2(flag, N) ;
+      N = hd_synt[s].npts ;
       if (opt->wgt[s] > 0.)
 	{
+	  d[s] = double_calloc2(flag, N) ;
 	  for(i=0 ; i<N ; i++)
 	    {
 	      fprintf(o_dat,"%15.6e ",data[s][i]) ;
@@ -931,11 +931,13 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
 	  /* Memory Freeing */
 	  free((void*)file) ;
 	}
+      else
+	d[s] = double_calloc2(flag, 1) ;
     }
   fclose(o_dat) ;
   fclose(o_Z)   ;
-  fclose(o_L)   ;
-  fclose(o_T)   ;
+  fclose(o_N)   ;
+  fclose(o_E)   ;
   free((void*)fZ)   ;
   free((void*)fL)   ;
   free((void*)fT)   ;
@@ -1315,10 +1317,10 @@ set_wgt(int ns, sachdr *hd_data,structopt *opt)
 {
   if (!strncmp(hd_data->kcmpnm, "LHZ",3))
     opt->wgt[ns] = opt->wZ;
-  else if (!strncmp(hd_data->kcmpnm, "LHL",3))
-    opt->wgt[ns] = opt->wL;
-  else if (!strncmp(hd_data->kcmpnm, "LHT",3))
-    opt->wgt[ns] = opt->wT;
+  else if (!strncmp(hd_data->kcmpnm, "LHN",3))
+    opt->wgt[ns] = opt->wN;
+  else if (!strncmp(hd_data->kcmpnm, "LHE",3))
+    opt->wgt[ns] = opt->wE;
 }
 
 void 
@@ -1930,8 +1932,8 @@ disphelp(char **argv,structopt *opt)
 
   fprintf(stderr,"\n data weighting and screening: \n");  
   fprintf(stderr,"  -wz real_value          weight for LHZ channels (%f)\n",opt->wZ);
-  fprintf(stderr,"  -wl real_value          weight for LHL channels (%f)\n",opt->wL);
-  fprintf(stderr,"  -wt real_value          weight for LHT channels (%f)\n",opt->wT);
+  fprintf(stderr,"  -wn real_value          weight for LHN channels (%f)\n",opt->wN);
+  fprintf(stderr,"  -we real_value          weight for LHE channels (%f)\n",opt->wE);
   fprintf(stderr,"  -med                    screening data before inversion (no pre-screening)\n") ;
   fprintf(stderr,"  -th real_value          reject data using a rms threshold (no rms threshold)\n") ; 
 
@@ -2073,8 +2075,8 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->ref_val   = 0. ;
   opt->ntr_val   = 0. ;
   opt->wZ        = 1. ;
-  opt->wL        = 1. ;
-  opt->wT        = 1. ;
+  opt->wN        = 1. ;
+  opt->wE        = 1. ;
   opt->dts_val   = 0. ;
   opt->dts_min   = 0. ;
   opt->dts_max   = 0. ;
@@ -2162,11 +2164,11 @@ get_opt(numarg1, numarg2, argv, opt, eq)
       if (!strncmp(argv[j],"-wz",3)){
 	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wZ) ;
 	k+=2 ;}
-      if (!strncmp(argv[j],"-wl",3)){
-	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wL) ;
+      if (!strncmp(argv[j],"-wn",3)){
+	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wN) ;
 	k+=2 ;}
-      if (!strncmp(argv[j],"-wt",3)){
-	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wT) ;
+      if (!strncmp(argv[j],"-we",3)){
+	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wE) ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-med",4)){
 	opt->med_val = 1 ;	

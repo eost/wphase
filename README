@@ -55,22 +55,33 @@ Computing Green's functions (GFs):
 >'calc_fast_synths.csh' : for all components
 >'calc_fast_synths_only_Z.csh' : only for vertical components
 >'recalc_fast_synths.csh' : compute GFs for grid search (??to be modified??)
+>'calc_fast_synths_rot.csh' : rotate Longitudinal and Transverse components 
+                              to North and East components
 
 Deconvolving Data, Convolve Green's functions and Filtering:
->'prepare_wp.csh' : for all components
+>'prepare_wp.csh' : for all components (using Long. and Trans. components).
 >'prepare_wp_only_Z.csh' : only for vertical components
+>'prepare_wp_norot.csh' : use East and North components instead
 >'reprepare_wp_ts.csh' : reprepare for time-shift grid search
 >'reprepare_wp_xy.csh' : reprepare for centroïd position grid-search 
 
 
 RUNA : run all routines and wpinversion using a screening on rms deviations:
->'RUNA.csh' : input is seed 
->'RUNA_only_Z.csh' : only for vertical components
->'RUNA_only_H.csh' : only for horizontal components
+
+>'RUNA_only_Z.csh' : only for vertical components.
+
+Using Longitudinal and Transverse components :
+>'RUNA.csh' : input is seed.
+>'RUNA_only_H.csh' : only for horizontal components.
 >'RUNA_lite.csh' : if data is already extracted
 >'RUNA_qrt.csh' : input is miniseed (1 file per channel) and dataless
                   files (libmseed and rdseed required). 
 
+Using North and East components
+>'RUNA_norot.csh' : input is seed (using North and East components).
+>'RUNA_lite_norot.csh' : if data is already extracted
+>'RUNA_qrt_norot.csh' : input is miniseed (1 file per channel) and dataless
+                  files (libmseed and rdseed required). 
 
 Cleaning the run directory :
 >'clean_run.csh' : keep only 'i_master*' and 'CMTSOLUTION*'
@@ -84,9 +95,10 @@ Python scripts are used for CENTROID GRID-SEARCHES and QUASI REAL-TIME
 MONITORING. You can found them in $WP_HOME/bin:
 
 
-GRID SEARCH:
->'wp_grid_search.py' : help is available using the option '-h'
-
+GRID SEARCH: 
+>'wp_grid_search.py' : using Longitudinal and Transverse components
+>'wp_grid_search_norot.py' : using North and East components
+Detailed help is available using the option '-h'
 
 QUASI REAL-TIME MONITORING:
 >'trigger_neic_emsc.py' : based on a triggering using emsc and neic
@@ -100,11 +112,16 @@ This script can be executed every minute using the cron daemon. This
 solution require to define the environment variable "WP_HOME" at the
 begining at the crontab used to execute trigger_neic_emsc.py
 example of crontab if $SHELL == /bin/sh:
-	WP_HOME=/home/zac/wphase_pack4
+
+	WP_HOME     = /home/zac/dev/WPhase/pack4
+	WPHASE_HOME = /home/zac/dev/WPhase/pack4
+	GF_PATH = /home/luis/GFS
+	RDSEED  = /opt/rdseed/rdseed
+	GMT_BIN = /opt/GMT/bin
+	DISPLAY = :0.0
 	# m h  dom mon dow   command
-	  * *   *   *   *    /usr/bin/python $WP_HOME/trigger_neic_emsc.py > $WP_HOME/run_qrt/trig_out
-
-
+	  * *   *   *   *    /usr/bin/python $WPHASE_HOME/bin/trigger_neic_emsc.py &> $WPHASE_HOME/run_qrt/trig_out
+  
 
 #########################
 ## Plot routines 
@@ -112,9 +129,10 @@ example of crontab if $SHELL == /bin/sh:
 All these routines require GMT:
 
 Comparision of observed and predicted data vector:
->'make_cwp_all.gmt' : all components (one graph per component
->'make_cwp.gmt LHX' : display only channels 'LHX' where X is 
-                      Z, L or T
+>'make_cwp_all.gmt' : all components (one graph per component)
+>'make_cwp.gmt' : display only one channel 
+>'make_cwp_all_norot.gmt' : same as 'make_cwp_all.gmt' but using
+                            North and East components instead
 
 Comparision of observed and predicted seismograms with a map:
 >'traces_6t_global.gmt' : global scale

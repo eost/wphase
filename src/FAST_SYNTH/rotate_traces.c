@@ -2,13 +2,13 @@
 #include <stdlib.h>
 
 void 
-rotate_traces(float *T, float *P, float baz, int npts, float *N, float *E)
+rotate_traces(double *T, double *P, float baz, int npts, double *N, double *E)
 {
   double co, si;
   int j;
 
-  co = cos(M_PI*baz/180.);
-  si = sin(M_PI*baz/180.);
+  co = cos(M_PI*(double)baz/180.);
+  si = sin(M_PI*(double)baz/180.);
 
   for(j=0; j<npts; j++)
 	{

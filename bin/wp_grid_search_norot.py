@@ -21,13 +21,13 @@ if WPHOME[-1] != '/':
 BIN = WPHOME+'bin/'
 
 REPREPARE_TS = BIN+'reprepare_wp_ts.csh'
-WPINV_TS     = BIN+'wpinversion -imas ts_i_master -ifil o_wpinversion -ofil ts_o_wpinversion -ocmtf ts_WCMTSOLUTION -ps ts_p_wpinversion '+\
-	       '-wpbm ts_wpinv.pgm -log LOG/_ts_wpinversion.log -osyndir ts_SYNTH -pdata ts_predicted_data -nt '
+WPINV_TS     = BIN+'wpinversion_norot -nt -imas ts_i_master -ifil o_wpinversion -ofil ts_o_wpinversion -ocmtf ts_WCMTSOLUTION '+\
+                   '-ps ts_p_wpinversion -wpbm ts_wpinv.pgm -log LOG/_ts_wpinversion.log -osyndir ts_SYNTH -pdata ts_predicted_data'
 
-RECALCSYN_XY = BIN+'recalc_fast_synths.csh'
-REPREPARE_XY = BIN+'reprepare_wp_xy.csh'
-WPINV_XY     = BIN+'wpinversion -imas xy_i_master -ifil o_wpinversion -ofil xy_o_wpinversion -ocmtf xy_WCMTSOLUTION -ps xy_p_wpinversion '+\
-	       '-wpbm xy_wpinv.pgm -log LOG/_xy_wpinversion.log -osyndir xy_SYNTH -pdata xy_predicted_data -nt'
+RECALCSYN_XY = BIN+'recalc_fast_synths_rot.csh'
+REPREPARE_XY = BIN+'reprepare_wp_xy_norot.csh'
+WPINV_XY     = BIN+'wpinversion_norot -nt -imas xy_i_master -ifil o_wpinversion -ofil xy_o_wpinversion -ocmtf xy_WCMTSOLUTION '+\
+                   '-ps xy_p_wpinversion -wpbm xy_wpinv.pgm -log LOG/_xy_wpinversion.log -osyndir xy_SYNTH -pdata xy_predicted_data'
 
 
 def grep(chaine, file):
@@ -156,7 +156,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
  			eq_gs.lon = cds[1]
  			eq_gs.wcmtfile(cmttmp,ts,hd)
 			os.system(RECALCSYN_XY+' > LOG/_log_py_recalsyn_xy')
-			os.system(REPREPARE_XY+' > LOG/_log_py_reprepare_xy')
+			os.system(REPREPARE_XY+'> LOG/_log_py_reprepare_xy')
 			os.system(WPINV_XY+' > LOG/_log_py_wpinv_xy')
 			out  = grep(r'^W_cmt_err:', 'LOG/_xy_wpinversion.log')
 			rms  = float(out[0].strip('\n').split()[1])
@@ -490,9 +490,7 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 	lat = eq.lat
 	lon = eq.lon
 	dep = eq.dep
-
-	print lat,lon,dep
-
+	
 	cmttmp = cmtref+'_ts_tmp'
 	eq.wimaster(datdir,ftable,cmttmp,'ts_i_master',dmin ,dmax,'ts_GF',wpwin)
 	eq.wcmtfile(cmttmp,tsini,hdini)

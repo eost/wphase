@@ -4,7 +4,7 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 
 ################################################
 
-set CHANS   = "LHL LHT LHZ"
+set CHANS   = "LHN LHE LHZ"
 set LOG     = LOG
 set DATA    = xy_DATA
 
@@ -31,11 +31,6 @@ else
     ${MKDIR} ${LOG}
 endif
 
-
-################################################
-# Rotation of data horizontal components (from E/N to L/T)
-${ECHO} "Centroid Grid Search : rotation of horizontal components...( >! ${LOG}/_xy_log_rot_data )"
-$ROT_HORIZ_CMP dec_bp_dat_fil_list xy_rot_dec_bp_dat_fil_list ${DATA} -icmtf ${CMTFILE} >! ${LOG}/_xy_log_rot_data
 
 ################################################
 # Synthetics preparatio:convolution and filter #
