@@ -60,7 +60,7 @@ if $status then
     exit
 endif
 
-${CAT} ${o_wpfile}_${CHAN} | ${CUT} -d/ -f2 | ${CUT} -d. -f1,3 >! _tmp_stat_names    #Fragile
+${CAT} ${o_wpfile}_${CHAN} | ${CUT} -d/ -f2 | ${CUT} -d. -f1 >! _tmp_stat_names    #Fragile
 ${RM} -f _tmp_stat_posit
 set np = `${CAT} ${o_wpfile}_${CHAN} | ${AWK} '{print $5 - $4}'`
 set c = 0
