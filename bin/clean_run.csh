@@ -2,8 +2,8 @@
 
 set RM = "/bin/rm -rf"
 ${RM} DATA GF LOG SYNTH
-${RM} i_wpinversion coeffs_rec_lut dec_bp_dat_fil_list i_seedfiles
-${RM} rot_dec_bp_dat_fil_list scr_dat_fil_list syn_fil_list
+${RM} i_wpinversion coeffs_rec_lut dec_bp_dat_fil_list i_seedfiles _ref_o_wpinversion
+${RM} upd_dec_bp_dat_fil_list rot_dec_bp_dat_fil_list scr_dat_fil_list syn_fil_list
 ${RM} CWP_* 
 ${RM} *_tmp* 
 ${RM} o_* 
