@@ -659,14 +659,11 @@ w_o_saclst(o_saclst, ns, sacfiles, hd_synt, rms, opt, flag)
   n0 = 0;
   for(i=0; i<*ns; i++)
     {
-      if (opt->wgt[i] > 0.)
-	{
-	  fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f\n",
-		  sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
-		  (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
-		  rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i]);
-	  n0 += hd_synt[i].npts ;
-	}
+      fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f\n",
+	      sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
+	      (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
+	      rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i]);
+      n0 += hd_synt[i].npts ;
     }
   fclose(o_sac);
   
@@ -676,14 +673,11 @@ w_o_saclst(o_saclst, ns, sacfiles, hd_synt, rms, opt, flag)
       n0 = 0;
       for(i=0; i<*ns; i++)
 	{
-	  if (opt->wgt[i] > 0.)
-	    {
-	      fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f %15.8f %15.8f\n",
-		      sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
-		      (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
-		      rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i],rms[i][2],rms[i][2]/rms[i][3]);
-	      n0 += hd_synt[i].npts ;
-	    }
+	  fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f %15.8f %15.8f\n",
+		  sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
+		  (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
+		  rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i],rms[i][2],rms[i][2]/rms[i][3]);
+	  n0 += hd_synt[i].npts ;
 	}
       fclose(o_sac);
     }
@@ -751,36 +745,33 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
   n0 = 0 ;
   for(i=0 ; i<*ns ; i++)
     {
-      if (opt->wgt[i] > 0.)
+      calc_rms_sub(hd_synt[i].npts, data[i], dcalc[i], rms[i], flag) ;
+      n0 += hd_synt[i].npts ;
+      if (flag == 2)
 	{
-	  calc_rms_sub(hd_synt[i].npts, data[i], dcalc[i], rms[i], flag) ;
-	  n0 += hd_synt[i].npts ;
-	  if (flag == 2)
+	  if (!strncmp(hd_synt[i].kcmpnm,"LHZ",3))
 	    {
-	      if (!strncmp(hd_synt[i].kcmpnm,"LHZ",3))
-		{
-		  rmsZ  += rms[i][2]   ;
-		  nrmsZ += rms[i][3]   ;
-		  nZ    += hd_synt[i].npts ;
-		}
-	      if (!strncmp(hd_synt[i].kcmpnm,"LHN",3))
-		{
-		  rmsL  += rms[i][2];
-		  nrmsL += rms[i][3];
-		  nL    += hd_synt[i].npts ;
-		}
-	      if (!strncmp(hd_synt[i].kcmpnm,"LHE",3))
-		{
-		  rmsT  += rms[i][2];
-		  nrmsT += rms[i][3];
-		  nT    += hd_synt[i].npts ;
-		}
+	      rmsZ  += rms[i][2]   ;
+	      nrmsZ += rms[i][3]   ;
+	      nZ    += hd_synt[i].npts ;
 	    }
-	  for(j=0 ; j<f2 ; j++) 
+	  if (!strncmp(hd_synt[i].kcmpnm,"LHN",3))
 	    {
-	      global_rms[j] += opt->wgt[i]*rms[i][j] ;
-	      rms[i][j] = opt->wgt[i] * sqrt(rms[i][j]/(double)hd_synt[i].npts); 
+	      rmsL  += rms[i][2];
+	      nrmsL += rms[i][3];
+	      nL    += hd_synt[i].npts ;
 	    }
+	  if (!strncmp(hd_synt[i].kcmpnm,"LHE",3))
+	    {
+	      rmsT  += rms[i][2];
+	      nrmsT += rms[i][3];
+	      nT    += hd_synt[i].npts ;
+	    }
+	}
+      for(j=0 ; j<f2 ; j++) 
+	{
+	  global_rms[j] += opt->wgt[i]*rms[i][j] ;
+	  rms[i][j] = opt->wgt[i] * sqrt(rms[i][j]/(double)hd_synt[i].npts); 
 	}
     }
   for(j=0; j<f2; j++)
@@ -907,32 +898,27 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
 	  exit(1)       ; 
 	}
       N = hd_synt[s].npts ;
-      if (opt->wgt[s] > 0.)
+      d[s] = double_calloc2(flag, N) ;
+      for(i=0 ; i<N ; i++)
 	{
-	  d[s] = double_calloc2(flag, N) ;
-	  for(i=0 ; i<N ; i++)
+	  fprintf(o_dat,"%15.6e ",data[s][i]) ;
+	  fprintf( ocmp,"%15.6e ",data[s][i]); 
+	  for(j=0; j<flag; j++)  
 	    {
-	      fprintf(o_dat,"%15.6e ",data[s][i]) ;
-	      fprintf( ocmp,"%15.6e ",data[s][i]); 
-	      for(j=0; j<flag; j++)  
-		{
-		  for(k=0; k<6; k++)
-		    d[s][j][i] += G[s][k][i] * vm[j][k] ;
-		  fprintf(o_dat,"%15.6e ",d[s][j][i]); 
-		  fprintf( ocmp,"%15.6e ",d[s][j][i]); 
-		}
-	      fprintf(o_dat,"\n") ;
-	      fprintf(ocmp,"\n") ;
+	      for(k=0; k<6; k++)
+		d[s][j][i] += G[s][k][i] * vm[j][k] ;
+	      fprintf(o_dat,"%15.6e ",d[s][j][i]); 
+	      fprintf( ocmp,"%15.6e ",d[s][j][i]); 
 	    }
-	  file = get_gf_filename(opt->osacdir, hd_synt[s].kstnm, hd_synt[s].knetwk, 
-				 hd_synt[s].kcmpnm, "synth.sac") ;
-	  whdrsac(file, &hd_synt[s])          ;
-	  wdatsac(file, &hd_synt[s], d[s][0]) ;
-	  /* Memory Freeing */
-	  free((void*)file) ;
+	  fprintf(o_dat,"\n") ;
+	  fprintf(ocmp,"\n") ;
 	}
-      else
-	d[s] = double_calloc2(flag, 1) ;
+      file = get_gf_filename(opt->osacdir, hd_synt[s].kstnm, hd_synt[s].knetwk, 
+			     hd_synt[s].kcmpnm, "synth.sac") ;
+      whdrsac(file, &hd_synt[s])          ;
+      wdatsac(file, &hd_synt[s], d[s][0]) ;
+      /* Memory Freeing */
+      free((void*)file) ;
     }
   fclose(o_dat) ;
   fclose(o_Z)   ;
@@ -1394,7 +1380,13 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	check_scan(11, flag, buf, i_sac) ;} 
       
       /* Read data header */
-      rhdrsac(datafile,  &hd_data, &ierror)   ;
+      rhdrsac(datafile,  &hd_data, &ierror);
+      set_wgt(ns, &hd_data, opt) ;
+      if (opt->wgt[ns] <= 0.)
+	{
+	  fprintf(stderr,"**** null weight, rejected : %s\n", datafile) ;
+	  continue ;
+	}
       if ((float)*evdp != hd_data.evdp)	{
 	fprintf(stderr,"WARNING : depth %f in sac header is different of %f from pde in CMTFILE\n",(float)*evdp, hd_data.evdp);
 	fprintf(stderr," ...you should carefully re-check gcarc and evdp header variables in file %s\n",datafile); }
@@ -1516,7 +1508,6 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 		 (*hd_synt)[ns].knetwk, (*hd_synt)[ns].kcmpnm, (*hd_synt)[ns].gcarc, (*hd_synt)[ns].az, 
 		 (*hd_synt)[ns].user[2], (*hd_synt)[ns].user[3]) ;
       
-      set_wgt(ns, &hd_data, opt)         ;
       strcpy( (*sacfiles)[ns], datafile) ;
       ns++ ;
     }
