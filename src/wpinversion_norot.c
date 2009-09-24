@@ -1710,9 +1710,13 @@ screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
   int    i, j, newn ;
   double min, max, val ;
   
-  min = 0.2 * (opt->p2p_med) ;
+  min = 0.1 * (opt->p2p_med) ;
   max = 3.0 * (opt->p2p_med) ;
-
+  
+  fprintf(o_log,"screen_med:\n") ;
+  fprintf(o_log,"   p2p_med: %15.8f\n",opt->p2p_med) ;
+  fprintf(o_log,"   reject p2p < : %15.8f or > %15.8f\n",min,max) ;
+  fprintf(o_log,"   reject avg > : %15.8f \n",opt->p2p_med/2) ;
   newn = 0 ;
   for (j=0;j<*nsac;j++)
     {
