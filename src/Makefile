@@ -1,4 +1,4 @@
-# Compilers
+## Compilers
 CC          =  cc           # C compiler
 FC	    =  gfortran     # fortran compiler
 			    #
