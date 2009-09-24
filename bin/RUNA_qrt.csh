@@ -43,7 +43,7 @@ endif
 ${RM} -f i_tmp
 
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-    -wl ${wL} -wt ${wT} -wz ${wZ} -nt -med
+    -wl ${wL} -wt ${wT} -wz ${wZ} -nt 
 
 ${CP} -f p_wpinversion p_wpinversion.noth
 ${CP} -f o_wpinversion o_wpinversion.noth

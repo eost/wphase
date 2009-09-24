@@ -35,7 +35,8 @@ ${RM} -f i_tmp
 # ${CP} -rf /home/zac/WP6/run_test_martinique07/GF ./
 
 
-$WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} -ref -nt -med
+$WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
+	 -ref -nt 
 
 ${CP} p_wpinversion p_wpinversion.noth
 ${CP} o_wpinversion o_wpinversion.noth
