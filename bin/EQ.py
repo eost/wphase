@@ -8,17 +8,20 @@ import time, calendar
 class EarthQuake:
 	"Store Earthquake information"
  	def __init__(self):
-		self.id    = '--'
- 		self.title = '--'
-		self.Otime = time.gmtime(0)
-		self.date  = time.gmtime(0)
-		self.mag   = 0.0		
-		self.lat   = 0.0 
-		self.lon   = 0.0
-		self.dep   = 0.0
-		self.org   = '--'
-		self.ts    = 0.0
-		self.hd    = 0.0		
+		self.id     = '--'
+ 		self.title  = '--'
+		self.Otime  = time.gmtime(0)
+		self.date   = time.gmtime(0)
+		self.mag    = 0.0		
+		self.pdelat = 0.0 
+		self.pdelon = 0.0
+		self.pdedep = 0.0
+		self.lat    = 0.0 
+		self.lon    = 0.0
+		self.dep    = 0.0
+		self.org    = '--'
+		self.ts     = 0.0
+		self.hd     = 0.0		
 	def affiche(self,out='stdout'):
 		if out == 'stdout':
 		    fid = sys.stdout
@@ -38,15 +41,18 @@ class EarthQuake:
 		if out != 'stdout':
 		   fid.close()		
 	def read(self,fid):
-		self.id    = fid.readline().strip('\n')
-		self.org   = fid.readline().strip('\n')
-		self.mag   = float(fid.readline().strip('\n'))
-		self.title = fid.readline().strip('\n')
-		self.Otime = time.strptime(fid.readline().strip('\n'),'%Y/%m/%d  --  %H:%M:%S')
-		self.date  = time.strptime(fid.readline().strip('\n'),'%Y/%m/%d  --  %H:%M:%S')
-		self.lat   = float(fid.readline().strip('\n'))
-		self.lon   = float(fid.readline().strip('\n'))
-		self.dep   = float(fid.readline().strip('\n'))
+		self.id     = fid.readline().strip('\n')
+		self.org    = fid.readline().strip('\n')
+		self.mag    = float(fid.readline().strip('\n'))
+		self.title  = fid.readline().strip('\n')
+		self.Otime  = time.strptime(fid.readline().strip('\n'),'%Y/%m/%d  --  %H:%M:%S')
+		self.date   = time.strptime(fid.readline().strip('\n'),'%Y/%m/%d  --  %H:%M:%S')
+		self.pdelat = float(fid.readline().strip('\n'))
+		self.pdelon = float(fid.readline().strip('\n'))
+		self.pdedep = float(fid.readline().strip('\n'))
+		self.lat    = self.pdelat
+		self.lon    = self.pdelon
+		self.dep    = self.pdedep
 		a=self.id[0]
 		if a.isalpha():
 		    self.org = 'neic'
@@ -74,7 +80,7 @@ class EarthQuake:
 		fid = open(cmtfil, 'wt')
 		fid.write(' PDE %4d %2d %2d %2d %2d %2d.%02d %8.4f %9.4f %5.1f %3.1f %3.1f %s\n' % \
 			  (self.Otime[0],self.Otime[1],self.Otime[2],self.Otime[3],self.Otime[4],
-			   self.Otime[5],0,self.lat,self.lon,self.dep,self.mag,self.mag,self.title[7:]))
+			   self.Otime[5],0,self.pdelat,self.pdelon,self.pdedep,self.mag,self.mag,self.title[7:]))
 		fid.write('event name:      %s\n' % self.id)
 		fid.write('time shift:%12.4f\n'   % self.ts)
 		fid.write('half duration:%9.4f\n' % self.hd)
@@ -84,19 +90,26 @@ class EarthQuake:
 		fid.close()
 	def rcmtfile(self,cmtfil):
 		fid = open(cmtfil)
-		tmp = fid.readline().strip('\n').split()
+		tmp = fid.readline()[5:].strip('\n').split()
 		dat = '%d/%0d/%0d  --  %0d:%0d:%0d' % \
-			  (int(tmp[1]),int(tmp[2]),int(tmp[3]),int(tmp[4]),int(tmp[5]),int(float(tmp[6])))
+		    (int(tmp[0]),int(tmp[1]),int(tmp[2]),int(tmp[3]),int(tmp[4]),int(float(tmp[5])))
 		self.Otime = time.strptime(dat,'%Y/%m/%d  --  %H:%M:%S')
-		self.lat   = float(tmp[7])
-		self.lon   = float(tmp[8])
-		self.dep   = float(tmp[9])
+		self.pdelat   = float(tmp[6])
+		self.pdelon   = float(tmp[7])
+		self.pdedep   = float(tmp[8])
 		self.mag   = float(tmp[10])
-		self.title = '%s '*len(tmp[12:])%tuple(tmp[12:])
+		if self.mag <= 2.:
+			self.mag   = float(tmp[9])
+			if self.mag <= 2.:
+				print '**** Warning : preliminary magnitude is very small'
+		self.title = '%s '*len(tmp[11:])%tuple(tmp[11:])
 		self.title ='M %3.1f, %s'%(self.mag,self.title)
 		self.id    = fid.readline().strip('\n').split()[2]
 		self.ts    = float(fid.readline().strip('\n').split()[2])
 		self.hd    = float(fid.readline().strip('\n').split()[2])
+		self.lat   = float(fid.readline().strip('\n').split()[1])
+		self.lon   = float(fid.readline().strip('\n').split()[1])
+		self.dep   = float(fid.readline().strip('\n').split()[1])
 		fid.close
 		
 	def wimaster(self,DATADIR,ftable,cmtfile,i_master,DMIN=0.0,DMAX=90.0,gf_dir='./GF',wpwin=[15.],DATALESS=''):
@@ -128,15 +141,18 @@ class EarthQuake:
 
 def EQcopy(EQ2,EQ1):
 	"Deepcopy EarthQuake objects"
-	EQ2.id    = EQ1.id
-	EQ2.title = EQ1.title
-	EQ2.Otime = EQ1.Otime
-	EQ2.date  = EQ1.date
-	EQ2.lat   = EQ1.lat
-	EQ2.lon   = EQ1.lon
-	EQ2.dep   = EQ1.dep
-	EQ2.mag   = EQ1.mag
-	EQ2.org   = EQ1.org
+	EQ2.id     = EQ1.id
+	EQ2.title  = EQ1.title
+	EQ2.Otime  = EQ1.Otime
+	EQ2.date   = EQ1.date
+	EQ2.pdelat = EQ1.pdelat
+	EQ2.pdelon = EQ1.pdelon
+	EQ2.pdedep = EQ1.pdedep
+	EQ2.lat    = EQ1.lat
+	EQ2.lon    = EQ1.lon
+	EQ2.dep    = EQ1.dep
+	EQ2.mag    = EQ1.mag
+	EQ2.org    = EQ1.org
 	
 def warn_msg(EQ,eq):
 	"Display a redundancy warning message"
@@ -161,7 +177,8 @@ def warn_msg2(field,id,val):
 def isdiff(EQ1,EQ2):
 	if EQ2.id   == EQ1.id and EQ2.title == EQ1.title and EQ2.Otime == EQ1.Otime \
 	   and EQ2.date == EQ1.date and EQ2.lat  == EQ1.lat and EQ2.lon  == EQ1.lon \
-	   and EQ2.dep  == EQ1.dep and EQ2.mag  == EQ1.mag and EQ2.org  == EQ1.org:
+	   and EQ2.dep  == EQ1.dep and EQ2.mag  == EQ1.mag and EQ2.org  == EQ1.org  \
+	   and EQ2.pdelat  == EQ1.pdelat and EQ2.pdelon == EQ1.pdelon and EQ2.pdedep  == EQ1.pdedep:
 		return 0
 	else:
 		return 1
@@ -169,8 +186,8 @@ def isdiff(EQ1,EQ2):
 def screening(EQs,EQ,mintime,minmag,O_scr2,Ep_scr2,M_scr2,count,flag):
 	"Screen events"
 	# Check focal depth
-	if EQ.dep < 0:
-	    warn_msg2('depth',EQ.id,EQ.dep)
+	if EQ.pdedep < 0:
+	    warn_msg2('depth',EQ.id,EQ.pdedep)
 	    return 0
 	# Event id screening
 	if EQs.has_key(EQ.id):
@@ -193,8 +210,8 @@ def screening(EQs,EQ,mintime,minmag,O_scr2,Ep_scr2,M_scr2,count,flag):
 	if count > 0 and flag != 0:
 	    for key,eq in EQs.items():
 	        Otmp = calendar.timegm(eq.Otime)
-		if (Otime - Otmp)**2<=O_scr2 and (EQ.lat-eq.lat)**2<=Ep_scr2\
-		       and (EQ.lon-eq.lon)**2<=Ep_scr2 and (EQ.mag-eq.mag)**2<=M_scr2:
+		if (Otime - Otmp)**2<=O_scr2 and (EQ.pdelat-eq.pdelat)**2<=Ep_scr2\
+		       and (EQ.pdelon-eq.pdelon)**2<=Ep_scr2 and (EQ.mag-eq.mag)**2<=M_scr2:
 			datedb = calendar.timegm(eq.date)
 			datenw = calendar.timegm(EQ.date)
 			if datedb < datenw and EQ.org == 'neic' and flag == 2:
@@ -285,10 +302,12 @@ def r_emsc_feeds(url,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag=0,EQs={}):
 					warn_msg2('magnitude',EQ.id,EQ.mag)
 				continue
 
-			EQ.lat = emsc_feeds2float(line,'(?<=<geo\:lat>).+(?=</geo\:lat>)')
-			EQ.lon = emsc_feeds2float(line,'(?<=<geo\:long>).+(?=</geo\:long>)')
-			EQ.dep = emsc_feeds2float(line,'(?<=<depth>).+(?=</depth>)')			
-			
+			EQ.pdelat = emsc_feeds2float(line,'(?<=<geo\:lat>).+(?=</geo\:lat>)')
+			EQ.pdelon = emsc_feeds2float(line,'(?<=<geo\:long>).+(?=</geo\:long>)')
+			EQ.pdedep = emsc_feeds2float(line,'(?<=<depth>).+(?=</depth>)')			
+			EQ.lat    = EQ.pdelat
+			EQ.lon    = EQ.pdelon
+			EQ.dep    = EQ.pdedep
 			EQ.date    = time.gmtime()
 			
 			
@@ -319,8 +338,11 @@ def r_neic_feeds(url,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag=0,EQs={}):
 			date     = re.search('(?<=<updated>).+(?=</updated>)',line).group()
 			EQ.Otime = time.strptime(date,'%Y-%m-%dT%H:%M:%SZ')
 
-			EQ.lat,EQ.lon = map(float,re.search('(?<=<georss\:point>).+(?=</georss\:point>)',line).group().split(' '))
-			EQ.dep   = float(re.search('(?<=\<georss\:elev\>).+(?=\</georss\:elev\>)',line).group())/-1000
+			EQ.pdelat,EQ.pdelon = map(float,re.search('(?<=<georss\:point>).+(?=</georss\:point>)',line).group().split(' '))
+			EQ.pdedep   = float(re.search('(?<=\<georss\:elev\>).+(?=\</georss\:elev\>)',line).group())/-1000
+			EQ.lat    = EQ.pdelat
+			EQ.lon    = EQ.pdelon
+			EQ.dep    = EQ.pdedep
 			EQ.date  = time.gmtime()
 			
 			if screening(EQs,EQ,mintime,minmag,O_scr2,Ep_scr2,M_scr2,count,flag):

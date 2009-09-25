@@ -22,12 +22,12 @@ BIN = WPHOME+'bin/'
 
 REPREPARE_TS = BIN+'reprepare_wp_ts.csh'
 WPINV_TS     = BIN+'wpinversion -imas ts_i_master -ifil o_wpinversion -ofil ts_o_wpinversion -ocmtf ts_WCMTSOLUTION -ps ts_p_wpinversion '+\
-	       '-wpbm ts_wpinv.pgm -log LOG/_ts_wpinversion.log -osyndir ts_SYNTH -pdata ts_predicted_data -nt '
+	       '-wpbm ts_wpinv.pgm -log LOG/_ts_wpinversion.log -osyndir ts_SYNTH -pdata ts_fort.15 -nt '
 
 RECALCSYN_XY = BIN+'recalc_fast_synths.csh'
 REPREPARE_XY = BIN+'reprepare_wp_xy.csh'
 WPINV_XY     = BIN+'wpinversion -imas xy_i_master -ifil o_wpinversion -ofil xy_o_wpinversion -ocmtf xy_WCMTSOLUTION -ps xy_p_wpinversion '+\
-	       '-wpbm xy_wpinv.pgm -log LOG/_xy_wpinversion.log -osyndir xy_SYNTH -pdata xy_predicted_data -nt'
+	       '-wpbm xy_wpinv.pgm -log LOG/_xy_wpinversion.log -osyndir xy_SYNTH -pdata xy_fort.15 -nt'
 
 
 def grep(chaine, file):
@@ -232,20 +232,23 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 	Nit = 3
 	Sts = [4.,4.,2.,1.]
 
-	ts1 = 1.
-	ts2 = tsini*3.
-	if ts2 > 60.:
-		ts2 = 60.	
-	if eq.mag <= 7.0:
-		ts1 =  1. 
-		ts2 = 20. 
-	elif eq.mag <8.0:
-	      	ts1 =  8. 
-		ts2 = 48. 
-	else: 
-	  	ts1 = 14. 
-		ts2 = 56. 	
-
+	if eq.mag < 5.5:
+		ts1 = 1.
+		ts2 = tsini*3.
+		if ts2 > 60.:
+			ts2 = 60.	
+	else:
+		
+		if eq.mag <= 7.0:
+			ts1 =  1. 
+			ts2 = 30. 
+		elif eq.mag <8.0:
+			ts1 =  8. 
+			ts2 = 48. 
+		else: 
+			ts1 = 14. 
+			ts2 = 56. 	
+				
 	lat = eq.lat
 	lon = eq.lon
 	dep = eq.dep
@@ -354,20 +357,22 @@ def fast_grid_search_ts_old(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flag
 	Nit = 3
 	Sts = [4.,4.,2.,1.]
 	
- 	# if eq.mag <= 7.0:
-	#	ts1 =  4. - tsini
-	#	ts2 = 20. - tsini
-	# elif eq.mag <8.0:
-	#      	ts1 =  8. - tsini
-	#  	ts2 = 48. - tsini
-	# else: 
-	#  	ts1 = 14. - tsini
-	#	ts2 = 56. - tsini
-	
-	ts1 = 1. - tsini
-	ts2 = tsini*2.	
-	if ts2 > 60. - tsini:
-		ts2 = 60. - tsini
+	if eq.mag < 5.5:
+		ts1 = 1. - tsini
+		ts2 = tsini*3.	
+		if ts2 > 60. - tsini:
+			ts2 = 60. - tsini
+	else:
+		if eq.mag <= 7.0:
+			ts1 =  1. 
+			ts2 = 30. 
+		elif eq.mag <8.0:
+			ts1 =  8. 
+			ts2 = 48. 
+		else: 
+			ts1 = 14. 
+			ts2 = 56. 
+
 
 	lat = eq.lat
 	lon = eq.lon
@@ -473,19 +478,21 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 	fid.write('FAST CENTROID TIME DELAY GRID SEARCH\n')		
 	Nit = 3
 	sts = 4.
-	# 	ts1 = 1.
-	# 	ts2 = tsini*2.	
-	# 	if ts2 > 60.:
-	# 		ts2 = 60.	
-	if eq.mag <= 7.0:
-		ts1 =  1. 
-		ts2 = 20. 
-	elif eq.mag <8.0:
-	      	ts1 =  8. 
-		ts2 = 48. 
-	else: 
-	  	ts1 = 14. 
-		ts2 = 56. 
+	if eq.mag < 5.5:
+		ts1 = 1.
+		ts2 = tsini*3.	
+		if ts2 > 60.:
+			ts2 = 60. 
+	else:
+		if eq.mag <= 7.0:
+			ts1 =  1. 
+			ts2 = 30. 
+		elif eq.mag <8.0:
+			ts1 =  8. 
+			ts2 = 48. 
+		else: 
+			ts1 = 14. 
+			ts2 = 56. 
 	fid.write('  ts1 = %5.1f sec, step = %5.1f sec, ts2 = %5.1f sec \n'%(ts1,sts,ts2))  	
 	lat = eq.lat
 	lon = eq.lon
