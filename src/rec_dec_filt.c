@@ -86,6 +86,7 @@ main(int argc, char *argv[])
   i_sacf = openfile_rt(i_sacfile,&nsac) ;
   o_sacf = openfile_wt(o_sacfile)       ;
 
+  i     = 0;
   count = 0;
   datfil->occur = 1      ;
   datfil->npts  = -12345 ;
@@ -103,7 +104,8 @@ main(int argc, char *argv[])
       rhdrsac(datfil->file, &hdr, &ierror) ;
       rdatsac(datfil->file, &hdr, x_in, &ierror) ;
       /* Set the butterworth sos (samp. rate must be the same for all stations)*/
-      if (count == 0)	{
+      if (count == 0 && i == 0)	
+	{
 	  dt = (double)hdr.delta;
 	  set_sos(eq.flow, eq.fhigh, dt, &eq.filtorder, &b1, &b2, &a1, &a2, &gain) ;
 	}
