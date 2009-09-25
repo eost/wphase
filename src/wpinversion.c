@@ -326,12 +326,14 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   /* fit quality */
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.1) ;
   fprintf(ps,"(Fit Quality:) show\n") ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.25) ;
+  fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.25) ;
   fprintf(ps,"(WCMT - RMS: %9.5f mm (%6.3f),  Gap: %5.1f\\312,  C#%9.0f) show\n",
 	  1000.*global_rms[0], global_rms[0]/global_rms[1], *gap, *Cond);
-  if (flag == 2) {
-    fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.4) ;
-    fprintf(ps,"(GCMT - RMS = %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  }
+  if (flag == 2) 
+    {
+      fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.4) ;
+      fprintf(ps,"(GCMT - RMS = %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  
+    }
 
   /* used stations */
   fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont\n") ;
@@ -382,7 +384,9 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(ps, "(WPWIN: %-8.2f %-8.2f %-8.2f %-8.2f ) show\n"
 	  , eq->wp_win4[0], eq->wp_win4[1], eq->wp_win4[2], eq->wp_win4[3]) ;
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.8-((double)nb)/8.) ;
-  fprintf(ps, "(Dmin : %-8.2f Dmax:%-8.2f) show\n", eq->dmin, eq->dmax) ;
+  fprintf(ps, "(Dmin : %-8.2f Dmax :%-8.2f) show\n", eq->dmin, eq->dmax) ;
+  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.9-((double)nb)/8.) ;
+  fprintf(ps, "(wL   : %-8.2f wT   :%-8.2f wZ   :%-8.2f) show\n", opt->wL, opt->wT, opt->wZ);  
 
   /* filter parameters */
   fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont") ;
