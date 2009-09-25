@@ -659,10 +659,10 @@ w_o_saclst(o_saclst, ns, sacfiles, hd_synt, rms, opt, flag)
   n0 = 0;
   for(i=0; i<*ns; i++)
     {
-      fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f\n",
+      fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f %10.3f\n",
 	      sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
 	      (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
-	      rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i]);
+	      rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i], opt->wgt[i]);
       n0 += hd_synt[i].npts ;
     }
   fclose(o_sac);
@@ -770,8 +770,8 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
 	}
       for(j=0 ; j<f2 ; j++) 
 	{
-	  global_rms[j] += opt->wgt[i]*rms[i][j] ;
-	  rms[i][j] = opt->wgt[i] * sqrt(rms[i][j]/(double)hd_synt[i].npts); 
+	  global_rms[j] += (opt->wgt[i]*opt->wgt[i]) * rms[i][j] ;
+	  rms[i][j] = sqrt(rms[i][j]/(double)hd_synt[i].npts); 
 	}
     }
   for(j=0; j<f2; j++)
@@ -1324,7 +1324,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   int    n1_data, n1_GF, n2_data, n2_GF    ;
   int    ns, nh = NDEPTHS, nd = NDISTAS    ;
   double gcarc, t0, Ptt, twp_beg, twp_end  ;
-  double *tmparray, *dv, *tv               ;
+  double *tmparray, *dv, *tv, dumf         ;
   char   *datafile,**gf_file,*dum,*GF,*buf ;
   FILE   *i_sac                            ;
   sachdr hd_data, hd_GF;
@@ -1367,17 +1367,21 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   for(i=0; i<*nsac; i++)
     {
       /* Read data file list */
-      if ( opt->op_pa <= 0 && opt->th_val <= 0){ 
-	flag = fscanf (i_sac, "%s", datafile) ;
-	fgets(buf,LSIZE,i_sac); /* end of line */
-	check_scan(1, flag, i_saclst, i_sac)  ;}
-      else {
-	flag = fscanf (i_sac, "%s %f %f %s %s %s %s %s %lf %lf %lf",
-		       datafile,&(*hd_synt)[ns].az,&(*hd_synt)[ns].gcarc,dum,dum,dum,dum,dum,
-		       &opt->rms_in[ns],&opt->p2p[ns],&opt->avg[ns]) ;
-	strcpy(buf,i_saclst);
-	strcat(buf," (nb of columns may be incorrect)");
-	check_scan(11, flag, buf, i_sac) ;} 
+      if ( opt->op_pa <= 0 && opt->th_val <= 0)
+	{ 
+	  flag = fscanf (i_sac, "%s", datafile) ;
+	  fgets(buf,LSIZE,i_sac); /* end of line */
+	  check_scan(1, flag, i_saclst, i_sac)  ;
+	}
+      else 
+	{
+	  flag = fscanf (i_sac, "%s %f %f %s %s %s %s %s %lf %lf %lf %lf",
+			 datafile,&(*hd_synt)[ns].az,&(*hd_synt)[ns].gcarc,dum,dum,dum,dum,dum,
+			 &opt->rms_in[ns],&opt->p2p[ns],&opt->avg[ns],&dumf) ;
+	  strcpy(buf,i_saclst);
+	  strcat(buf," (nb of columns may be incorrect)");
+	  check_scan(12, flag, buf, i_sac) ;
+	} 
       
       /* Read data header and weight */
       rhdrsac(datafile,  &hd_data, &ierror)   ;
@@ -1659,7 +1663,7 @@ screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
   newn = 0 ;
   for (j=0; j<*nsac; j++)
     {
-      if( opt->rms_in[j] < opt->th_val )
+      if( opt->rms_in[j]*opt->wgt[j] < opt->th_val )
 	{
 	  fprintf( o_log,"%-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
 		   hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
