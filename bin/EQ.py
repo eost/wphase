@@ -90,9 +90,9 @@ class EarthQuake:
 		fid.close()
 	def rcmtfile(self,cmtfil):
 		fid = open(cmtfil)
-		tmp = fid.readline()[5:].strip('\n')
+		tmp = fid.readline().strip('\n')
 		dat = '%d/%0d/%0d  --  %0d:%0d:%0d' % \
-		    (int(tmp[5:9),int(tmp[10:12]),int(tmp[13:15]),int(tmp[16:18]),int(tmp[19:21]),int(float(tmp[22:27])))
+		    (int(tmp[5:9]),int(tmp[10:12]),int(tmp[13:15]),int(tmp[16:18]),int(tmp[19:21]),int(float(tmp[22:27])))
 		self.Otime = time.strptime(dat,'%Y/%m/%d  --  %H:%M:%S')
 		self.pdelat   = float(tmp[29:36])
 		self.pdelon   = float(tmp[38:46])
