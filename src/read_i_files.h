@@ -8,7 +8,7 @@
 typedef struct
 {
   char   pdeline[__LSIZE__], cmtfile[__FSIZE__], seed[__FSIZE__] ; 
-  char   gf_dir[__FSIZE__], evnm[32], evid[32] ;
+  char   gf_dir[__FSIZE__], evnm[__FSIZE__], evid[32] ;
   int    ot_ye, ot_mo, ot_dm, ot_ho, ot_mi, ot_se, ot_ms ;
   int    filtorder, nf, filtnpass     ;
   double pde_evla, pde_evlo, pde_evdp ;
