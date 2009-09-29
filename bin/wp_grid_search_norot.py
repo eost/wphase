@@ -96,11 +96,11 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
  	EQcopy(eq_gs,eq)
 	
 	Nit  = 2
-	dx   = 0.8
-	lat1 = eq.lat - 2.4
-	lat2 = eq.lat + 2.4
-	lon1 = eq.lon - 2.4
-	lon2 = eq.lon + 2.4
+	dx   = 0.4
+	lat1 = eq.lat - 1.2
+	lat2 = eq.lat + 1.2
+	lon1 = eq.lon - 1.2
+	lon2 = eq.lon + 1.2
 
 	#n    = (lat2-lat1)/dx+1#######################################
 
