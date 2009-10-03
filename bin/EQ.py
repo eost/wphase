@@ -102,7 +102,9 @@ class EarthQuake:
 		except:
 			self.mag   = float(tmp[53:56])
 		if self.mag <= 2.:
-			print '**** Warning : preliminary magnitude is very small'
+			self.mag   = float(tmp[53:56])
+			if self.mag <= 2.:
+				print '**** Warning : preliminary magnitude is very small'
 		self.title = '%s '*len(tmp[11:])%tuple(tmp[11:])
 		self.title ='M %3.1f, %s'%(self.mag,self.title)
 		self.id    = fid.readline().strip('\n').split()[2]
