@@ -98,10 +98,6 @@ def grid_search_dep(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,
 	dep1 = eq.dep - 30.
 	dep2 = eq.dep + 30.
 
-	depopt  = eq.dep
-	rmsopt  = 1.0e10
-	depopt2 = dep2
-	rmsopt2 = 1.1e10
 	########################################
 
 	if dep1 < 10.:
@@ -133,9 +129,23 @@ def grid_search_dep(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,
 		fr = " "
 
 	# Grid search
-	idp = 0
 	eq_gs = EarthQuake()
  	EQcopy(eq_gs,eq)
+	eq_gs.wcmtfile(cmttmp,ts,hd)
+	if flagref:
+		addrefsol(cmtpde,cmttmp)
+	os.system(RECALCSYN_XY+' dp_ > LOG/_log_py_recalsyn_dp')
+	os.system(REPREPARE_XY+' dp_ > LOG/_log_py_reprepare_dp')
+	os.system(WPINV_DP+' -ps %s.ini -ocmtf %s.ini %s > LOG/_log_py_wpinv_xy'% (o_p_wp,o_cmtf,fr))
+	out  = grep(r'^W_cmt_err:', 'LOG/_dp_wpinversion.log')			
+	rmsini  = float(out[0].strip('\n').split()[1])
+	nrmsini = float(out[0].strip('\n').split()[2])
+	depopt  = eq.dep
+	rmsopt  = rmsini
+	depopt2 = dep2
+	rmsopt2 = 1.1e10
+
+	idp = 0
 	tmp_table = open(tmpfile, 'w')
  	format     = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
 	for j in xrange(Nit):
@@ -185,7 +195,7 @@ def grid_search_dep(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,
 	tmp_table = open(tmpfile,'r')
 	out_table = open( o_file,'w')
 	out_table.write('%5.1f%12.7f\n'%(depopt, rmsopt))	
-	out_table.write('%5.1f%12.7f\n'%(eq.dep, rmsopt))
+	out_table.write('%5.1f%12.7f\n'%(eq.dep, rmsini))
 	out_table.write(tmp_table.read())
 	out_table.close()
 	tmp_table.close()
@@ -341,6 +351,8 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	# Set Mww
 	out  = grep(r'^Wmag:', 'LOG/_xy_wpinversion.log')
 	eq.mag = float(out[0].split()[1]) ;
+	eq.lat = latopt[0]
+	eq.lon = lonopt[0]
 
 
 def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):

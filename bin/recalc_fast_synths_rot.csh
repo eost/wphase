@@ -2,18 +2,26 @@
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 
+set my_argv = ($ARGV)
+if ($#my_argv < 1) then
+    set pre="xy_"
+else if ($#my_argv == 1) then
+    set pre = $my_argv[1]
+endif
+
+
 ###################################
 if (-e i_master) then
-        ${GREP} -v "^#" xy_i_master >! i_tmp
+        ${GREP} -v "^#" ${pre}i_master >! i_tmp
 else
-        ${ECHO} "Error: file  xy_i_master not available"
+        ${ECHO} "Error: file  ${pre}i_master not available"
         exit
 endif
 
 set MOM_POW  = 28
 set EVNAME   = `${GREP} EVNAME     i_tmp | ${HEAD} -1 | ${CUT} -d: -f2`
 set CMTFILE  = `${GREP} CMTFILE    i_tmp | ${HEAD} -1 | ${CUT} -d: -f2`
-set gf_dir   = "./xy_GF"
+set gf_dir   = "./${pre}GF"
 set tmp      = `${GREP} GFDIR   i_tmp`
 if ! $status then
         set gf_dir   = `echo $tmp | ${HEAD} -1 | ${CUT} -d: -f2`
@@ -29,8 +37,8 @@ ${AWK} '{printf "%-4s %-2s %9.3f %9.3f\n",$2,$3,$5,$6}' scr_dat_fil_list | ${SOR
 
 # Elementary moment tensors
 ${HEAD} -2 $CMTFILE                                      >! $gf_dir/CMT_tmp
-${GREP} -i shift     $CMTFILE | ${SED} -e "s/[0-9]/0/g"     >> $gf_dir/CMT_tmp
-${GREP} -i duration  $CMTFILE | ${SED} -e "s/[0-9]/0/g"     >> $gf_dir/CMT_tmp
+${GREP} -i shift     $CMTFILE | ${SED} -e "s/[0-9]/0/g"  >> $gf_dir/CMT_tmp
+${GREP} -i duration  $CMTFILE | ${SED} -e "s/[0-9]/0/g"  >> $gf_dir/CMT_tmp
 ${GREP} -i latitude  $CMTFILE                            >> $gf_dir/CMT_tmp
 ${GREP} -i longitude $CMTFILE                            >> $gf_dir/CMT_tmp
 ${GREP} -i depth     $CMTFILE                            >> $gf_dir/CMT_tmp
