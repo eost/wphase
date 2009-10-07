@@ -1,0 +1,24 @@
+#!/bin/csh -f
+
+source $WPHASE_HOME/bin/WP_HEADER.CSH
+
+
+set my_argv = ($ARGV)
+if ($#my_argv < 1) then
+    set o_wpfile = o_wpinversion
+    set predfile = fort.15
+    set isref = 0
+else
+    set o_wpfile = $my_argv[1]
+    set predfile = $my_argv[2]
+    set isref    = $my_argv[3]
+endif
+
+
+
+${BIN}/make_cwp.gmt LHZ $o_wpfile $predfile $isref
+${BIN}/make_cwp.gmt LHL $o_wpfile $predfile $isref
+${BIN}/make_cwp.gmt LHT $o_wpfile $predfile $isref
+
+
+${RM} -f _tmp_XYW _tmp_XYR _tmp_XY1 _tmp_stats _tmp_stat_posit _tmp_stat_names _tmp_minmax o_wpinversion_LHL o_wpinversion_LHZ o_wpinversion_LHT
