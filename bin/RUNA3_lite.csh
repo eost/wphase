@@ -15,12 +15,11 @@ else
     set wZ = $my_argv[3]
 endif
 
-
 set BIN     = $WPHASE_HOME/bin
-set EXTRACT = ${BIN}/extract_qrt.csh
-set CALC    = ${BIN}/calc_fast_synths_rot.csh
-set PREPARE = ${BIN}/prepare_wp_norot.csh
-set WPINVER = ${BIN}/wpinversion_norot
+set EXTRACT = ${BIN}/extract_lite.csh
+set CALC    = ${BIN}/calc_fast_synths.csh
+set PREPARE = ${BIN}/prepare_wp.csh
+set WPINVER = ${BIN}/wpinversion
 
 
 ${RM} -rf SYNTH
@@ -44,7 +43,7 @@ endif
 ${RM} -f i_tmp
 
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-	 -wn ${wN} -we ${wE} -wz ${wZ} -nt 
+	-wn ${wN} -we ${wE} -wz ${wZ} -nt -med
 
 ${CP} -f p_wpinversion p_wpinversion.noth
 ${CP} -f o_wpinversion o_wpinversion.noth
@@ -53,13 +52,15 @@ ${CP} -f WCMTSOLUTION WCMTSOLUTION.noth
 ${CP} -f o_wpinversion o_wpinv
 set ths =  "5.0 3.0 0.9"
 
+
 foreach th ($ths)
 
     $WPINVER  -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
-	      -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
-	      -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir} \
-	      -wn ${wN} -we ${wE} -wz ${wZ} -nt -old 
-    ${CP} -f o_wpinv.th_$th o_wpinversion
+    -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
+    -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir}\
+    -wn ${wN} -we ${wE} -wz ${wZ} -nt -old 
+
+    ${CP} -f o_wpinv.th_$th o_wpinversion        
     set NBSTA = `${CAT} o_wpinversion | ${WC}  -l`
     if ( $NBSTA < 25 ) then
  	${ECHO} "${NBSTA} stations : stop for th=${th}"
@@ -70,3 +71,4 @@ end
 ${CP} -f WCMTSOLUTION.th_${th} WCMTSOLUTION
 ${CP} -f p_wpinversion.th_${th} p_wpinversion
 ${CP} LOG/wpinversion.th_${th}.log LOG/wpinversion.log
+

@@ -10,6 +10,7 @@ class EarthQuake:
  	def __init__(self):
 		self.id     = '--'
  		self.title  = '--'
+		self.pdebeg = ' PDE'
 		self.Otime  = time.gmtime(0)
 		self.date   = time.gmtime(0)
 		self.mag    = 0.0		
@@ -21,7 +22,7 @@ class EarthQuake:
 		self.dep    = 0.0
 		self.org    = '--'
 		self.ts     = 0.0
-		self.hd     = 0.0		
+		self.hd     = 0.0   
 	def affiche(self,out='stdout'):
 		if out == 'stdout':
 		    fid = sys.stdout
@@ -78,8 +79,8 @@ class EarthQuake:
 		if hd!=-99.:
 			self.hd = hd		
 		fid = open(cmtfil, 'wt')
-		fid.write(' PDE %4d %2d %2d %2d %2d %2d.%02d %8.4f %9.4f %5.1f %3.1f %3.1f %s\n' % \
-			  (self.Otime[0],self.Otime[1],self.Otime[2],self.Otime[3],self.Otime[4],
+		fid.write('%4s %4d %2d %2d %2d %2d %2d.%02d %8.4f %9.4f %5.1f %3.1f %3.1f %s\n' % \
+			  (self.pdebeg,self.Otime[0],self.Otime[1],self.Otime[2],self.Otime[3],self.Otime[4],
 			   self.Otime[5],0,self.pdelat,self.pdelon,self.pdedep,self.mag,self.mag,self.title[7:]))
 		fid.write('event name:      %s\n' % self.id)
 		fid.write('time shift:%12.4f\n'   % self.ts)
@@ -91,6 +92,7 @@ class EarthQuake:
 	def rcmtfile(self,cmtfil):
 		fid = open(cmtfil)
 		tmp = fid.readline().strip('\n')
+		self.pdebeg = tmp[0:5]
 		dat = '%d/%0d/%0d  --  %0d:%0d:%0d' % \
 		    (int(tmp[5:9]),int(tmp[10:12]),int(tmp[13:15]),int(tmp[16:18]),int(tmp[19:21]),int(float(tmp[22:27])))
 		self.Otime = time.strptime(dat,'%Y/%m/%d  --  %H:%M:%S')

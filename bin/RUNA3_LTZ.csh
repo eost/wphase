@@ -5,24 +5,25 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 
 set my_argv = ($ARGV)
 if ($#my_argv < 1) then
-    set wN = 1.
-    set wE = 1.
+    set wL = 1.
+    set wT = 1.
     set wZ = 1.
 else if ($#my_argv == 3) then
-    set wN = $my_argv[1]
-    set wE = $my_argv[2]
+    set wL = $my_argv[1]
+    set wT = $my_argv[2]
     set wZ = $my_argv[3]
 else
-    echo "*** ERROR (RUNA_norot.csh) ***"
-    echo "Syntax: RUNA_norot.csh [wN wE wZ]"
+    echo "*** ERROR (RUNA.csh) ***"
+    echo "Syntax: RUNA.csh [wL wT wZ]"
     exit
 endif
 
+
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract.csh
-set CALC    = ${BIN}/calc_fast_synths_rot.csh
-set PREPARE = ${BIN}/prepare_wp_norot.csh
-set WPINVER = ${BIN}/wpinversion_norot
+set CALC    = ${BIN}/calc_fast_synths_LTZ.csh
+set PREPARE = ${BIN}/prepare_wp_LTZ.csh
+set WPINVER = ${BIN}/wpinversion_LTZ
 
 ${RM} -rf SYNTH
 ${MKDIR} SYNTH
@@ -50,7 +51,7 @@ ${RM} -f i_tmp
 
 
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-	 -pdata fort.15.noth -wn ${wN} -we ${wE} -wz ${wZ} -ref -nt 
+	 -pdata fort.15.noth -wl ${wL} -wt ${wT} -wz ${wZ} -ref -nt 
 
 ${CP} p_wpinversion p_wpinversion.noth
 ${CP} o_wpinversion o_wpinversion.noth
@@ -65,7 +66,7 @@ foreach th ($ths)
     $WPINVER -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
     -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
     -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir} \
-    -wn ${wN} -we ${wE} -wz ${wZ} -ref -nt -old
+    -wl ${wL} -wt ${wT} -wz ${wZ} -ref -nt -old
 
 #     set NBSTA = `${CAT} o_wpinversion | ${WC}  -l`
 #     if ( $NBSTA < 20 ) then

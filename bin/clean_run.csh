@@ -8,9 +8,10 @@ ${RM} CWP_*
 ${RM} *_tmp* 
 ${RM} o_* 
 ${RM} p_* page_* 
-${RM} fort.15*
+${RM} *fort.15*
 ${RM} WCMTSOLUTION*
 ${RM} grid_search_*
 ${RM} ts_*
 ${RM} xy_*
+${RM} dp_*
 

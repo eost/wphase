@@ -36,7 +36,7 @@ typedef struct
   double op_pa, p2p_med, p2p_low, p2p_high ;
   double dts_min,dts_step,dts_max, dts_val ; 
   double  ntr_val, ref_val ;
-  double *rms_in, *p2p,*avg, *wgt,wZ,wN,wE ;
+  double *rms_in, *p2p,*avg, *wgt,wZ,wL,wT ;
   char   i_master[FSIZE], i_saclst[FSIZE]  ;
   char   o_saclst[FSIZE], log[FSIZE]       ; 
   char   o_cmtf[FSIZE], p_data[FSIZE]      ;
@@ -329,17 +329,15 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.25) ;
   fprintf(ps,"(WCMT - RMS: %9.5f mm (%6.3f),  Gap: %5.1f\\312,  C#%9.0f) show\n",
 	  1000.*global_rms[0], global_rms[0]/global_rms[1], *gap, *Cond);
-  if (flag == 2) {
-    fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.4) ;
-    fprintf(ps,"(GCMT - RMS = %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  }
+  if (flag == 2) 
+    {
+      fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.4) ;
+      fprintf(ps,"(GCMT - RMS = %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  
+    }
 
   /* used stations */
-  fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont\n") ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.6)             ;
-  fprintf(ps,"(Used stations (%d) : ) show\n", *nsac )       ;
-  fprintf(ps,"/Courier      findfont .07 scalefont setfont")  ;
-  k = 0 ;
 
+  k = 0 ;
   for(i=0; i<*nsac; i++) /* Set list of channels per stations */
     {
       nb = nbchar(hd_synt[i].kstnm)   ;
@@ -363,6 +361,11 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
 	k++ ; }
     }
   
+  fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont\n") ;
+  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.6)             ;
+  fprintf(ps,"(Used stations (%d, %d channels) : ) show\n", k, *nsac ) ;
+  fprintf(ps,"/Courier      findfont .07 scalefont setfont")  ;
+
   j  = 0;
   nb = 1;
   fprintf(ps,"%15.6f %15.6f moveto\n(", -1., -2.7) ;
@@ -382,9 +385,9 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(ps, "(WPWIN: %-8.2f %-8.2f %-8.2f %-8.2f ) show\n"
 	  , eq->wp_win4[0], eq->wp_win4[1], eq->wp_win4[2], eq->wp_win4[3]) ;
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.8-((double)nb)/8.) ;
-  fprintf(ps, "(Dmin : %-8.2f Dmax:%-8.2f) show\n", eq->dmin, eq->dmax) ;
+  fprintf(ps, "(Dmin : %-8.2f Dmax :%-8.2f) show\n", eq->dmin, eq->dmax) ;
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.9-((double)nb)/8.) ;
-  fprintf(ps, "(wN   : %-8.2f wE   :%-8.2f wZ   :%-8.2f) show\n", opt->wN, opt->wE, opt->wZ);  
+  fprintf(ps, "(wL   : %-8.2f wT   :%-8.2f wZ   :%-8.2f) show\n", opt->wL, opt->wT, opt->wZ);  
 
   /* filter parameters */
   fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont") ;
@@ -757,13 +760,13 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
 	      nrmsZ += rms[i][3]   ;
 	      nZ    += hd_synt[i].npts ;
 	    }
-	  if (!strncmp(hd_synt[i].kcmpnm,"LHN",3))
+	  if (!strncmp(hd_synt[i].kcmpnm,"LHL",3))
 	    {
 	      rmsL  += rms[i][2];
 	      nrmsL += rms[i][3];
 	      nL    += hd_synt[i].npts ;
 	    }
-	  if (!strncmp(hd_synt[i].kcmpnm,"LHE",3))
+	  if (!strncmp(hd_synt[i].kcmpnm,"LHT",3))
 	    {
 	      rmsT  += rms[i][2];
 	      nrmsT += rms[i][3];
@@ -772,7 +775,7 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
 	}
       for(j=0 ; j<f2 ; j++) 
 	{
-	  global_rms[j] += (opt->wgt[i]*opt->wgt[i])*rms[i][j] ;
+	  global_rms[j] += (opt->wgt[i]*opt->wgt[i]) * rms[i][j] ;
 	  rms[i][j] = sqrt(rms[i][j]/(double)hd_synt[i].npts); 
 	}
     }
@@ -790,16 +793,16 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
       printf("##################################################\n");
       printf("Ref. solution misfits:\n");
       printf("LHZ_rms : %15.6e mm (%15.6f)\n",rmsZ,rmsZ/nrmsZ);
-      printf("LHN_rms : %15.6e mm (%15.6f)\n",rmsL,rmsL/nrmsL);
-      printf("LHE_rms : %15.6e mm (%15.6f)\n",rmsT,rmsT/nrmsT);
+      printf("LHL_rms : %15.6e mm (%15.6f)\n",rmsL,rmsL/nrmsL);
+      printf("LHT_rms : %15.6e mm (%15.6f)\n",rmsT,rmsT/nrmsT);
       rmsL = rmsZ/rmsL ;      
       rmsT = rmsZ/rmsT ;
       nrmsL = nrmsL*rmsL/nrmsZ ;
       nrmsT = nrmsT*rmsT/nrmsZ ;
-      printf("(LHZ_rms/LHN_rms) : %15.6e mm (%15.6f)\n",rmsL,nrmsL);
-      printf("(LHZ_rms/LHE_rms) : %15.6e mm (%15.6f)\n",rmsT,nrmsT);
-      printf("(LHZ_rms/LHN_rms)^2 : %15.6e mm (%15.6f)\n",rmsL*rmsL,nrmsL*nrmsL);
-      printf("(LHZ_rms/LHE_rms)^2 : %15.6e mm (%15.6f)\n",rmsT*rmsT,nrmsT*nrmsT);
+      printf("(LHZ_rms/LHL_rms) : %15.6e mm (%15.6f)\n",rmsL,nrmsL);
+      printf("(LHZ_rms/LHT_rms) : %15.6e mm (%15.6f)\n",rmsT,nrmsT);
+      printf("(LHZ_rms/LHL_rms)^2 : %15.6e mm (%15.6f)\n",rmsL*rmsL,nrmsL*nrmsL);
+      printf("(LHZ_rms/LHT_rms)^2 : %15.6e mm (%15.6f)\n",rmsT*rmsT,nrmsT*nrmsT);
     }
 
 }
@@ -861,7 +864,7 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
 {
   int  i, j, k, s, N        ;
   char *fZ, *fL, *fT, *file ;
-  FILE *o_dat, *o_Z, *o_N, *o_E, *ocmp ;
+  FILE *o_dat, *o_Z, *o_L, *o_T, *ocmp ;
 
   /* Allocating memory */
   fZ = char_alloc(FSIZE) ;
@@ -873,33 +876,33 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
   strcpy(fL,opt->p_data) ;
   strcpy(fT,opt->p_data) ;
   strcat(fZ,"_LHZ") ;
-  strcat(fL,"_LHN") ;
-  strcat(fT,"_LHE") ;
+  strcat(fL,"_LHL") ;
+  strcat(fT,"_LHT") ;
   
   /* Opening files */
   o_dat = openfile_wt(opt->p_data) ;
   o_Z = openfile_wt(fZ) ;
-  o_N = openfile_wt(fL) ;
-  o_E = openfile_wt(fT) ;
+  o_L = openfile_wt(fL) ;
+  o_T = openfile_wt(fT) ;
 
   for( s=0 ; s< *nsac ; s++)
     {
       if (hd_synt[s].kcmpnm[2] == 'Z')
 	ocmp = o_Z ;
-      else if (hd_synt[s].kcmpnm[2] == 'N')
-	ocmp = o_N ;
-      else if (hd_synt[s].kcmpnm[2] == 'E')
-	ocmp = o_E ;
+      else if (hd_synt[s].kcmpnm[2] == 'L')
+	ocmp = o_L ;
+      else if (hd_synt[s].kcmpnm[2] == 'T')
+	ocmp = o_T ;
       else 
 	{
 	  fprintf(stderr,"ERROR : invalid component\n") ;
 	  fclose(o_dat) ;
 	  fclose(o_Z)   ;
-	  fclose(o_N)   ;
-	  fclose(o_E)   ;
+	  fclose(o_L)   ;
+	  fclose(o_T)   ;
 	  exit(1)       ; 
 	}
-      N = hd_synt[s].npts ;
+      N = hd_synt[s].npts ;	  
       d[s] = double_calloc2(flag, N) ;
       for(i=0 ; i<N ; i++)
 	{
@@ -924,8 +927,8 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
     }
   fclose(o_dat) ;
   fclose(o_Z)   ;
-  fclose(o_N)   ;
-  fclose(o_E)   ;
+  fclose(o_L)   ;
+  fclose(o_T)   ;
   free((void*)fZ)   ;
   free((void*)fL)   ;
   free((void*)fT)   ;
@@ -1305,10 +1308,10 @@ set_wgt(int ns, sachdr *hd_data,structopt *opt)
 {
   if (!strncmp(hd_data->kcmpnm, "LHZ",3))
     opt->wgt[ns] = opt->wZ;
-  else if (!strncmp(hd_data->kcmpnm, "LHN",3))
-    opt->wgt[ns] = opt->wN;
-  else if (!strncmp(hd_data->kcmpnm, "LHE",3))
-    opt->wgt[ns] = opt->wE;
+  else if (!strncmp(hd_data->kcmpnm, "LHL",3))
+    opt->wgt[ns] = opt->wL;
+  else if (!strncmp(hd_data->kcmpnm, "LHT",3))
+    opt->wgt[ns] = opt->wT;
 }
 
 void 
@@ -1326,7 +1329,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   int    n1_data, n1_GF, n2_data, n2_GF    ;
   int    ns, nh = NDEPTHS, nd = NDISTAS    ;
   double gcarc, t0, Ptt, twp_beg, twp_end  ;
-  double *tmparray, *dv, *tv, dumf         ;
+  double *tmparray, *dv, *tv               ;
   char   *datafile,**gf_file,*dum,*GF,*buf ;
   FILE   *i_sac                            ;
   sachdr hd_data, hd_GF;
@@ -1377,25 +1380,27 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	}
       else 
 	{
-	  flag = fscanf (i_sac, "%s %f %f %s %s %s %s %s %lf %lf %lf %lf",
+	  flag = fscanf (i_sac, "%s %f %f %s %s %s %s %s %lf %lf %lf %s",
 			 datafile,&(*hd_synt)[ns].az,&(*hd_synt)[ns].gcarc,dum,dum,dum,dum,dum,
-			 &opt->rms_in[ns],&opt->p2p[ns],&opt->avg[ns],&dumf) ;
+			 &opt->rms_in[ns],&opt->p2p[ns],&opt->avg[ns],dum) ;
 	  strcpy(buf,i_saclst);
 	  strcat(buf," (nb of columns may be incorrect)");
 	  check_scan(12, flag, buf, i_sac) ;
 	} 
       
-      /* Read data header */
-      rhdrsac(datafile,  &hd_data, &ierror);
-      set_wgt(ns, &hd_data, opt) ;
+      /* Read data header and weight */
+      rhdrsac(datafile,  &hd_data, &ierror) ;
+      set_wgt(ns, &hd_data, opt)            ;      
       if (opt->wgt[ns] <= 0.)
 	{
 	  fprintf(stderr,"**** null weight, rejected : %s\n", datafile) ;
 	  continue ;
 	}
-      if ((float)*evdp != hd_data.evdp)	{
-	fprintf(stderr,"WARNING : depth %f in sac header is different of %f from pde in CMTFILE\n",(float)*evdp, hd_data.evdp);
-	fprintf(stderr," ...you should carefully re-check gcarc and evdp header variables in file %s\n",datafile); }
+      if ((float)*evdp != hd_data.evdp)	
+	{
+	  fprintf(stderr,"WARNING : depth %f in sac header is different of %f from pde in CMTFILE\n",(float)*evdp, hd_data.evdp);
+	  fprintf(stderr," ...you should carefully re-check gcarc and evdp header variables in file %s\n",datafile); 
+	}
 
       /* Set GF filenames */
       GF = get_gf_filename("", hd_data.kstnm, hd_data.knetwk, hd_data.kcmpnm, ".SAC.sac.bp") ;
@@ -1418,8 +1423,9 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 
       /* Set first and last samples */
       t0 = Ptt + hd_data.o ; /* Data */
-      n1_data = (t0 + twp_beg - (double)hd_data.b) / ((double)hd_data.delta) - 1 ; /* TO BE MODIFIED */
-      n2_data = (int) (n1_data + (twp_end - twp_beg) / ((double)hd_data.delta))  ; /* TO BE MODIFIED */
+      //n1_data = (int)((t0 + twp_beg - (double)hd_data.b) / ((double)hd_data.delta)) - 1 ; /* Error **** first data Sample  */
+      n1_data = (int)((t0 + twp_beg - (double)hd_data.b) / ((double)hd_data.delta)) ; /* first data Sample (corrected)  */
+      n2_data = n1_data + (int)((twp_end - twp_beg) / ((double)hd_data.delta))      ; /* Last data Sample               */
       npts    = n2_data - n1_data + 1 ;
       if ( (n1_data < 0) || (n2_data >= hd_data.npts) ) {
 	fprintf(stderr,"**** Incomplete data, rejected : %s\n", datafile) ;
@@ -1443,8 +1449,9 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	    break ;                         }
 
 	  t0 = Ptt + (double)hd_GF.o ;
-	  n1_GF = (t0 + twp_beg - (double)hd_GF.b - opt->dts_val)  / ((double)hd_GF.delta) - 1 ; /* TO BE MODIFIED */
-	  n2_GF = (int)(n1_GF + (twp_end - twp_beg) / ((double)hd_GF.delta))    ;                /* TO BE MODIFIED */
+	  //n1_GF = (int)((t0 + twp_beg - (double)hd_GF.b - opt->dts_val)  / ((double)hd_GF.delta)) - 1 ; /* Error **** first GF Sample */
+	  n1_GF = (int)((t0 + twp_beg - (double)hd_GF.b - opt->dts_val)  / ((double)hd_GF.delta)) ; /* first GF Sample (corrected) */
+	  n2_GF = n1_GF + (int)((twp_end - twp_beg) / ((double)hd_GF.delta)) ;                      /* Last GF Sample */
 	  if ( (n1_GF < 0) || n2_GF >= hd_GF.npts ) {
 	    fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_data.kstnm, 
 		     hd_data.knetwk, hd_data.kcmpnm, hd_data.gcarc, hd_data.az, 
@@ -1513,7 +1520,6 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", (*hd_synt)[ns].kstnm, 
 		 (*hd_synt)[ns].knetwk, (*hd_synt)[ns].kcmpnm, (*hd_synt)[ns].gcarc, (*hd_synt)[ns].az, 
 		 (*hd_synt)[ns].user[2], (*hd_synt)[ns].user[3]) ;
-      
       strcpy( (*sacfiles)[ns], datafile) ;
       ns++ ;
     }
@@ -1709,7 +1715,7 @@ screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
   
   min = 0.1 * (opt->p2p_med) ;
   max = 3.0 * (opt->p2p_med) ;
-  
+
   fprintf(o_log,"screen_med:\n") ;
   fprintf(o_log,"   p2p_med: %15.8f\n",opt->p2p_med) ;
   fprintf(o_log,"   reject p2p < : %15.8f or > %15.8f\n",min,max) ;
@@ -1933,8 +1939,8 @@ disphelp(char **argv,structopt *opt)
 
   fprintf(stderr,"\n data weighting and screening: \n");  
   fprintf(stderr,"  -wz real_value          weight for LHZ channels (%f)\n",opt->wZ);
-  fprintf(stderr,"  -wn real_value          weight for LHN channels (%f)\n",opt->wN);
-  fprintf(stderr,"  -we real_value          weight for LHE channels (%f)\n",opt->wE);
+  fprintf(stderr,"  -wl real_value          weight for LHL channels (%f)\n",opt->wL);
+  fprintf(stderr,"  -wt real_value          weight for LHT channels (%f)\n",opt->wT);
   fprintf(stderr,"  -med                    screening data before inversion (no pre-screening)\n") ;
   fprintf(stderr,"  -th real_value          reject data using a rms threshold (no rms threshold)\n") ; 
 
@@ -2076,8 +2082,8 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->ref_val   = 0. ;
   opt->ntr_val   = 0. ;
   opt->wZ        = 1. ;
-  opt->wN        = 1. ;
-  opt->wE        = 1. ;
+  opt->wL        = 1. ;
+  opt->wT        = 1. ;
   opt->dts_val   = 0. ;
   opt->dts_min   = 0. ;
   opt->dts_max   = 0. ;
@@ -2165,11 +2171,11 @@ get_opt(numarg1, numarg2, argv, opt, eq)
       if (!strncmp(argv[j],"-wz",3)){
 	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wZ) ;
 	k+=2 ;}
-      if (!strncmp(argv[j],"-wn",3)){
-	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wN) ;
+      if (!strncmp(argv[j],"-wl",3)){
+	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wL) ;
 	k+=2 ;}
-      if (!strncmp(argv[j],"-we",3)){
-	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wE) ;
+      if (!strncmp(argv[j],"-wt",3)){
+	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wT) ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-med",4)){
 	opt->med_val = 1 ;	

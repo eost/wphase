@@ -22,19 +22,19 @@ all:    $(BIN)/fast_synth $(BIN)/fast_synth_only_Z $(BIN)/fast_synth_rot
 
 
 $(BIN)/fast_synth: fast_synth.o sum_up.o $(OBJS)
-	$(CC) ${LDFLAGS} -o $(BIN)/fast_synth  fast_synth.o sum_up.o \
+	@ $(CC) ${LDFLAGS} -o $(BIN)/fast_synth  fast_synth.o sum_up.o \
 	$(OBJS) -lm 
 
 $(BIN)/fast_synth_rot: fast_synth_rot.o sum_up.o $(OBJS)
-	$(CC) ${LDFLAGS} -o $(BIN)/fast_synth_rot  fast_synth_rot.o sum_up.o \
+	@ $(CC) ${LDFLAGS} -o $(BIN)/fast_synth_rot  fast_synth_rot.o sum_up.o \
 	$(OBJS) -lm 
 
 $(BIN)/fast_synth_only_Z: fast_synth_only_Z.o sum_up_only_Z.o $(OBJS)
-	$(CC) ${LDFLAGS} -o $(BIN)/fast_synth_only_Z fast_synth_only_Z.o \
+	@ $(CC) ${LDFLAGS} -o $(BIN)/fast_synth_only_Z fast_synth_only_Z.o \
 	sum_up_only_Z.o $(OBJS) -lm 
 
 %.o: %.c
-	${CC} ${CFLAGS} -c $<  -o $@
+	@ ${CC} ${CFLAGS} -c $<  -o $@
 
 clean: 
 	\rm -f *.o 

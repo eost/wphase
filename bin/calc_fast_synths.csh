@@ -48,6 +48,6 @@ foreach cmp ($cmps)
                         ${ECHO} "M${cmp2}:       0.000000e+$MOM_POW" >> CMTSOLUTION_$cmp
                 endif
         end
-        $FAST_SYNTH CMTSOLUTION_$cmp ../STAT_LIST
+        $FAST_SYNTH_ROT CMTSOLUTION_$cmp ../STAT_LIST
 	cd ../..
 end

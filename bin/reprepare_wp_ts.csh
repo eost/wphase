@@ -4,7 +4,7 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 
 ################################################
 
-set CHANS   = "LHL LHT LHZ"
+set CHANS   = "LHN LHE LHZ"
 set LOG     = LOG
 
 ################################################

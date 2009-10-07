@@ -11,8 +11,8 @@
 import os,shutil,sys,time,calendar
 
 from EQ import *
-from wp_grid_search import *
-
+from wp_grid_search_LTZ import *
+import wp_grid_search as nr
 
 WPHOME = os.path.expandvars('$WPHASE_HOME')
 if WPHOME[-1] != '/':
@@ -24,11 +24,11 @@ BIN      = WPHOME+'bin/'
 DATDIR   = '/home/zac/DATA/BUD/'
 DATALESS = '/home/zac/DATA/dataless/'
 
-RUNALL = BIN+'RUNA_qrt.csh >& RUNA_log'
+RUNALL     = BIN+'RUNA_qrt.csh >& RUNA_log'
+RUNALL_LTZ = BIN+'RUNA_qrt_LTZ.csh >& RUNA_log'
 
 
-
-def wpinversion_50(ftable,eq):
+def wpinversion_50_LTZ(ftable,eq):
 
 	dir = '%s%s_M%d_%s_50deg/'% (RUNQRT,time.strftime('%Y_%m_%d',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
 	if os.access(dir,os.F_OK):
@@ -51,7 +51,7 @@ def wpinversion_50(ftable,eq):
 	eq.wimaster(DATDIR,freqs,cmtpde,dir+'i_master',10.,50.,DATALESS=DATALESS)
 	os.chdir(dir)
 	eq.affiche('PDErsstrig50')
-	os.system(RUNALL)
+	os.system(RUNALL_LTZ)
 	[ts_opt,hd_opt]=fast_grid_search_ts(DATDIR,cmtpde,freqs,eq,hd,hd,[15.],0,10.,50.,'ts_gs_log')
 	os.system('cat ts_gs_log | mail -s \"wpinv50deg: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
 		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
@@ -61,7 +61,7 @@ def wpinversion_50(ftable,eq):
 	os.chdir('../')
 
 
-def wpinversion_90(ftable,eq):
+def wpinversion_90_LTZ(ftable,eq):
 	
 	dir = '%s%s_M%d_%s_90deg/'% (RUNQRT,time.strftime('%Y_%m_%d',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
 	if os.access(dir,os.F_OK):
@@ -84,12 +84,77 @@ def wpinversion_90(ftable,eq):
 	eq.wimaster(DATDIR,freqs,cmtpde,dir+'i_master',10.,87.,DATALESS=DATALESS)
 	os.chdir(dir)
 	eq.affiche('PDErsstrig90')
-	os.system(RUNALL)
+	os.system(RUNALL_LTZ)
 	[ts_opt,hd_opt]=fast_grid_search_ts(DATDIR,cmtpde,freqs,eq,hd,hd,[15.],0,10.,87.,'ts_gs_log')
 	os.system('cat ts_gs_log | mail -s \"wpinv90deg: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
 		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
 	grid_search_xy(DATDIR,cmtpde,freqs,eq,ts_opt,hd_opt,[15.],0,10.,87.,'xy_gs_log')
 	os.system('cat xy_gs_log | mail -s \"wpinv90deg: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
+		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
+	os.chdir('../')		
+
+def wpinversion_50(ftable,eq):
+
+	dir = '%s%s_M%d_%s_50deg_norot/'% (RUNQRT,time.strftime('%Y_%m_%d',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
+	if os.access(dir,os.F_OK):
+		shutil.rmtree(dir)
+	os.mkdir(dir)
+
+	cmtpde = 'CMTSOLUTION'
+
+	# Half duration
+	Mo = 10.**(1.5*eq.mag + 16.1)
+	hd = 1.2*10**(-8.)*(Mo)**(1./3.)
+
+	# Frequency band
+	for i in xrange(len(ftable[0])):
+		if eq.mag >= ftable[0][i] and eq.mag < ftable[1][i]:
+			break;	
+	freqs = [ftable[2][i],ftable[3][i]]
+	
+	eq.wcmtfile(dir+cmtpde,hd,hd)
+	eq.wimaster(DATDIR,freqs,cmtpde,dir+'i_master',10.,50.,DATALESS=DATALESS)
+	os.chdir(dir)
+	eq.affiche('PDErsstrig50')
+	os.system(RUNALL)
+	[ts_opt,hd_opt]=nr.fast_grid_search_ts(DATDIR,cmtpde,freqs,eq,hd,hd,[15.],0,10.,50.,'ts_gs_log')
+	os.system('cat ts_gs_log | mail -s \"wpinv50deg_norot: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
+		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
+	nr.grid_search_xy(DATDIR,cmtpde,freqs,eq,ts_opt,hd_opt,[15.],0,10.,50.,'xy_gs_log')
+	os.system('cat xy_gs_log | mail -s \"wpinv50deg_norot: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
+		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
+	os.chdir('../')
+
+
+def wpinversion_90(ftable,eq):
+	
+	dir = '%s%s_M%d_%s_90deg_norot/'% (RUNQRT,time.strftime('%Y_%m_%d',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
+	if os.access(dir,os.F_OK):
+		shutil.rmtree(dir)
+	os.mkdir(dir)
+
+	cmtpde = 'CMTSOLUTION'
+
+	# Half duration
+	Mo = 10.**(1.5*eq.mag + 16.1)
+	hd = 1.2*10**(-8.)*(Mo)**(1./3.)
+
+	# Frequency band
+	for i in xrange(len(ftable[0])):
+		if eq.mag >= ftable[0][i] and eq.mag < ftable[1][i]:
+			break;	
+	freqs = [ftable[2][i],ftable[3][i]]
+	
+	eq.wcmtfile(dir+cmtpde,hd,hd)
+	eq.wimaster(DATDIR,freqs,cmtpde,dir+'i_master',10.,87.,DATALESS=DATALESS)
+	os.chdir(dir)
+	eq.affiche('PDErsstrig90')
+	os.system(RUNALL)
+	[ts_opt,hd_opt]=nr.fast_grid_search_ts(DATDIR,cmtpde,freqs,eq,hd,hd,[15.],0,10.,87.,'ts_gs_log')
+	os.system('cat ts_gs_log | mail -s \"wpinv90deg_norot: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
+		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
+	nr.grid_search_xy(DATDIR,cmtpde,freqs,eq,ts_opt,hd_opt,[15.],0,10.,87.,'xy_gs_log')
+	os.system('cat xy_gs_log | mail -s \"wpinv90deg_norot: %s Mww%4.2f %s\" zacharie.duputel@eost.u-strasbg.fr'
 		  %(time.strftime('%Y/%m/%d',eq.Otime),eq.mag,eq.title[7:]))
 	os.chdir('../')		
 
@@ -115,11 +180,16 @@ def main(argv=None):
 	M_scr  = 1      # Magnitude screening window
 	flag   = 1
 	
-	mmin   = [0.0   ,6.5  ,7.0    ,7.5    ,8.0]
-	mmax   = [6.5   ,7.0  ,7.5    ,8.0    ,99.]
-	fmin   = [0.0067,0.002,0.00167,0.00167,0.001]
-	fmax   = [0.02  ,0.01 ,0.01   ,0.005  ,0.005]
+	mmin   = [0.0      ,   6.5   ,7.0       ,7.5     ,8.0      ]
+	mmax   = [6.5      ,   7.0   ,7.5       ,8.0     ,99.      ]
+# 	fmin   = [0.0067   ,0.002    ,0.00167  ,0.00167  ,0.001]
+# 	fmax   = [0.02     ,0.01     ,0.01     ,0.005    ,0.005]
+	fmin   = [0.0020000,0.0016827,0.0014158,0.0011912,0.0010000]
+	fmin   = [0.0100000,0.0084258,0.0070795,0.0059566,0.0050000]	
+#       lc = 10^(-1.7615 - 0.15*m)
+#       hc = 10^(-1.0625 - 0.15*m)	
 	ftable = [mmin,mmax,fmin,fmax]
+
 
 	######################################################################
 	
@@ -165,12 +235,12 @@ def main(argv=None):
 	        print '%s with evid : %s already inverted for stations until 50 deg' % (eq.title,eq.id)
 		dbflag = 1
 	    if (eq.mag >= minmag_inv):
-	        if (delta > 37. and dbflag != 1): #24+13min (13min=approximative acquisition delay)
+	        if (delta > 37. and dbflag != 1): # 24+13min (13min=approximative acquisition delay)
 		   eqs_50[eq.id] = EarthQuake()
 		   EQcopy(eqs_50[eq.id],eq)
 		   print 'to be inverted at 50 deg: %s (id:%s)'% (eq.title,eq.id)
 		   eqtoinv50.append(eq)
-		if (delta > 61.): #48+13min (13min=approximative acquisition delay)
+		if (delta > 61.):                 # 48+13min (13min=approximative acquisition delay)
 		   eqs_90[eq.id] = EarthQuake()
 		   EQcopy(eqs_90[eq.id],eq)
 		   print 'to be inverted at 90 deg: %s (id:%s)'% (eq.title,eq.id)
@@ -192,16 +262,17 @@ def main(argv=None):
  	fid.close()	
 
 	if len(eqtoinv50)>0 or len(eqtoinv90)>0:
-		
 		for eq in eqtoinv50:
 			print '\nWPINVERSSION (50 deg): '
 			eq.affiche()
 			wpinversion_50(ftable,eq)
+			wpinversion_50_LTZ(ftable,eq)
 
 		for eq in eqtoinv90:
 			print '\nWPINVERSSION (90 deg): '
 			eq.affiche()
 			wpinversion_90(ftable,eq)
+			wpinversion_90_LTZ(ftable,eq)
 		
 	
 if __name__ == "__main__":

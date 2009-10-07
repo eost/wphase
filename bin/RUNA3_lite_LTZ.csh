@@ -17,9 +17,9 @@ endif
 
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract_lite.csh
-set CALC    = ${BIN}/calc_fast_synths.csh
-set PREPARE = ${BIN}/prepare_wp.csh
-set WPINVER = ${BIN}/wpinversion
+set CALC    = ${BIN}/calc_fast_synths_LTZ.csh
+set PREPARE = ${BIN}/prepare_wp_LTZ.csh
+set WPINVER = ${BIN}/wpinversion_LTZ
 
 
 ${RM} -rf SYNTH
@@ -43,7 +43,7 @@ endif
 ${RM} -f i_tmp
 
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-	 -wl ${wL} -wt ${wT} -wz ${wZ} -nt 
+	 -wl ${wL} -wt ${wT} -wz ${wZ} -nt -med
 
 ${CP} -f p_wpinversion p_wpinversion.noth
 ${CP} -f o_wpinversion o_wpinversion.noth

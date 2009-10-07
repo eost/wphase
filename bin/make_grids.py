@@ -40,17 +40,19 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.png',mksmin=1.,mksm
             lon.append(float(tmp[5]))
             rms.append(float(tmp[7]))
 
+	
 	# RMS Scale 
         minrms = rmsopt
 	maxrms = max(rms)        
 	pyl.figure(figsize=(7.6875, 6.125))
 	ax1 = pyl.axes([0.1,0.1,0.7,0.8])
 	ax2 = pyl.axes([0.85,0.2,0.1,0.6])
+	cm = pyl.get_cmap('jet')
 	for i in xrange(8):
 		Bpos   = interp(i,8,0.,1.)
 		Brms=interp(i,8,minrms,maxrms)
 		mksize = ((Brms-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin
-		pyl.plot([0.5],[Bpos],'ko',ms=mksize)
+		pyl.plot([0.5],[Bpos],'ko',ms=mksize,markerfacecolor=cm((Brms-minrms)/(maxrms-minrms)))
 		pyl.text(0.9,Bpos-0.02,'%7.4f'%Brms)
 	ax2.set_axis_off()
 	mksize = ((pyl.array(rms)-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin
@@ -59,7 +61,7 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.png',mksmin=1.,mksm
 	pyl.title('RMS (mm)')
 	pyl.axes(ax1)
 	for i in xrange(len(L)-2):
-            pyl.plot([lon[i]],[lat[i]],'ko',ms=mksize[i])
+            pyl.plot([lon[i]],[lat[i]],'ko',ms=mksize[i],markerfacecolor=cm((rms[i]-minrms)/(maxrms-minrms)))
 	pyl.plot([lonpde],[latpde],'rv',ms=6)
        	pyl.plot([lonopt],[latopt],'bv',ms=6)
 	pyl.axis('equal')
@@ -118,9 +120,9 @@ if __name__ == "__main__":
     flagts = 1
     flagxy = 1
     ts_ifile='grid_search_ts_out'
-    ts_ofile='grid_search_ts.png'
+    ts_ofile='grid_search_ts.pdf'
     xy_ifile='grid_search_xy_out'
-    xy_ofile='grid_search_xy.png'
+    xy_ofile='grid_search_xy.pdf'
 
     for o, a in opts:
         if o == '-h' or o == '--help':

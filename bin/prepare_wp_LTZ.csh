@@ -4,7 +4,7 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 
 ################################################
 
-set CHANS   = "LHN LHE LHZ"
+set CHANS   = "LHL LHT LHZ"
 
 set LOG     = LOG
 set DATA    = DATA
@@ -40,7 +40,7 @@ $REC_DEC_FILT coeffs_rec_lut i_master scr_dat_fil_list dec_bp_dat_fil_list >> ${
 ################################################
 # Rotation of data horizontal components (from E/N to L/T)
 ${ECHO} "Rotation of horizontal components...               ( >! ${LOG}/_log_rot_data )"
-$CHANGE_SAC_HEADERS dec_bp_dat_fil_list upd_dec_bp_dat_fil_list ${DATA} -icmtf ${CMTFILE} >! ${LOG}/_log_rot_data
+$ROT_HORIZ_CMP dec_bp_dat_fil_list rot_dec_bp_dat_fil_list ${DATA} -icmtf ${CMTFILE} >! ${LOG}/_log_rot_data
 
 ################################################
 # Synthetics preparatio:convolution and filter #
@@ -56,6 +56,6 @@ $SYN_CONV_FILT syn_fil_list l  -imas i_master -gfdir ${gf_dir} >! ${LOG}/_log_sy
 
 ###############################################
 # Creating input file for inversion ... 
-${CUT} -d' ' -f1  upd_dec_bp_dat_fil_list >! i_wpinversion
+${CUT} -d' ' -f1  rot_dec_bp_dat_fil_list >! i_wpinversion
 
 ${RM} -f dat_fil_list

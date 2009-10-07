@@ -52,35 +52,35 @@ screening by distance:
                      dataless files (libmseed and rdseed required).
 
 Computing Green's functions (GFs):
->'calc_fast_synths.csh' : for all components
+>'calc_fast_synths.csh' : for all components (Z,N,E)
 >'calc_fast_synths_only_Z.csh' : only for vertical components
 >'recalc_fast_synths.csh' : compute GFs for grid search (??to be modified??)
->'calc_fast_synths_rot.csh' : rotate Longitudinal and Transverse components 
-                              to North and East components
+>'calc_fast_synths_LTZ.csh' : compute L,T,Z components instead
 
 Deconvolving Data, Convolve Green's functions and Filtering:
->'prepare_wp.csh' : for all components (using Long. and Trans. components).
+>'prepare_wp.csh' : for all components (using Z,N,E components).
 >'prepare_wp_only_Z.csh' : only for vertical components
->'prepare_wp_norot.csh' : use East and North components instead
+>'prepare_wp_LTZ.csh' : use L,T,Z components instead
 >'reprepare_wp_ts.csh' : reprepare for time-shift grid search
 >'reprepare_wp_xy.csh' : reprepare for centroïd position grid-search 
 
 
 RUNA : run all routines and wpinversion using a screening on rms deviations:
 
->'RUNA_only_Z.csh' : only for vertical components.
+>'RUNA3_only_Z.csh' : only for vertical components.
 
 Using Longitudinal and Transverse components :
->'RUNA.csh' : input is seed.
->'RUNA_only_H.csh' : only for horizontal components.
->'RUNA_lite.csh' : if data is already extracted
->'RUNA_qrt.csh' : input is miniseed (1 file per channel) and dataless
+>'RUNA3_LTZ.csh' : input is seed.
+>'RUNA3_lite_LTZ.csh' : if data was already extracted
+>'RUNA_qrt_LTZ.csh' : input is miniseed (1 file per channel) and dataless
                   files (libmseed and rdseed required). 
 
 Using North and East components
->'RUNA_norot.csh' : input is seed (using North and East components).
->'RUNA_lite_norot.csh' : if data is already extracted
->'RUNA_qrt_norot.csh' : input is miniseed (1 file per channel) and dataless
+>'RUNA3.csh' :    input is seed (using North and East components).
+>'RUNA6.csh' :      "    "   "  (using North and East components).
+>'RUNA3_only_H.csh':"    "   "  (only for horizontal components).
+>'RUNA3_lite.csh' : if data was already extracted
+>'RUNA_qrt.csh' : input is miniseed (1 file per channel) and dataless
                   files (libmseed and rdseed required). 
 
 Cleaning the run directory :
@@ -96,8 +96,8 @@ MONITORING. You can found them in $WP_HOME/bin:
 
 
 GRID SEARCH: 
->'wp_grid_search.py' : using Longitudinal and Transverse components
->'wp_grid_search_norot.py' : using North and East components
+>'wp_grid_search.py' : using North and East components
+>'wp_grid_search_LTZ.py' : using Longitudinal and Transverse components
 Detailed help is available using the option '-h'
 
 QUASI REAL-TIME MONITORING:
@@ -131,8 +131,8 @@ All these routines require GMT:
 Comparision of observed and predicted data vector:
 >'make_cwp_all.gmt' : all components (one graph per component)
 >'make_cwp.gmt' : display only one channel 
->'make_cwp_all_norot.gmt' : same as 'make_cwp_all.gmt' but using
-                            North and East components instead
+>'make_cwp_all_LTZ.gmt' : same as 'make_cwp_all.gmt' but using
+                          L,T,Z components instead
 
 Comparision of observed and predicted seismograms with a map:
 >'traces_6t_global.gmt' : global scale
