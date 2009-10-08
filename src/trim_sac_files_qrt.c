@@ -26,7 +26,8 @@
 void distaz(double    cmt_lat,  double    cmt_lon,  float*    stlats,  float*    stlons, 
 	    int       nstat,    float*    dists,    float*    azs,     float*    bazs,   
 	    float*    xdegs,    long int* nerr);  
-int  rmseed(char *i_file, int i_t0, int i_t1, double *o_x, sachdr *o_hd);
+int  rmseed(str_quake_params *eq, struct tm *tm0, int i_t0, int i_t1, double *o_x, sachdr *hdr);
+
 
 /* Internal routines */
 void get_params(int argc, char **argv, int *un, char **i_locs, char **o_sacdir, 
@@ -100,7 +101,6 @@ main(int argc, char *argv[])
 	}
       
       /* Set wp time window */
-
       trav_time(&xdegd, tv, dv, &nd, &P_tt, &tterr) ; /* P travel time */
       date2epoch1(&eq.ot_ye, &eq.ot_mo, &eq.ot_dm, &eq.ot_ho, &eq.ot_mi, &eq.ot_se, &eq.ot_ms, &otime) ;
       t0  = (time_t) (otime + P_tt - eq.preevent - (double)SAFETY_DELAY) ;
@@ -110,18 +110,11 @@ main(int argc, char *argv[])
 
       /* Read mseed file */
       add_slash(eq.seed);
-      if (!strcmp(hdr.khole,"--"))
-	sprintf(msfil,"%s%s/%s/%s.%s.%s.%s.%d.%d",eq.seed,hdr.knetwk,hdr.kstnm,
-		hdr.knetwk,hdr.kstnm,"",hdr.kcmpnm,tm0->tm_year+1900,tm0->tm_yday+1);
-      else
-	sprintf(msfil,"%s%s/%s/%s.%s.%s.%s.%d.%d",eq.seed,hdr.knetwk,hdr.kstnm,
-		hdr.knetwk,hdr.kstnm,hdr.khole,hdr.kcmpnm,tm0->tm_year+1900,tm0->tm_yday+1);
       sprintf(scfil,"%s%4d.%03d.%02d.%02d.%02d.%04d.%s.%s.%s.%s.SAC",o_sacdir,tm0->tm_year+1900,
 	      tm0->tm_yday+1,tm0->tm_hour,tm0->tm_min,tm0->tm_sec,0,hdr.knetwk,hdr.kstnm,hdr.khole,hdr.kcmpnm);
-
-      if (rmseed(msfil, (int)t0, (int)t1, x_in, &hdr))
+      if (rmseed(&eq, tm0, (int)t0, (int)t1, x_in, &hdr))
 	  continue;
-      
+
       /* Write rough sac file */
       whdrsac(scfil, &hdr);
       wdatsac(scfil, &hdr, x_in);
@@ -140,15 +133,17 @@ main(int argc, char *argv[])
 	  fprintf(stderr, "WARNING: non uniform samp. period between sac files\n") ; 
 	  fprintf(stderr, "     ...file : %s with dt = %e is rejected\n", scfil, hdr.delta)  ; 
 	  flag++   ; 
-	   	  continue ; 
+	  continue ; 
 	} 
       else if (sampstart >= 0 && sampstart < hdr.npts) 
 	{ 
 	  /* Set new sac header variables */ 
 	  hdr.delta = (float) SAMPLEPERIOD  ; 
 	  hdr.o     = (float) otime         ; /* event origin time */
-	  hdr.npts  = hdr.npts + 1 - sampstart; /* nb of samples     */
-	  hdr.b     = hdr.b + ((float)sampstart)*hdr.delta ; /* Error **** shift of the first sample */
+	  //hdr.npts  = hdr.npts + 1 - sampstart;              /* Error **** nb of samples     */
+	  //hdr.b     = hdr.b + ((float)sampstart)*hdr.delta ; /* Error **** shift of the first sample */
+	  hdr.npts  = hdr.npts - sampstart ;                 /* nb of samples (corrected) */
+	  hdr.b     = hdr.b + ((float)sampstart)*hdr.delta ; /* shift of the first sample (corrected) */
 	  hdr.e     = hdr.b + (hdr.npts-1) * hdr.delta    ;
 	  hdr.dist  = dist ; /* epicentral distance (km)                      */
 	  hdr.gcarc = xdeg ; /* station to event great circle arc length(deg) */
@@ -163,7 +158,8 @@ main(int argc, char *argv[])
 	    fprintf(stderr,"Warning : traces cut to %d samples.\n", (int)__LEN_SIG__);
 	  strcat(scfil,".scr.sac");
 	  whdrsac(scfil, &hdr);
-	  x_out = &x_in[sampstart-1]; /* Error **** shift of the first sample */
+	  //x_out = &x_in[sampstart-1]; /* Error **** shift of the first sample */
+	  x_out = &x_in[sampstart];   /* shift of the first sample (corrected) */	  
 	  wdatsac(scfil, &hdr, x_out);
 
 

@@ -2,72 +2,136 @@
 #include <libmseed.h>
 #include <string.h>
 
+#include <time.h>
+#include <locale.h>
+
 #include "proto_alloc.h"
 #include "rwsacs.h"
+#include "read_i_files.h"
+#include "rwtextfiles.h"
 
-
+int read_ms_file(str_quake_params *eq, int year, int yday, hptime_t t0_in, \
+		 hptime_t t1_in, sachdr *o_hd, double *o_x);
+void get_msname(sachdr *hdr, str_quake_params *eq, int year, int day, char *msfil);
 void fill_hdr_char(char *o_c, char* i_c,int N);
-
 int  check_hdr(sachdr *hdr, MSRecord *msr);
-
 int  fill_sac(sachdr *hdr, double *o_x, MSRecord *msr);
 
 int
-rmseed(char *i_file, int i_t0, int i_t1, double *o_x, sachdr *o_hd)
+rmseed(str_quake_params *eq, struct tm *tm0, int i_t0, int i_t1, \
+       double *o_x, sachdr *o_hd)
 {
-  int flag = 1       ;
-  int retcode        ;
-  int totalrecs  = 0 ;
-  int totalsamps = 0 ;
-  MSRecord *msr = 0  ;
-  hptime_t t0, t0_in, t1_in ;
-
+  int      flag   ;
+  hptime_t t0_in, t1_in ;
   
-  /* printf("RMSEED : %s\n",i_file); */
 
   /* Initialize variables */
   t0_in = MS_EPOCH2HPTIME(i_t0);
   t1_in = MS_EPOCH2HPTIME(i_t1);
   o_hd->npts = -12345 ;
-  
+
   /* Loop over the input file */
-  while ( (retcode = ms_readmsr (&msr, i_file, -1, NULL, NULL, 1, 1, 0)) == MS_NOERROR )
-    {
-      t0 = msr->starttime+(double)msr->numsamples*(double)HPTMODULUS/msr->samprate;
-      if (t0_in <= t0 && t1_in > msr->starttime)
-	{
-	  flag = 0 ;
-	  if (fill_sac(o_hd, o_x, msr))
-	    {
-	      fprintf(stderr," file: %s rejected\n",i_file);
-	      flag = 1;
-	      break ;
-	    }
-	}
-      else if ( t1_in <= msr->starttime )
-	{
-	  retcode = MS_ENDOFFILE ;
-	  break ;
-	}
+  flag = read_ms_file(eq, tm0->tm_year+1900, tm0->tm_yday+1, t0_in, t1_in, o_hd, o_x) ;
 
-      totalrecs++;
-      totalsamps += msr->samplecnt;
-    }
-  
-  if ( retcode != MS_ENDOFFILE && flag == 0)
-    {
-      fprintf(stderr,"Warning: (rmseed) Cannot read %s (file rejected)\n",i_file);
-      flag = 1 ;
-    }
-
-  /* Make sure everything is cleaned up */
-  ms_readmsr (&msr, NULL, 0, NULL, NULL, 0, 0, 0);
-  /* printf("%s : Records: %d, Samples: %d\n", i_file, totalrecs, totalsamps); */
+  /* printf("%s : Records: %d, Samples: %d\n", msfil, totalrecs, totalsamps); */
   /* printf("RMSEED FLAG==%d\n",flag); */
   return flag;
 } 
 
 
+int
+read_ms_file(str_quake_params *eq, int year, int yday, hptime_t t0_in, \
+	     hptime_t t1_in, sachdr *o_hd, double *o_x)
+{
+  int  flag = 1       ;
+  int  retcode        ;
+  int  totalrecs  = 0 ;
+  int  totalsamps = 0 ;
+  char msfil[FSIZE]   ;
+  hptime_t t0 ;
+  MSRecord *msr = 0  ;
+  FILE     *fid ;
+  
+  get_msname(o_hd, eq, year, yday, msfil);
+  if ((fid = fopen (msfil,"r"))==NULL)
+    {
+      fprintf(stderr,"Warning: (rmseed) Cannot read %s (file rejected)\n",msfil);
+      flag = 1 ;
+    }
+  else
+    {
+      fclose(fid);
+      while ( (retcode = ms_readmsr (&msr, msfil, -1, NULL, NULL, 1, 1, 0)) == MS_NOERROR )
+	{
+	  t0 = msr->starttime+(double)msr->numsamples*(double)HPTMODULUS/msr->samprate;
+	  if (t0_in <= t0 && t1_in > msr->starttime)
+	    {
+	      if (fill_sac(o_hd, o_x, msr))
+		{
+		  fprintf(stderr," file: %s rejected\n",msfil);
+		  break ;
+		}
+	    }
+	  else if ( t1_in <= msr->starttime )
+	    {
+	      retcode = MS_ENDOFFILE ;
+	      flag = 0 ;
+	      break    ;
+	    }
+	  totalrecs++ ;
+	  totalsamps += msr->samplecnt ;
+	}
+      if ( retcode != MS_ENDOFFILE)
+	{
+	  fprintf(stderr,"Warning: (rmseed) Cannot read %s (file rejected)\n",msfil);	  
+	  flag = 1 ;
+	}
+    }
+  /* Make sure everything is cleaned up */
+  ms_readmsr (&msr, NULL, 0, NULL, NULL, 0, 0, 0);
+
+  if (retcode == MS_ENDOFFILE  && flag)
+    {
+      fprintf(stderr,"Warning: (rmseed) file %s is not complete, reading next file...\n",msfil);           
+      if (yday == 365)
+	flag = read_ms_file(eq, year+1, 0, t0_in, t1_in, o_hd, o_x);
+      else
+	flag = read_ms_file(eq, year, yday+1, t0_in, t1_in, o_hd, o_x);
+      if (flag == 0)
+	{
+	  fprintf(stderr,"             ... No problem encountered while reading next file\n");           
+	}
+    }
+
+
+  return flag ;
+}
+void 
+get_msname(sachdr *hdr, str_quake_params *eq, int year, int day, char *msfil)
+{
+  int i;
+  char knetwk[9], kstnm[9], kcmpnm[9], khole[9];
+  
+  i = nbchar(hdr->knetwk) ;
+  strncpy(knetwk,hdr->knetwk,i);
+  knetwk[i] = '\0';
+  i = nbchar(hdr->kstnm) ;
+  strncpy(kstnm,hdr->kstnm,i);
+  kstnm[i] = '\0';
+  i = nbchar(hdr->kcmpnm) ;
+  strncpy(kcmpnm,hdr->kcmpnm,i);
+  kcmpnm[i] = '\0';
+  i = nbchar(hdr->khole) ;
+  strncpy(khole,hdr->khole,i);
+  khole[i] = '\0';
+
+  if (!strcmp(hdr->khole,"--"))
+    sprintf(msfil,"%s%s/%s/%s.%s.%s.%s.%d.%d",eq->seed,knetwk,kstnm,
+	    knetwk,kstnm,"",kcmpnm,year,day);
+  else
+    sprintf(msfil,"%s%s/%s/%s.%s.%s.%s.%d.%d",eq->seed,knetwk,kstnm,
+	    knetwk,kstnm,khole,kcmpnm,year,day);
+}
 
 void 
 fill_hdr_char(char *o_c, char* i_c,int N)

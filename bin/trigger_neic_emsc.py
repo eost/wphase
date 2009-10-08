@@ -34,7 +34,7 @@ def wpinversion_50_LTZ(ftable,eq):
 	if os.access(dir,os.F_OK):
 		shutil.rmtree(dir)
 	os.mkdir(dir)
-
+	
 	cmtpde = 'CMTSOLUTION'
 
 	# Half duration
@@ -182,12 +182,12 @@ def main(argv=None):
 	
 	mmin   = [0.0      ,   6.5   ,7.0       ,7.5     ,8.0      ]
 	mmax   = [6.5      ,   7.0   ,7.5       ,8.0     ,99.      ]
-# 	fmin   = [0.0067   ,0.002    ,0.00167  ,0.00167  ,0.001]
-# 	fmax   = [0.02     ,0.01     ,0.01     ,0.005    ,0.005]
+	# 	fmin   = [0.0067   ,0.002    ,0.00167  ,0.00167  ,0.001]
+	# 	fmax   = [0.02     ,0.01     ,0.01     ,0.005    ,0.005]
 	fmin   = [0.0020000,0.0016827,0.0014158,0.0011912,0.0010000]
 	fmax   = [0.0100000,0.0084258,0.0070795,0.0059566,0.0050000]	
-#       lc = 10^(-1.7615 - 0.15*m)
-#       hc = 10^(-1.0625 - 0.15*m)	
+	#       lc = 10^(-1.7615 - 0.15*m)
+	#       hc = 10^(-1.0625 - 0.15*m)	
 	ftable = [mmin,mmax,fmin,fmax]
 
 
@@ -214,7 +214,7 @@ def main(argv=None):
  	flag = 2 
  	while(flag):
 		eqs = r_neic_feeds(urlneic,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag,eqs)
-		eqs = r_emsc_feeds(urlemsc,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag,eqs)		
+		#eqs = r_emsc_feeds(urlemsc,mintime,minmag,O_scr2,Ep_scr2,M_scr2,flag,eqs)		
  		flag = 0
 
 	# Write databases
