@@ -28,14 +28,16 @@ set my_argv = ($ARGV)
 set sol_id   = 'W'
 set SOLFILE = WCMTSOLUTION
 set SYNDIR  = SYNTH
-if ($#my_argv == 2) then
+if ($#my_argv < 1) then
+    echo "using default parameters"
+else if ($#my_argv == 2) then
     set SOLFILE  = $my_argv[1]
     set SYNDIR   = $my_argv[2]
 else if ($#my_argv == 3) then
     set ymin  = $my_argv[1]
     set ymax  = $my_argv[2]
-    set ticks = $my_argv[3]    
-    set ylim_auto = 'non'  
+    set ticks = $my_argv[3]
+    set ylim_auto = 'non'      
 else if ($#my_argv == 5) then
     set SOLFILE  = $my_argv[1]
     set SYNDIR   = $my_argv[2]
@@ -50,7 +52,11 @@ else if ($#my_argv == 6) then
     set ymax   = $my_argv[4]
     set ticks  = $my_argv[5]
     set sol_id = $my_argv[6]
-    set ylim_auto = 'non'  
+    set ylim_auto = 'non'
+else
+    echo "*** ERROR ($0) ***"
+    echo "Syntax: $0 [ymin ymax dy] [WCMTFILE OUTPUTDIR [ymin ymax dy [ID]]] "
+    exit    
 endif
 
 
