@@ -4,7 +4,7 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 
 #####################################
 
-set ylim_auto = 'non'        # 'yes'  or  'non'
+set ylim_auto = 'yes'        # 'yes'  or  'non'
 
 if($ylim_auto != 'yes') then
   set ymin      = -0.2          #  mm
@@ -26,24 +26,33 @@ set Rg        = -R0/360/-90/90
 ####################################
 set my_argv = ($ARGV)
 set sol_id   = 'W'
-if ($#my_argv < 1) then
-    set SOLFILE = WCMTSOLUTION
-    set SYNDIR  = SYNTH
-else
+set SOLFILE = WCMTSOLUTION
+set SYNDIR  = SYNTH
+if ($#my_argv == 2) then
     set SOLFILE  = $my_argv[1]
     set SYNDIR   = $my_argv[2]
-    if ($#my_argv == 5) then
-	set ymin  = $my_argv[3]
-	set ymax  = $my_argv[4]
-	set ticks = $my_argv[5]
-    endif
-    if ($#my_argv == 6) then
-	set ymin   = $my_argv[3]
-	set ymax   = $my_argv[4]
-	set ticks  = $my_argv[5]
-	set sol_id = $my_argv[6]
-    endif
+else if ($#my_argv == 3) then
+    set ymin  = $my_argv[1]
+    set ymax  = $my_argv[2]
+    set ticks = $my_argv[3]
+    set ylim_auto = 'non'      
+else if ($#my_argv == 5) then
+    set SOLFILE  = $my_argv[1]
+    set SYNDIR   = $my_argv[2]
+    set ymin  = $my_argv[3]
+    set ymax  = $my_argv[4]
+    set ticks = $my_argv[5]
+    set ylim_auto = 'non'  
+else if ($#my_argv == 6) then
+    set SOLFILE  = $my_argv[1]
+    set SYNDIR   = $my_argv[2]
+    set ymin   = $my_argv[3]
+    set ymax   = $my_argv[4]
+    set ticks  = $my_argv[5]
+    set sol_id = $my_argv[6]
+    set ylim_auto = 'non'  
 endif
+
 
 ${ECHO} "Using $SOLFILE"
 

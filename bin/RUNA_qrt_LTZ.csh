@@ -13,13 +13,17 @@ else
     set wL = $my_argv[1]
     set wT = $my_argv[2]
     set wZ = $my_argv[3]
+else
+    echo "*** ERROR ($0) ***"
+    echo "Syntax: =0 [wL wT wZ]"
+    exit
 endif
 
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract_qrt.csh
-set CALC    = ${BIN}/calc_fast_synths.csh
-set PREPARE = ${BIN}/prepare_wp.csh
-set WPINVER = ${BIN}/wpinversion
+set CALC    = ${BIN}/calc_fast_synths_LTZ.csh
+set PREPARE = ${BIN}/prepare_wp_LTZ.csh
+set WPINVER = ${BIN}/wpinversion_LTZ
 
 
 ${RM} -rf SYNTH

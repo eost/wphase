@@ -13,6 +13,10 @@ else
     set wL = $my_argv[1]
     set wT = $my_argv[2]
     set wZ = $my_argv[3]
+else
+    echo "*** ERROR ($0) ***"
+    echo "Syntax: =0 [wL wT wZ]"
+    exit
 endif
 
 set BIN     = $WPHASE_HOME/bin

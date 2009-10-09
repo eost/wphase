@@ -8,10 +8,22 @@ if ($#my_argv < 1) then
     set o_wpfile = o_wpinversion
     set predfile = fort.15
     set isref = 0
-else
+else if ($#my_argv == 1) then
+    set o_wpfile = o_wpinversion
+    set predfile = fort.15
+    set isref    = $my_argv[1]
+else if ($#my_argv == 2) then
     set o_wpfile = $my_argv[1]
     set predfile = $my_argv[2]
-    set isref    = $my_argv[3]
+    set isref = 0
+else if  ($#my_argv == 3) then
+    set o_wpfile = $my_argv[1]
+    set predfile = $my_argv[2]
+    set isref    = $my_argv[3]	
+else 
+    echo "*** ERROR ($0) ***"
+    echo "Syntax: $0 [0,1] [o_wpfile fort.15file [0,1]]"
+    exit    
 endif
 
 

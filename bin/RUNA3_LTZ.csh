@@ -13,8 +13,8 @@ else if ($#my_argv == 3) then
     set wT = $my_argv[2]
     set wZ = $my_argv[3]
 else
-    echo "*** ERROR (RUNA.csh) ***"
-    echo "Syntax: RUNA.csh [wL wT wZ]"
+    echo "*** ERROR ($0) ***"
+    echo "Syntax: =0 [wL wT wZ]"
     exit
 endif
 
@@ -51,7 +51,7 @@ ${RM} -f i_tmp
 
 
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-	 -pdata fort.15.noth -wl ${wL} -wt ${wT} -wz ${wZ} -ref -nt 
+	 -pdata fort.15.noth -wl ${wL} -wt ${wT} -wz ${wZ} -nt 
 
 ${CP} p_wpinversion p_wpinversion.noth
 ${CP} o_wpinversion o_wpinversion.noth
@@ -66,7 +66,7 @@ foreach th ($ths)
     $WPINVER -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
     -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
     -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir} \
-    -wl ${wL} -wt ${wT} -wz ${wZ} -ref -nt -old
+    -wl ${wL} -wt ${wT} -wz ${wZ} -nt -old
 
 #     set NBSTA = `${CAT} o_wpinversion | ${WC}  -l`
 #     if ( $NBSTA < 20 ) then

@@ -159,7 +159,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
  			eq_gs.wcmtfile(cmttmp,ts,hd)
 			os.system(RECALCSYN_XY+' > LOG/_log_py_recalsyn_xy')
 			os.system(REPREPARE_XY+' > LOG/_log_py_reprepare_xy')
-			os.system(WPINV_XY+' > LOG/_log_py_wpinv_xy')
+			os.system(WPINV_XY+' -noref > LOG/_log_py_wpinv_xy')
 			out  = grep(r'^W_cmt_err:', 'LOG/_xy_wpinversion.log')
 			rms  = float(out[0].strip('\n').split()[1])
 			nrms = float(out[0].strip('\n').split()[2])
@@ -198,16 +198,16 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 		addrefsol(cmtpde,cmttmp)
 		if flag:
 			fid.close()
-			os.system(WPINV_XY+' -ref >> '+fileout)
+			os.system(WPINV_XY+' >> '+fileout)
 		else:
-			os.system(WPINV_XY+' -ref')
+			os.system(WPINV_XY)
 
 	else:
 		if flag:
 			fid.close()
-			os.system(WPINV_XY+' >> '+fileout)
+			os.system(WPINV_XY+' -noref >> '+fileout)
 		else:
-			os.system(WPINV_XY)	
+			os.system(WPINV_XY+' -noref')	
 
 	# Set Mww
 	out  = grep(r'^Wmag:', 'LOG/_xy_wpinversion.log')
@@ -287,7 +287,7 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 		while ts < ts2+sts:
 			eq.wcmtfile(cmttmp,ts,ts)
 			os.system(REPREPARE_TS+' > LOG/_log_py_reprepare_ts')
-			os.system(WPINV_TS+' > LOG/_log_py_wpinv_ts')
+			os.system(WPINV_TS+' -noref > LOG/_log_py_wpinv_ts')
 			out  = grep(r'^W_cmt_err:', 'LOG/_ts_wpinversion.log')			
 			rms  = float(out[0].strip('\n').split()[1])
 			nrms = float(out[0].strip('\n').split()[2])
@@ -322,15 +322,15 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 		addrefsol(cmtpde,cmttmp)
 		if flag:
 			fid.close()	
-			os.system(WPINV_TS+' -ref >> '+fileout)
-		else:
-			os.system(WPINV_TS+' -ref')
-	else:
-		if flag:
-			fid.close()	
 			os.system(WPINV_TS+' >> '+fileout)
 		else:
 			os.system(WPINV_TS)
+	else:
+		if flag:
+			fid.close()	
+			os.system(WPINV_TS+' -noref>> '+fileout)
+		else:
+			os.system(WPINV_TS+' -noref')
 
 	# Set Mww
 	out  = grep(r'^Wmag:', 'LOG/_ts_wpinversion.log')
@@ -513,9 +513,9 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 	shutil.copytree('GF','./ts_GF')
 	if flag:
 		fid.close()
-		os.system(WPINV_TS+' -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion >> %s'% (ts1,sts,ts2,o_file,fileout))
+		os.system(WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion >> %s'% (ts1,sts,ts2,o_file,fileout))
 	else:
-		os.system(WPINV_TS+' -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,o_file))
+		os.system(WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,o_file))
 	tmp_table = open(o_file, 'r')
 	tsopt, rmsopt = map(float,tmp_table.readline().strip('\n').split())
  	tmp_table.close()
@@ -525,14 +525,14 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
  	if flagref:
  		addrefsol(cmtpde,cmttmp)
 		if flag:
-			os.system(WPINV_TS+' -ref >> '+fileout)
+			os.system(WPINV_TS+'  >> '+fileout)
 		else:
-			os.system(WPINV_TS+' -ref')
+			os.system(WPINV_TS+' ')
  	else:
 		if flag:
-			os.system(WPINV_TS+' >> '+fileout)
+			os.system(WPINV_TS+' -noref>> '+fileout)
 		else:
-			os.system(WPINV_TS)
+			os.system(WPINV_TS+' -noref')
 
 	# Set Mww
 	out  = grep(r'^Wmag:', 'LOG/_ts_wpinversion.log')
@@ -543,41 +543,41 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 
 
 def usage():
-	print 'usage: wp_grid_search [-f] [-t] [-p] [-i] ... [--help]'
+	print 'usage: wp_grid_search [-s] [-t] [-p] [-i] ... [--help]'
 
 def disphelp():
 	print 'Centroid time-shift and centroid position grid search\n'
 	usage()
 	print '\nAll parameters are optional:'
-	print '   -f, --fast           use a fast time-shift search'
+	print '   -s, --slow           use a  time grid-search considering ts=fd'
 	print '   -t, --onlyts         centroid time-shift grid search only'
 	print '   -p, --onlyxy         centroid position grid search only'
 	print '   -i, --imas \'file\'    set i_master file (i_master)'
-	print '   -r, --ref            read the reference solution in cmtfile (no ref. sol.)'
+	print '   -n, --noref          do not use the reference solution in cmtfile (ref. sol. used)'
 	print '\n   -h, --help           display this help and exit'
 	print '\nReport bugs to: <zacharie.duputel@eost.u-strasbg.fr>'
 
 ##### MAIN #####	
 if __name__ == "__main__":
 	try:
-		opts, args = getopt.gnu_getopt(sys.argv[1:],'ftpi:rh',["fast","onlyts","onlyxy","imas=","ref","help"])
+		opts, args = getopt.gnu_getopt(sys.argv[1:],'stpi:nh',["slow","onlyts","onlyxy","imas=","noref","help"])
 	except getopt.GetoptError, err:
 		print '*** ERROR ***'
 		print str(err)
 		usage()
 		sys.exit(1)
 	
-	fastflag = 0	
+	fastflag = 1	
 	flagts   = 1
 	flagxy   = 1
-	flagref  = 0
+	flagref  = 1
 	i_master = 'i_master' 
 	for o, a in opts:
 		if o == '-h' or o == '--help':
 			disphelp()
 			sys.exit(0)
-		if o == '-f' or o == '--fast':
-			fastflag = 1
+		if o == '-s' or o == '--slow':
+			fastflag = 0
 		if o == '-t' or o == '--onlyts':
 			if flagts == 0:
 				print '** ERROR (options -t and -p cannot be used simultaneously) **'
@@ -594,8 +594,8 @@ if __name__ == "__main__":
 			flagxy = 1
 		if o == '-i' or o == '--imas':
 			i_master = a
-		if o == '-r' or o == '--ref':
-			flagref = 1
+		if o == '-n' or o == '--noref':
+			flagref = 0
 			
 	out    = grep2([r'^SEED',r'^CMTFILE',r'^EVNAME',r'^filt_cf1',r'^filt_cf2',\
 				 r'^WP_WIN'], i_master)

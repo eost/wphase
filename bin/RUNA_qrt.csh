@@ -10,17 +10,22 @@ if ($#my_argv < 1) then
     set wE = 1.
     set wZ = 1.
 else
-    set wN = $my_argv[1]
-    set wE = $my_argv[2]
-    set wZ = $my_argv[3]
+    set wZ = $my_argv[1]
+    set wN = $my_argv[2]
+    set wE = $my_argv[3]
+else
+    echo "*** ERROR ($0) ***"
+    echo "Syntax: $0 [wZ wN wE]"
+    exit
 endif
+
 
 
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract_qrt.csh
-set CALC    = ${BIN}/calc_fast_synths_rot.csh
-set PREPARE = ${BIN}/prepare_wp_norot.csh
-set WPINVER = ${BIN}/wpinversion_norot
+set CALC    = ${BIN}/calc_fast_synths.csh
+set PREPARE = ${BIN}/prepare_wp.csh
+set WPINVER = ${BIN}/wpinversion
 
 
 ${RM} -rf SYNTH
@@ -49,6 +54,10 @@ $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
 ${CP} -f p_wpinversion p_wpinversion.noth
 ${CP} -f o_wpinversion o_wpinversion.noth
 ${CP} -f WCMTSOLUTION WCMTSOLUTION.noth
+${CP} -f fort.15 fort.15.noth
+${CP} -f fort.15_LHZ fort.15.noth_LHZ
+${CP} -f fort.15_LHE fort.15.noth_LHE
+${CP} -f fort.15_LHN fort.15.noth_LHN
 
 ${CP} -f o_wpinversion o_wpinv
 set ths =  "5.0 3.0 0.9"

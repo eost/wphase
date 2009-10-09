@@ -53,7 +53,7 @@ typedef struct
 void wp_time_window(double *gcarc, double *wp_win4, double *twp_beg, double *twp_end) ;
 void get_opt(int numarg1, int numarg2, char **argv, structopt *opt, str_quake_params *eq) ;
 void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq, int *flag);
-void get_param2(char *file, str_quake_params *eq, int flag) ;
+void get_param2(char *file, structopt *opt, str_quake_params *eq, int *flag) ;
 
 /* Screening routines */
 void screen_med(int *nsac, char **data_name, double **data, 
@@ -145,7 +145,7 @@ main(int argc, char *argv[])
   fflush(stdout) ;
   get_param1(argc, argv, &M, &opt, &eq, &flag) ;
   fflush(stdout) ;
-  get_param2(opt.i_master, &eq, flag)    ;
+  get_param2(opt.i_master, &opt, &eq, &flag)    ;
   fflush(stdout) ;
   
   /* Write log header     */
@@ -1853,9 +1853,10 @@ wp_time_window(gcarc, wp_win4, twp_beg, twp_end)
 }
 
 
-void get_param2(file, eq,  flag)
-     int    flag     ;
+void get_param2(file, opt, eq,  flag)
+     int    *flag    ;
      char   *file    ;
+     structopt *opt  ;
      str_quake_params *eq      ;
 {
   int  i=0, nimas ;
@@ -1882,7 +1883,9 @@ void get_param2(file, eq,  flag)
   strcpy(keys[i++],"filt_pass") ;
 
   get_i_master(file, keys, nimas, eq) ;  
-  get_cmtf(eq, flag)     ;
+  *flag = get_cmtf(eq, *flag) ;
+  if (*flag == 1.)
+    opt->ref_val = 0. ;        
   
   for(i=0 ; i<nimas ; i++)
     free((void*)keys[i]) ;
@@ -1896,7 +1899,7 @@ dispsynt(char **argv)
   fprintf(stderr,"              [-log logfil(out)] [-icmtf cmtfil(in)] [-ocmtf cmtfil(out)] [-osyndir out_synt_dir] \n")   ;
   fprintf(stderr,"              [-pdata calc_dat_txtfil(out)] [-wpbm wp_bitmap(out)] [-ocovf o_covariance(out)] \n")        ;
   fprintf(stderr,"              [-ps ps_filename(out)] [-refbm ref_bitmap(out)] [-th rms_threshold(in)] [-cth cond_thre(in)] \n") ;
-  fprintf(stderr,"              [-wz wgt] [-wl wgt] [-wt wgt] [-df damp_fac(in)] [-med] [-old] [-nt] [-ref] [-h (help)]\n")                                                 ;
+  fprintf(stderr,"              [-wz wgt] [-wl wgt] [-wt wgt] [-df damp_fac(in)] [-med] [-old] [-nt] [-noref] [-h (help)]\n")                                                 ;
 }
 
 
@@ -1924,7 +1927,7 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"  -gfdir path             Green's function directory (./GF/)\n");
 
   fprintf(stderr,"\nOutput files: \n");  
-  fprintf(stderr,"  -ref                    read reference solution in input CMTSOLUTION file (no ref. sol.)\n") ;
+  fprintf(stderr,"  -ref                    read reference solution in input CMTSOLUTION file (ref. sol. used)\n") ;
   fprintf(stderr,"  -ocmtf cmtfil           output CMTSOLUTION file (%s)\n",opt->o_cmtf) ;
   fprintf(stderr,"  -ocovf o_covariance     covariance file (%s)\n",opt->o_covf) ;
   fprintf(stderr,"  -pdata calc_dat_txtfil  predicted data filename (%s)\n",opt->p_data) ;
@@ -2079,7 +2082,7 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->df_val    = 0. ;
   opt->med_val   = 0. ;
   opt->op_pa     = 0. ;
-  opt->ref_val   = 0. ;
+  opt->ref_val   = 1. ;
   opt->ntr_val   = 0. ;
   opt->wZ        = 1. ;
   opt->wL        = 1. ;
@@ -2186,8 +2189,8 @@ get_opt(numarg1, numarg2, argv, opt, eq)
       if (!strncmp(argv[j],"-nt",3)){
 	opt->ntr_val = 1. ;
 	k++ ;}
-      if (!strncmp(argv[j],"-ref",4)){
-	opt->ref_val = 1. ;
+      if (!strncmp(argv[j],"-noref",6)){
+	opt->ref_val = 0. ;
 	k++ ;}
       if (!strncmp(argv[j],"-h",2))
 	disphelp(argv,opt) ;
