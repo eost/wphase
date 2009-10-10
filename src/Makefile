@@ -19,10 +19,10 @@ CFLAGS   = -g -Wall \
 	   -D__SAFETY_DELAY__=$(safetydelay) \
 	   -D__SAFETY_DIST__=$(safetydist)
 
-LDFLAGS  = -g -fsecond-underscore -std=legacy
+LDFLAGS  = -g -fsecond-underscore 
 
 FFLAGS   = -x f77-cpp-input -g -ffixed-line-length-132 -fsecond-underscore \
-		  -D__LEN_SIG__=$(length)
+		  -D__LEN_SIG__=$(length) -std=legacy
 
 # Libmseed dependencies : type 'make with_miniseed' if miniseed reading is required
 CINCLUDES   = -I/opt/libmseed
