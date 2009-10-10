@@ -66,7 +66,7 @@ get_cmtf(eq, flag)
     }  
   if (flag == 2 && nl == 7)
     {
-      flag == 1 ;
+      flag = 1 ;
     }
   else if (flag == 2 && nl != 13)
     {
