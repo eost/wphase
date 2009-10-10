@@ -30,7 +30,7 @@ RUNALL_LTZ = BIN+'RUNA_qrt_LTZ.csh >& RUNA_log'
 
 def wpinversion_50_LTZ(ftable,eq):
 
-	dir = '%s%s_M%d_%s_50deg/'% (RUNQRT,time.strftime('%Y_%m_%d',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
+	dir = '%s%s_M%d_%s_50deg/'% (RUNQRT,time.strftime('%Y_%m_%d_%H_%M_%S',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
 	if os.access(dir,os.F_OK):
 		shutil.rmtree(dir)
 	os.mkdir(dir)
@@ -63,7 +63,7 @@ def wpinversion_50_LTZ(ftable,eq):
 
 def wpinversion_90_LTZ(ftable,eq):
 	
-	dir = '%s%s_M%d_%s_90deg/'% (RUNQRT,time.strftime('%Y_%m_%d',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
+	dir = '%s%s_M%d_%s_90deg/'% (RUNQRT,time.strftime('%Y_%m_%d_%H_%M_%S',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
 	if os.access(dir,os.F_OK):
 		shutil.rmtree(dir)
 	os.mkdir(dir)
@@ -95,7 +95,7 @@ def wpinversion_90_LTZ(ftable,eq):
 
 def wpinversion_50(ftable,eq):
 
-	dir = '%s%s_M%d_%s_50deg_norot/'% (RUNQRT,time.strftime('%Y_%m_%d',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
+	dir = '%s%s_M%d_%s_50deg_norot/'% (RUNQRT,time.strftime('%Y_%m_%d_%H_%M_%S',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
 	if os.access(dir,os.F_OK):
 		shutil.rmtree(dir)
 	os.mkdir(dir)
@@ -128,7 +128,7 @@ def wpinversion_50(ftable,eq):
 
 def wpinversion_90(ftable,eq):
 	
-	dir = '%s%s_M%d_%s_90deg_norot/'% (RUNQRT,time.strftime('%Y_%m_%d',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
+	dir = '%s%s_M%d_%s_90deg_norot/'% (RUNQRT,time.strftime('%Y_%m_%d_%H_%M_%S',eq.Otime),eq.mag,eq.title[7:].replace(' ','_').replace(',','_'))
 	if os.access(dir,os.F_OK):
 		shutil.rmtree(dir)
 	os.mkdir(dir)
@@ -182,10 +182,10 @@ def main(argv=None):
 	
 	mmin   = [0.0      ,   6.5   ,7.0       ,7.5     ,8.0      ]
 	mmax   = [6.5      ,   7.0   ,7.5       ,8.0     ,99.      ]
-	# 	fmin   = [0.0067   ,0.002    ,0.00167  ,0.00167  ,0.001]
-	# 	fmax   = [0.02     ,0.01     ,0.01     ,0.005    ,0.005]
-	fmin   = [0.0020000,0.0016827,0.0014158,0.0011912,0.0010000]
-	fmax   = [0.0100000,0.0084258,0.0070795,0.0059566,0.0050000]	
+	fmin   = [0.0067   ,0.002    ,0.00167  ,0.00167  ,0.001]
+	fmax   = [0.02     ,0.01     ,0.01     ,0.005    ,0.005]
+	#  fmin   = [0.0020000,0.0016827,0.0014158,0.0011912,0.0010000]
+	#  fmax   = [0.0100000,0.0084258,0.0070795,0.0059566,0.0050000]	
 	#       lc = 10^(-1.7615 - 0.15*m)
 	#       hc = 10^(-1.0625 - 0.15*m)	
 	ftable = [mmin,mmax,fmin,fmax]
