@@ -11,7 +11,7 @@ idlen       = 16    # len of station id
 safetydist  = 2.   
 safetydelay = 10.
 
-CFLAGS   = -g -Wall -std=legacy\
+CFLAGS   = -g -Wall \
 	   -D__LEN_SIG__=$(datalen) \
 	   -D__FSIZE__=$(fnamelen) \
 	   -D__IDSIZE__=$(idlen)\
@@ -19,7 +19,7 @@ CFLAGS   = -g -Wall -std=legacy\
 	   -D__SAFETY_DELAY__=$(safetydelay) \
 	   -D__SAFETY_DIST__=$(safetydist)
 
-LDFLAGS  = -g -fsecond-underscore
+LDFLAGS  = -g -fsecond-underscore -std=legacy
 
 FFLAGS   = -x f77-cpp-input -g -ffixed-line-length-132 -fsecond-underscore \
 		  -D__LEN_SIG__=$(length)
