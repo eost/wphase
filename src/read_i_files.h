@@ -42,7 +42,7 @@ void add_slash(char *c);
 /*                      by inverting Wphase.                          */
 /*          > eq->vm[1] moment tensor elements of the reference sol.  */
 /*                      loaded from cmtfile by this routine if flag=2 */
-void get_cmtf(str_quake_params *eq, int flag) ;
+int get_cmtf(str_quake_params *eq, int flag) ;
 
 
 /************************************************/

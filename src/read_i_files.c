@@ -35,32 +35,45 @@ add_slash(char *c)
 /*                      by inverting Wphase.                          */
 /*          > eq->vm[1] moment tensor elements of the reference sol.  */
 /*                      loaded from cmtfile by this routine if flag=2 */
-void 
+int 
 get_cmtf(eq, flag)
      int   flag            ;
      str_quake_params *eq  ; 
 {
-  int    nl, nb, nb2, tmp1 ;
-  char   *line             ;
-  double tmp2              ;
-  FILE   *cmtfile          ;
+  int    nl,nb,nb2,tmp1 ;
+  char   *line          ;
+  double tmp2           ;
+  FILE   *cmtfile       ;
   
   /* Allocate memory    */
   line = char_alloc(LSIZE);
   
   /* Openning file      */
   cmtfile = openfile_rt(eq->cmtfile,&nl);
-
+  
   /* Checking variables */
-  if (nl < 1) {
-    fprintf(stderr,"ERROR : incomplete cmtfile : %s\n", eq->cmtfile) ;
-    fclose(cmtfile) ;
-    exit(1) ; }  
-  else if (flag!=0 && flag!=1 && flag!=2){
-    fprintf(stderr,"ERROR reading cmtfile : %s (incorrect flag) \n", eq->cmtfile) ;
-    fclose(cmtfile) ;
-    exit(1) ; }  
-
+  if (nl < 1) 
+    {
+      fprintf(stderr,"ERROR : incomplete cmtfile : %s\n", eq->cmtfile) ;
+      fclose(cmtfile) ;
+      exit(1) ; 
+    }  
+  else if (flag!=0 && flag!=1 && flag!=2)
+    {
+      fprintf(stderr,"ERROR reading cmtfile : %s (incorrect flag) \n", eq->cmtfile) ;
+      fclose(cmtfile) ;
+      exit(1) ; 
+    }  
+  if (flag == 2 && nl == 7)
+    {
+      flag == 1 ;
+    }
+  else if (flag == 2 && nl != 13)
+    {
+      fprintf(stderr,"ERROR : incomplete cmtfile : %s\n", eq->cmtfile) ;
+      fclose(cmtfile) ;
+      exit(1) ; 
+    } 
 
   /* Read lines */
   nl = 0;
@@ -180,18 +193,27 @@ get_cmtf(eq, flag)
   free((void *)line) ;  
   
   /* Check if nl is correct */
-  if ((flag == 1 && nl < 7) || (flag == 2 && nl < 13)){
-    fprintf(stderr,"ERROR: reading cmtfile %s (field(s) are missing)\n",eq->cmtfile) ;
-    exit(1);}
-  else if ((flag == 1 && nl > 7) || (flag == 2 && nl > 13)){
-    fprintf(stderr,"ERROR: reading cmtfile %s (field(s) redundancy)\n",eq->cmtfile) ;
-    exit(1);}
-  else if (!flag && nl < 1) {
-    fprintf(stderr,"ERROR: PDE missing in cmtfile : %s \n",eq->cmtfile) ;
-    exit(1);}
-  else if (!flag && nl > 1) {
-    fprintf(stderr,"ERROR: PDE redundancy in cmtfile : %s \n",eq->cmtfile) ;
-    exit(1);}
+  if ((flag == 1 && nl < 7) || (flag == 2 && nl < 13))
+    {
+      fprintf(stderr,"ERROR: reading cmtfile %s (field(s) are missing)\n",eq->cmtfile) ;
+      exit(1);
+    }
+  else if ((flag == 1 && nl > 7) || (flag == 2 && nl > 13))
+    {
+      fprintf(stderr,"ERROR: reading cmtfile %s (field(s) redundancy)\n",eq->cmtfile) ;
+      exit(1);
+    }
+  else if (!flag && nl < 1) 
+    {
+      fprintf(stderr,"ERROR: PDE missing in cmtfile : %s \n",eq->cmtfile) ;
+      exit(1);
+    }
+  else if (!flag && nl > 1) 
+    {
+      fprintf(stderr,"ERROR: PDE redundancy in cmtfile : %s \n",eq->cmtfile) ;
+      exit(1);
+    }
+  return flag ;
 }
 
 
