@@ -11,7 +11,7 @@ idlen       = 16    # len of station id
 safetydist  = 2.   
 safetydelay = 10.
 
-CFLAGS   = -g -Wall \
+CFLAGS   = -g -Wall -std=legacy\
 	   -D__LEN_SIG__=$(datalen) \
 	   -D__FSIZE__=$(fnamelen) \
 	   -D__IDSIZE__=$(idlen)\
