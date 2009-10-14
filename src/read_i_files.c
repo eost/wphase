@@ -64,11 +64,11 @@ get_cmtf(eq, flag)
       fclose(cmtfile) ;
       exit(1) ; 
     }  
-  if (flag == 2 && nl == 7)
+  if (flag == 2 && nl <= 7)
     {
       flag = 1 ;
     }
-  else if (flag == 2 && nl != 13)
+  else if (flag == 2 && nl < 13)
     {
       fprintf(stderr,"ERROR : incomplete cmtfile : %s\n", eq->cmtfile) ;
       fclose(cmtfile) ;
@@ -214,6 +214,30 @@ get_cmtf(eq, flag)
       exit(1);
     }
   return flag ;
+}
+
+
+/********************************************************/
+/*  W-phase time window used in the data fit.           */ 
+/*  The epicentral distance is given in degrees and     */
+/*  both times are given in seconds with respect to the */
+/*  P arrival time.                                     */
+/*  The window is defined with 1, 2, 3 or 4 parameters  */
+void 
+wp_time_window(gcarc, wp_win4, twp_beg, twp_end)
+     double *gcarc, *wp_win4, *twp_beg, *twp_end ;
+{
+  double feakdist;
+
+  if (wp_win4[2] > *gcarc) 
+    feakdist = wp_win4[2] ;
+  else
+    feakdist = *gcarc ;
+  if (wp_win4[3] < feakdist) 
+    feakdist = wp_win4[3] ;
+
+  *twp_beg = wp_win4[0] * feakdist ;
+  *twp_end = wp_win4[1] * feakdist ;
 }
 
 

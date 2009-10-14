@@ -50,7 +50,6 @@ typedef struct
 
 
 /* Parameter setting functions */
-void wp_time_window(double *gcarc, double *wp_win4, double *twp_beg, double *twp_end) ;
 void get_opt(int numarg1, int numarg2, char **argv, structopt *opt, str_quake_params *eq) ;
 void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq, int *flag);
 void get_param2(char *file, structopt *opt, str_quake_params *eq, int *flag) ;
@@ -1827,30 +1826,6 @@ w_log_header(argv, opt, eq, wp_win4, o_log)
   fflush(o_log)       ;
 }
 
-
-
-/********************************************************/
-/*  W-phase time window used in the data fit.           */ 
-/*  The epicentral distance is given in degrees and     */
-/*  both times are given in seconds with respect to the */
-/*  P arrival time.                                     */
-/*  The window is defined with 1, 2, 3 or 4 parameters  */
-void 
-wp_time_window(gcarc, wp_win4, twp_beg, twp_end)
-     double *gcarc, *wp_win4, *twp_beg, *twp_end ;
-{
-  double feakdist;
-
-  if (wp_win4[2] > *gcarc) 
-    feakdist = wp_win4[2] ;
-  else
-    feakdist = *gcarc ;
-  if (wp_win4[3] < feakdist) 
-    feakdist = wp_win4[3] ;
-
-  *twp_beg = wp_win4[0] * feakdist ;
-  *twp_end = wp_win4[1] * feakdist ;
-}
 
 
 void get_param2(file, opt, eq,  flag)
