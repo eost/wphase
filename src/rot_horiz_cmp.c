@@ -162,16 +162,17 @@ main(int argc, char *argv[])
       rdatsac(h_fil[0], &hdr1, x_in1, &ierror) ; 
       rdatsac(h_fil[1], &hdr2, x_in2, &ierror) ;
       /* Rotate E/N components to L/T */
-      co = cos(M_PI * (az/180. - 1.)) ;
-      si = sin(M_PI * (az/180. - 1.)) ;
-      for (i=0; i<hdr1.npts; i++) {
-	tmp      = -si * x_in1[i] - co * x_in2[i] ;
-	x_in2[i] = co * x_in1[i] - si * x_in2[i]  ;
-	x_in1[i] = tmp ; }
+      co = cos(M_PI*(double)hdr1.baz/180.);
+      si = sin(M_PI*(double)hdr1.baz/180.);
+      for(i=0; i<hdr1.npts; i++)
+	{
+	  tmp  = -co*x_in2[i] -si*x_in1[i]     ;
+	  x_in2[i] = -si*x_in2[i] + co*x_in1[i] ;
+	  x_in1[i] = tmp ;
+	}      
       /* Writing Longitudinal cmp */
       strcpy(hdproto->kcmpnm, "LHL     ") ;
       o_fil = get_gf_filename(o_dir, sta, net, "LHL", ".data.sac") ;
-      hdproto->cmpaz = (float)az ;
       printf("%-9s L : %-f", hdproto->kstnm, hdproto->cmpaz) ;
       whdrsac( o_fil, hdproto) ;
       wdatsac( o_fil, hdproto, x_in1) ;
@@ -182,7 +183,6 @@ main(int argc, char *argv[])
       /* Writing Transverse cmp */
       strcpy(hdproto->kcmpnm, "LHT     ") ;
       o_fil = get_gf_filename(o_dir, sta, net, "LHT", ".data.sac") ;
-      hdproto->cmpaz = (float)(az - 90.) ;
       printf(" T : %-f\n", hdproto->cmpaz) ;
       whdrsac( o_fil, hdproto) ;
       wdatsac( o_fil, hdproto, x_in2) ;
