@@ -74,6 +74,7 @@ main(int argc, char *argv[])
   while( (tmp=fscanf (i_sacf, "%s", fil)) != EOF )
     {
       check_scan(1, tmp, i_sacs, i_sacf);
+
       /* Read sac file */
       rhdrsac(fil, &hdr, &ierror)       ;
       if (hdr.npts > (int)__LEN_SIG__)
@@ -86,6 +87,7 @@ main(int argc, char *argv[])
       baz  = 0. ;
       xdeg = 0. ;
       distaz(eq.pde_evla, eq.pde_evlo, &hdr.stla, &hdr.stlo, tmp, &dist, &az, &baz, &xdeg, &nerr) ;
+
       /* Set travel time */
       xdegd = (double) xdeg                         ;
       trav_time(&xdegd, tv, dv, &nd, &P_tt, &tterr) ;
@@ -97,8 +99,8 @@ main(int argc, char *argv[])
       hdr.t[0]  = (float)(P_tt + tdiff) ; /* P arrival         */
 
       /* Windowing -- Screening by distance */
-      tdiff   += P_tt - (double)hdr.b - eq.preevent - (double)SAFETY_DELAY ;  /*time for the 1st sample */
-      sampstart = (int) (tdiff/((double)hdr.delta) + 0.5)               ;
+      tdiff    += P_tt - (double)hdr.b - eq.preevent - (double)SAFETY_DELAY ;      /* time for the 1st sample */
+      sampstart = (int) (tdiff/((double)hdr.delta) + 0.5)                   ;
       if ((int)(hdr.delta * 1000.+0.5) != (int)((float)SAMPLEPERIOD * 1000.+0.5)) /* *************** MAY BE MODIFIED ***************** */
 	{
 	  fprintf(stderr, "WARNING: non uniform samp. period between sac files\n") ;
@@ -110,9 +112,10 @@ main(int argc, char *argv[])
 	{
 	  /* Set new sac header variables */
 	  hdr.delta = (float) SAMPLEPERIOD  ;
-	  hdr.o     = (float) otime         ; /* event origin time */
-	  hdr.npts  = hdr.npts + 1 - sampstart; /* nb of samples     */
-	  hdr.b     = hdr.b + ((float)sampstart)*hdr.delta ; /* Error **** shift of the first sample */
+	  hdr.o     = (float) otime         ;   /* event origin time */
+	  //hdr.npts  = hdr.npts + 1 - sampstart;              /* Error **** nb of samples             */
+	  hdr.npts  = hdr.npts - sampstart ;                 /* nb of samples (corrected) */
+	  hdr.b     = hdr.b + ((float)sampstart)*hdr.delta ; /* shift of the first sample (corrected) */
 	  hdr.e     = hdr.b + (hdr.npts-1) * hdr.delta    ; 
 	  hdr.dist  = dist ; /* epicentral distance (km)                      */
 	  hdr.gcarc = xdeg ; /* station to event great circle arc length(deg) */
@@ -126,7 +129,8 @@ main(int argc, char *argv[])
 	  if (hdr.npts > (int)__LEN_SIG__)
 	    fprintf(stderr,"Warning : traces cut to %d samples.\n", (int)__LEN_SIG__);
 	  whdrsac(fil, &hdr);
-	  x_out = &x_in[sampstart-1]; /* Error **** shift of the first sample */
+	  //x_out = &x_in[sampstart-1]; /* Error **** shift of the first sample */
+	  x_out = &x_in[sampstart];   /* shift of the first sample (corrected) */	  
 	  wdatsac(fil, &hdr, x_out);
 
 	  /* Sort sac files in a tree */
