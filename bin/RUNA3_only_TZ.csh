@@ -7,7 +7,7 @@ set my_argv = ($ARGV)
 if ($#my_argv < 1) then
     set wT = 1.
     set wZ = 1.
-else if ($#my_argv == 3) then
+else if ($#my_argv == 2) then
     set wT = $my_argv[1]
     set wZ = $my_argv[2]
 else
