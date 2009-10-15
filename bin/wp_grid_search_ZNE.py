@@ -20,15 +20,15 @@ if WPHOME[-1] != '/':
 BIN = WPHOME+'bin/'
 
 REPREPARE_TS = BIN+'reprepare_wp_ts_ZNE.csh'
-WPINV_TS     = BIN+'wpinversion_ZNE -nt -imas ts_i_master -ifil o_wpinversion -ofil ts_o_wpinversion -ocmtf ts_WCMTSOLUTION '+\
+WPINV_TS     = BIN+'wpinversion_ZNE -imas ts_i_master -ifil o_wpinversion -ofil ts_o_wpinversion -ocmtf ts_WCMTSOLUTION '+\
                    '-ps ts_p_wpinversion -wpbm ts_wpinv.pgm -log LOG/_ts_wpinversion.log -osyndir ts_SYNTH -pdata ts_fort.15'
 
 RECALCSYN_XY = BIN+'recalc_fast_synths_ZNE.csh'
 REPREPARE_XY = BIN+'reprepare_wp_xy_ZNE.csh'
-WPINV_XY     = BIN+'wpinversion_ZNE -nt -imas xy_i_master -ifil xy_o_wpinversion -ofil xy_o_wpinversion -ocmtf xy_WCMTSOLUTION '+\
+WPINV_XY     = BIN+'wpinversion_ZNE -imas xy_i_master -ifil xy_o_wpinversion -ofil xy_o_wpinversion -ocmtf xy_WCMTSOLUTION '+\
                    '-ps xy_p_wpinversion -wpbm xy_wpinv.pgm -log LOG/_xy_wpinversion.log -osyndir xy_SYNTH -pdata xy_fort.15'
 
-WPINV_DP     = BIN+'wpinversion_ZNE -nt -imas dp_i_master -ifil dp_o_wpinversion -ofil dp_o_wpinversion '+\
+WPINV_DP     = BIN+'wpinversion_ZNE -imas dp_i_master -ifil dp_o_wpinversion -ofil dp_o_wpinversion '+\
                    '-wpbm dp_wpinv.pgm -log LOG/_dp_wpinversion.log -osyndir dp_SYNTH -pdata dp_fort.15'
 
 

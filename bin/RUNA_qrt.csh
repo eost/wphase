@@ -49,7 +49,7 @@ endif
 ${RM} -f i_tmp
 
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-	 -wn ${wN} -we ${wE} -wz ${wZ} -nt -med
+	 -wn ${wN} -we ${wE} -wz ${wZ} -med
 
 ${CP} -f p_wpinversion p_wpinversion.noth
 ${CP} -f o_wpinversion o_wpinversion.noth
@@ -67,7 +67,7 @@ foreach th ($ths)
     $WPINVER  -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
 	      -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
 	      -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir} \
-	      -wn ${wN} -we ${wE} -wz ${wZ} -nt -old 
+	      -wn ${wN} -we ${wE} -wz ${wZ} -old 
     ${CP} -f o_wpinv.th_$th o_wpinversion
     set NBSTA = `${CAT} o_wpinversion | ${WC}  -l`
     if ( $NBSTA < 25 ) then

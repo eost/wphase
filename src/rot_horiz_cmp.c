@@ -33,10 +33,9 @@ main(int argc, char *argv[])
   FILE   *istaf, *ostaf       ;
   sachdr hdr1, hdr2, *hdproto ;
   str_quake_params eq ;
-  structopt opt ;
 
   /* Input params */
-  get_params(argc, argv, &scr_lst, &o_lst, &o_dir, &eq,&opt) ;
+  get_params(argc, argv, &scr_lst, &o_lst, &o_dir, &eq) ;
 
 
   /* Allocate data tabs     */

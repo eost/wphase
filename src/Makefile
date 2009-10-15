@@ -1,6 +1,6 @@
 ## Compilers
 CC          =  cc           # C compiler
-FC	    =  gfortran     # fortran compiler
+FC	    =  gfortran-4.3 # fortran compiler
 			    #
 
 # Some parameters
@@ -63,7 +63,7 @@ $(BIN)/wpinversion_ZNE:wpinversion_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
 	travel_times.o jacobi.o charplot.o read_i_files.o -o $(BIN)/wpinversion_ZNE -lm
 
 wpinversion_ZNE.o:wpinversion_ZNE.c
-	@ $(CC) $(CFLAGS) -c wpinversion.c
+	@ $(CC) $(CFLAGS) -c wpinversion_ZNE.c
 
 $(BIN)/wpinversion_LTZ:wpinversion_LTZ.o rwsacs.o proto_alloc.o rwtextfiles.o \
 	travel_times.o jacobi.o charplot.o read_i_files.o

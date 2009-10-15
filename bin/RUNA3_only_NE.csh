@@ -30,8 +30,7 @@ if ! $status then
 endif
 ${RM} -f i_tmp 
 
-$WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-	 -ref -nt 
+$WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir}
 
 ${CP} p_wpinversion p_wpinversion.noth
 ${CP} o_wpinversion o_wpinversion.noth
@@ -46,7 +45,7 @@ foreach th ($ths)
     $WPINVER -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
     -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
     -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th}\
-    -gfdir ${gf_dir} -ref -nt -old
+    -gfdir ${gf_dir} -old
 
 #     set NBSTA = `${CAT} o_wpinversion | ${WC}  -l`
 #     if ( $NBSTA < 20 ) then
