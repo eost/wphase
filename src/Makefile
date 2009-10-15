@@ -1,6 +1,6 @@
 ## Compilers
 CC          =  cc           # C compiler
-FC	    =  gfortran-4.3 # fortran compiler
+FC	    =  gfortran     # fortran compiler
 			    #
 
 # Some parameters
