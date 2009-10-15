@@ -1882,7 +1882,7 @@ dispsynt(char **argv)
   fprintf(stderr,"              [-log logfil(out)] [-icmtf cmtfil(in)] [-ocmtf cmtfil(out)] [-osyndir out_synt_dir] \n")   ;
   fprintf(stderr,"              [-pdata calc_dat_txtfil(out)] [-wpbm wp_bitmap(out)] [-ocovf o_covariance(out)] \n")        ;
   fprintf(stderr,"              [-ps ps_filename(out)] [-refbm ref_bitmap(out)] [-th rms_threshold(in)] [-cth cond_thre(in)] \n") ;
-  fprintf(stderr,"              [-wz wgt] [-wl wgt] [-wt wgt] [-df damp_fac(in)] [-med] [-old] [-nt] [-noref] [-h (help)]\n")                                                 ;
+  fprintf(stderr,"              [-wz wgt] [-wl wgt] [-wt wgt] [-df damp_fac(in)] [-med] [-old] [-nont] [-noref] [-h (help)]\n")                                                 ;
 }
 
 
@@ -2167,7 +2167,7 @@ get_opt(numarg1, numarg2, argv, opt, eq)
       if (!strncmp(argv[j],"-old",4)){
 	opt->op_pa   = 1. ;	
 	k++ ;}
-      if (!strncmp(argv[j],"-nont",3)){
+      if (!strncmp(argv[j],"-nont",5)){
 	opt->ntr_val = 0. ;
 	k++ ;}
       if (!strncmp(argv[j],"-noref",6)){

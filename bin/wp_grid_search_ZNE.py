@@ -646,6 +646,7 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 	rmsini  = float(out[0].strip('\n').split()[1])
 	nrmsini = float(out[0].strip('\n').split()[2])
 	format  = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
+ 	print WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,o_file)
 	if flag:
 		fid.close()
 		os.system(WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion >> %s'% (ts1,sts,ts2,o_file,fileout))
