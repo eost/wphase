@@ -11,15 +11,9 @@
 #include "read_i_files.h"
 
 
-typedef struct
-{
-  int fad;
-} structopt ;
-
-
 /* Internal routines */
 void get_params(int argc, char **argv, char **scr_lst, char **o_lst, char **o_dir,
-		str_quake_params *eq, structopt *opt);
+		str_quake_params *eq);
 
 /* External routines */
 void distaz(double    cmt_lat,  double    cmt_lon,  float*    stlats,  float*    stlons, 
@@ -80,13 +74,10 @@ main(int argc, char *argv[])
 	  o_fil = get_gf_filename(o_dir, sta, net, "LHZ", ".data.sac") ;
 	  rhdrsac(i_fil, &hdr1, &ierror)        ;
 	  rdatsac(i_fil, &hdr1, x_in1, &ierror) ;
-	  if (opt.fad)
-	    {
-	      distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, &hdr1.baz, &hdr1.gcarc, &nerr) ;
-	      az   = (double) hdr1.az     ;
-	      xdeg = (double) hdr1.gcarc  ;
-	      hdr1.evdp = (float) eq.evdp ;
-	    }
+	  distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, &hdr1.baz, &hdr1.gcarc, &nerr) ;
+	  az   = (double) hdr1.az     ;
+	  xdeg = (double) hdr1.gcarc  ;
+	  hdr1.evdp = (float) eq.evdp ;
 	  fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
 		  o_fil,sta,net,cmp,stla,stlo,stel,az,xdeg) ;
 	  whdrsac(  o_fil, &hdr1) ;
@@ -142,19 +133,16 @@ main(int argc, char *argv[])
       /* Read input sac file */
       rhdrsac(h_fil[0], &hdr1, &ierror) ;
       rhdrsac(h_fil[1], &hdr2, &ierror) ;
-      if (opt.fad)
-	{
-	  distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, 
-		 &hdr1.baz, &hdr1.gcarc, &nerr) ;
-	  hdr2.dist  = hdr1.dist     ;	  
-	  hdr2.az    = hdr1.az       ;
-	  hdr2.baz   = hdr1.baz      ;
-	  hdr2.gcarc = hdr1.gcarc    ;
-	  az   = (double) hdr1.az    ;
-	  xdeg = (double) hdr1.gcarc ;
-	  hdr1.evdp = (float) eq.evdp ;
-	  hdr2.evdp = (float) eq.evdp ;
-	}
+      distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, 
+	     &hdr1.baz, &hdr1.gcarc, &nerr) ;
+      hdr2.dist  = hdr1.dist     ;	  
+      hdr2.az    = hdr1.az       ;
+      hdr2.baz   = hdr1.baz      ;
+      hdr2.gcarc = hdr1.gcarc    ;
+      az   = (double) hdr1.az    ;
+      xdeg = (double) hdr1.gcarc ;
+      hdr1.evdp = (float) eq.evdp ;
+      hdr2.evdp = (float) eq.evdp ;
       hdproto = &hdr1 ;
       if (hdr1.npts > hdr2.npts) 
 	hdproto = &hdr2 ;
@@ -268,12 +256,12 @@ get_char_arg(argv, j, i, numarg2, str)
 
 
 void 
-get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq, structopt *opt)
+get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq)
 {
   int i,j,k;
 
   /* Default values */
-  opt->fad = 0 ;
+  strcpy(eq->cmtfile,"CMTSOLUTION") ;
   k = 0        ;
   for (i=0; i<numarg2; i++)
     {
@@ -281,7 +269,6 @@ get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq, structopt *
       if (!strncmp(argv[j],"-icmtf",6))
 	{
 	  get_char_arg(argv, j, i, numarg2, eq->cmtfile) ;
-	  opt->fad = 1;
 	  k+=2 ;
 	}
       if (!strncmp(argv[j],"-h",2))
@@ -295,7 +282,7 @@ get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq, structopt *
 
 void 
 get_params(int argc, char **argv, char **scr_lst, char **o_lst, char **o_dir, 
-	   str_quake_params *eq, structopt *opt)
+	   str_quake_params *eq)
 {
   int numarg1, numarg2 ;
 
@@ -320,14 +307,9 @@ get_params(int argc, char **argv, char **scr_lst, char **o_lst, char **o_dir,
   strcpy(*o_lst, argv[2])      ;
   strcpy(*o_dir, argv[3])      ;
 
-  get_opt(numarg1,numarg2,argv,eq,opt) ;
-  if (opt->fad)
-    {
-      printf("Using centroid location in %s : \n",eq->cmtfile);
-      printf("      corresponding azim. and ep. distances \n");
-      printf("      will be used and writen in sac headers \n");
-      get_cmtf(eq,1) ;
-    }
-  else
-    printf("Using source location of sac headers\n");
+  get_opt(numarg1,numarg2,argv,eq) ;
+  printf("Using centroid location in %s : \n",eq->cmtfile);
+  printf("      corresponding azim. and ep. distances \n");
+  printf("      will be used and writen in sac headers \n");
+  get_cmtf(eq,1) ;
 }

@@ -44,7 +44,7 @@ EXE = $(BIN)/rec_dec_filt\
       $(BIN)/make_resp_lookup_table\
       $(BIN)/trim_sac_files\
       $(BIN)/FAST\
-      $(BIN)/wpinversion\
+      $(BIN)/wpinversion_ZNE\
       $(BIN)/wpinversion_LTZ\
       $(BIN)/synth_v5\
       $(BIN)/rot_horiz_cmp\
@@ -57,12 +57,12 @@ all : $(EXE)
 with_miniseed:  $(EXE) $(BIN)/trim_sac_files_qrt
 
 # Inversion
-$(BIN)/wpinversion:wpinversion.o rwsacs.o proto_alloc.o rwtextfiles.o \
+$(BIN)/wpinversion_ZNE:wpinversion_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
 	travel_times.o jacobi.o charplot.o read_i_files.o
-	@ $(CC) $(LDFLAGS) wpinversion.o rwsacs.o proto_alloc.o rwtextfiles.o \
-	travel_times.o jacobi.o charplot.o read_i_files.o -o $(BIN)/wpinversion -lm
+	@ $(CC) $(LDFLAGS) wpinversion_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
+	travel_times.o jacobi.o charplot.o read_i_files.o -o $(BIN)/wpinversion_ZNE -lm
 
-wpinversion.o:wpinversion.c
+wpinversion_ZNE.o:wpinversion_ZNE.c
 	@ $(CC) $(CFLAGS) -c wpinversion.c
 
 $(BIN)/wpinversion_LTZ:wpinversion_LTZ.o rwsacs.o proto_alloc.o rwtextfiles.o \

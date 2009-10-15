@@ -4,10 +4,10 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 ##################################
 
 set BIN     = $WPHASE_HOME/bin
-set EXTRACT = ${BIN}/extract_only_H.csh
-set CALC    = ${BIN}/calc_fast_synths.csh
-set PREPARE = ${BIN}/prepare_wp.csh
-set WPINVER = ${BIN}/wpinversion
+set EXTRACT = ${BIN}/extract_only_NE.csh
+set CALC    = ${BIN}/calc_fast_synths_ZNE.csh
+set PREPARE = ${BIN}/prepare_wp_ZNE.csh
+set WPINVER = ${BIN}/wpinversion_ZNE
 
 
 ${RM} -rf SYNTH
@@ -29,11 +29,6 @@ if ! $status then
         set gf_dir   = `echo $tmp | ${HEAD} -1 | ${CUT} -d: -f2`
 endif
 ${RM} -f i_tmp 
-
-# ${RM} -rf GF
-# ${CP} -f /home/zac/WP6/run_test_martinique07/*.dec.bp.int DATA/
-# ${CP} -rf /home/zac/WP6/run_test_martinique07/GF ./
-
 
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
 	 -ref -nt 

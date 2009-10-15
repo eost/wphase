@@ -12,7 +12,6 @@ else if ($#my_argv == 3) then
     set wZ = $my_argv[1]
     set wN = $my_argv[2]
     set wE = $my_argv[3]
-
 else
     echo "*** ERROR ($0) ***"
     echo "Syntax: $0 [wZ wN wE]"
@@ -21,9 +20,9 @@ endif
 
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract.csh
-set CALC    = ${BIN}/calc_fast_synths.csh
-set PREPARE = ${BIN}/prepare_wp.csh
-set WPINVER = ${BIN}/wpinversion
+set CALC    = ${BIN}/calc_fast_synths_ZNE.csh
+set PREPARE = ${BIN}/prepare_wp_ZNE.csh
+set WPINVER = ${BIN}/wpinversion_ZNE
 
 ${RM} -rf SYNTH
 ${MKDIR} SYNTH
@@ -45,11 +44,6 @@ if ! $status then
 endif
 ${RM} -f i_tmp
 
-# ${RM} -rf GF
-# ${CP} -f /home/zac/WP6/run_test_martinique07/*.dec.bp.int DATA/
-# ${CP} -rf /home/zac/WP6/run_test_martinique07/GF ./
-
-
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
 	 -pdata fort.15.noth -wn ${wN} -we ${wE} -wz ${wZ} -nt -med
 
@@ -58,7 +52,7 @@ ${CP} o_wpinversion o_wpinversion.noth
 ${CP} WCMTSOLUTION WCMTSOLUTION.noth
 
 ${CP} o_wpinversion o_wpinv
-set ths =  "5.0 4.0 3.0 2.0 1.0 0.9"
+set ths =  "5.0 3.0 0.9"
 
 
 foreach th ($ths)

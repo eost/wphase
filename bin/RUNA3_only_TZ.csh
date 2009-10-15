@@ -42,10 +42,6 @@ if ! $status then
 endif
 ${RM} -f i_tmp
 
-# ${RM} -rf GF
-# ${CP} -f /home/zac/WP6/run_test_martinique07/*.dec.bp.int DATA/
-# ${CP} -rf /home/zac/WP6/run_test_martinique07/GF ./
-
 ${RM} -f i_wpinversion
 ${GREP} LHT rot_dec_bp_dat_fil_list | ${CUT} -d' ' -f1  >! i_wpinversion
 ${GREP} LHZ rot_dec_bp_dat_fil_list | ${CUT} -d' ' -f1  >> i_wpinversion

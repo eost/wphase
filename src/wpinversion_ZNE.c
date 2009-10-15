@@ -1893,12 +1893,6 @@ disphelp(char **argv,structopt *opt)
   dispsynt(argv) ;  
   fprintf(stderr,"\nAll parameters are optional :\n");
 
-  fprintf(stderr,"\nInversion :\n");  
-  fprintf(stderr,"  -nt                     constraining the trace of the moment tensor to be zero (no constraints)\n") ;
-  fprintf(stderr,"  -cth real_value         set conditioning threshold (no conditioning)\n") ;
-  fprintf(stderr,"  -df real_value          set the damping factor to use when the conditioning threshold\n");
-  fprintf(stderr,"                                specified by -cth is reached (no conditioning)\n") ;
-
   fprintf(stderr,"\nInput files: \n");
   fprintf(stderr,"  -imas imasterfile       imaster file (%s)\n",opt->i_master);
   fprintf(stderr,"  -ifil stalistfile       input sac file list (%s)\n",opt->i_saclst);
@@ -1923,14 +1917,18 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"\nOutput paths: \n");
   fprintf(stderr,"  -osyndir out_synt_dir   output synthetic directory (%s)\n",opt->osacdir) ;
 
+  fprintf(stderr,"\nInversion :\n");  
+  fprintf(stderr,"  -nont                   no constraints on the moment tensor trace (zero trace)\n") ;
+  fprintf(stderr,"  -cth real_value         set conditioning threshold (no conditioning)\n") ;
+  fprintf(stderr,"  -df real_value          set the damping factor to use when the conditioning threshold\n");
+  fprintf(stderr,"                                specified by -cth is reached (no conditioning)\n") ;
+
   fprintf(stderr,"\n data weighting and screening: \n");  
   fprintf(stderr,"  -wz real_value          weight for LHZ channels (%f)\n",opt->wZ);
   fprintf(stderr,"  -wn real_value          weight for LHN channels (%f)\n",opt->wN);
   fprintf(stderr,"  -we real_value          weight for LHE channels (%f)\n",opt->wE);
   fprintf(stderr,"  -med                    screening data before inversion (no pre-screening)\n") ;
   fprintf(stderr,"  -th real_value          reject data using a rms threshold (no rms threshold)\n") ; 
-
-
 
   fprintf(stderr,"\nTime-shift grid-search :\n");
   fprintf(stderr,"  -dts real_value         apply a time-shift to Green's functions (no time-shift)\n");
@@ -2066,7 +2064,7 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->med_val   = 0. ;
   opt->op_pa     = 0. ;
   opt->ref_val   = 1. ;
-  opt->ntr_val   = 0. ;
+  opt->ntr_val   = 1. ;
   opt->wZ        = 1. ;
   opt->wN        = 1. ;
   opt->wE        = 1. ;
@@ -2169,8 +2167,8 @@ get_opt(numarg1, numarg2, argv, opt, eq)
       if (!strncmp(argv[j],"-old",4)){
 	opt->op_pa   = 1. ;	
 	k++ ;}
-      if (!strncmp(argv[j],"-nt",3)){
-	opt->ntr_val = 1. ;
+      if (!strncmp(argv[j],"-nont",3)){
+	opt->ntr_val = 0. ;
 	k++ ;}
       if (!strncmp(argv[j],"-noref",6)){
 	opt->ref_val = 0. ;

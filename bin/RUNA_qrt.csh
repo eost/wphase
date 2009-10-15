@@ -23,9 +23,9 @@ endif
 
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract_qrt.csh
-set CALC    = ${BIN}/calc_fast_synths.csh
-set PREPARE = ${BIN}/prepare_wp.csh
-set WPINVER = ${BIN}/wpinversion
+set CALC    = ${BIN}/calc_fast_synths_ZNE.csh
+set PREPARE = ${BIN}/prepare_wp_ZNE.csh
+set WPINVER = ${BIN}/wpinversion_ZNE
 
 
 ${RM} -rf SYNTH
