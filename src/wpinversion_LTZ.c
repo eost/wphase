@@ -35,7 +35,7 @@ typedef struct
   double th_val, cth_val, df_val, med_val  ;
   double op_pa, p2p_med, p2p_low, p2p_high ;
   double dts_min,dts_step,dts_max, dts_val ; 
-  double  ntr_val, ref_val ;
+  double  ntr_val, ref_val, dmin, dmax,azp ;
   double *rms_in, *p2p,*avg, *wgt,wZ,wL,wT ;
   char   i_master[FSIZE], i_saclst[FSIZE]  ;
   char   o_saclst[FSIZE], log[FSIZE]       ; 
@@ -384,7 +384,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(ps, "(WPWIN: %-8.2f %-8.2f %-8.2f %-8.2f ) show\n"
 	  , eq->wp_win4[0], eq->wp_win4[1], eq->wp_win4[2], eq->wp_win4[3]) ;
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.8-((double)nb)/8.) ;
-  fprintf(ps, "(Dmin : %-8.2f Dmax :%-8.2f) show\n", eq->dmin, eq->dmax) ;
+  fprintf(ps, "(Dmin : %-8.2f Dmax :%-8.2f) show\n", opt->dmin, opt->dmax) ;
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.9-((double)nb)/8.) ;
   fprintf(ps, "(wL   : %-8.2f wT   :%-8.2f wZ   :%-8.2f) show\n", opt->wL, opt->wT, opt->wZ);  
 
@@ -1313,6 +1313,42 @@ set_wgt(int ns, sachdr *hd_data,structopt *opt)
     opt->wgt[ns] = opt->wT;
 }
 
+void
+azpond (sachdr *hd_synt, int ns, structopt *opt) 
+{
+  int    i, j ;
+  double moy, std, mok ;
+  double *aztab, *azcov ;
+
+  aztab = double_alloc(ns) ;
+  azcov = double_alloc(ns) ;
+
+  for (i=0; i<ns; i++)
+    aztab[i] = hd_synt[i].az ;
+  sort(aztab, &ns);
+  for (i=0; i<ns-1; i++)
+    {
+      aztab[i] = aztab[i+1]-aztab[i] ;
+      moy  += aztab[i] ;
+    }
+  moy /= ns ;
+  for (i=0; i<ns-1; i++)
+    std += (aztab[i] - moy)*(aztab[i] - moy) ;
+  std = sqrt(std/ns) ;
+
+  for(i=0; i<ns ; i++)
+    {
+      for(j=0; j<ns; j++)
+	{
+	  mok = (hd_synt[i].az-hd_synt[j].az)/std ;
+	  azcov[i] += exp(-1./2.*mok*mok) ;
+	}
+      opt->wgt[i] += 1./(azcov[i]*azcov[i]);
+    }
+  free((void*)aztab) ;
+  free((void*)azcov) ;
+}
+
 void 
 set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	      data, G, opt, eq,o_log) 
@@ -1368,6 +1404,9 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 
   /* Set GFs and data matrix */
   ns = 0 ;
+  opt->dmin = 2.e4 ;
+  opt->dmax = 0.   ;  
+
   for(i=0; i<*nsac; i++)
     {
       /* Read data file list */
@@ -1416,6 +1455,10 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
        
       /* Set time window  */
       gcarc = (double) hd_data.gcarc ;
+      if (opt->dmin > gcarc)
+	opt->dmin = gcarc ;
+      if (opt->dmax < gcarc)
+	opt->dmax = gcarc ;
       fflush(stdout);
       trav_time(&gcarc, tv, dv, &nd, &Ptt, &ierror) ;
       wp_time_window(&gcarc, wp_win4, &twp_beg, &twp_end) ;
@@ -1525,6 +1568,10 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   *nsac  = ns   ;
   fclose(i_sac) ;
   
+  /* Azimuth ponderation */
+  if (opt->azp)
+    azpond(*hd_synt,ns,opt) ;
+
   /* Memory Freeing */
   free((void*)tmparray) ;
   free((void*)dv)       ;
@@ -1919,6 +1966,7 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"  -wz real_value          weight for LHZ channels (%f)\n",opt->wZ);
   fprintf(stderr,"  -wl real_value          weight for LHL channels (%f)\n",opt->wL);
   fprintf(stderr,"  -wt real_value          weight for LHT channels (%f)\n",opt->wT);
+  fprintf(stderr,"  -azp                    azimuth weighting (no az. ponderation)\n");
   fprintf(stderr,"  -med                    screening data before inversion (no pre-screening)\n") ;
   fprintf(stderr,"  -th real_value          reject data using a rms threshold (no rms threshold)\n") ; 
   
@@ -2153,6 +2201,9 @@ get_opt(numarg1, numarg2, argv, opt, eq)
       if (!strncmp(argv[j],"-wt",3)){
 	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wT) ;
 	k+=2 ;}
+      if (!strncmp(argv[j],"-azp",4)){
+	opt->azp = 1 ;
+	k+=1 ;}
       if (!strncmp(argv[j],"-med",4)){
 	opt->med_val = 1 ;	
 	k++ ;}
@@ -2184,7 +2235,7 @@ get_param1(argc, argv, M, opt, eq, flag)
      structopt *opt ; 
 {
   int numarg1, numarg2 ;
-  int max = 46 ;
+  int max = 47 ;
 
   numarg1 = 0              ;
   numarg2 = argc-numarg1-1 ;

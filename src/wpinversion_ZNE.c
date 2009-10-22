@@ -35,7 +35,7 @@ typedef struct
   double th_val, cth_val, df_val, med_val  ;
   double op_pa, p2p_med, p2p_low, p2p_high ;
   double dts_min,dts_step,dts_max, dts_val ; 
-  double  ntr_val, ref_val, dmin, dmax     ;
+  double  ntr_val, ref_val, dmin, dmax,azp ;
   double *rms_in, *p2p,*avg, *wgt,wZ,wN,wE ;
   char   i_master[FSIZE], i_saclst[FSIZE]  ;
   char   o_saclst[FSIZE], log[FSIZE]       ; 
@@ -68,7 +68,7 @@ void calc_rms_sub(int npts, double *data, double **dcalc, double *rms,
 		   int flag) ;
 void calc_rms(int *ns, sachdr *hd_synt, double **data, double ***dcalc, 
 	       double **rms, double *global_rms, structopt *opt, int flag) ;
-
+void azpond(sachdr *hd_synt, int ns, structopt *opt) ;
 
 /* Inversion routines and linear algebra */
 void comp_GtG( int *M, int *nsac, sachdr *hd_synt, double ***G, double **GtG, structopt *opt) ;
@@ -1314,6 +1314,42 @@ set_wgt(int ns, sachdr *hd_data,structopt *opt)
     opt->wgt[ns] = opt->wE;
 }
 
+void
+azpond (sachdr *hd_synt, int ns, structopt *opt) 
+{
+  int    i, j ;
+  double moy, std, mok ;
+  double *aztab, *azcov ;
+
+  aztab = double_alloc(ns) ;
+  azcov = double_alloc(ns) ;
+
+  for (i=0; i<ns; i++)
+    aztab[i] = hd_synt[i].az ;
+  sort(aztab, &ns);
+  for (i=0; i<ns-1; i++)
+    {
+      aztab[i] = aztab[i+1]-aztab[i] ;
+      moy  += aztab[i] ;
+    }
+  moy /= ns ;
+  for (i=0; i<ns-1; i++)
+    std += (aztab[i] - moy)*(aztab[i] - moy) ;
+  std = sqrt(std/ns) ;
+
+  for(i=0; i<ns ; i++)
+    {
+      for(j=0; j<ns; j++)
+	{
+	  mok = (hd_synt[i].az-hd_synt[j].az)/std ;
+	  azcov[i] += exp(-1./2.*mok*mok) ;
+	}
+      opt->wgt[i] += 1./(azcov[i]*azcov[i]);
+    }
+  free((void*)aztab) ;
+  free((void*)azcov) ;
+}
+
 void 
 set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	      data, G, opt, eq,o_log) 
@@ -1371,6 +1407,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   ns = 0 ;
   opt->dmin = 2.e4 ;
   opt->dmax = 0.   ;  
+
   for(i=0; i<*nsac; i++)
     {
       /* Read data file list */
@@ -1423,7 +1460,6 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	opt->dmin = gcarc ;
       if (opt->dmax < gcarc)
 	opt->dmax = gcarc ;
-
       fflush(stdout);
       trav_time(&gcarc, tv, dv, &nd, &Ptt, &ierror) ;
       wp_time_window(&gcarc, wp_win4, &twp_beg, &twp_end) ;
@@ -1534,6 +1570,10 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   *nsac  = ns   ;
   fclose(i_sac) ;
   
+  /* Azimuth ponderation */
+  if (opt->azp)
+    azpond(*hd_synt,ns,opt) ;
+
   /* Memory Freeing */
   free((void*)tmparray) ;
   free((void*)dv)       ;
@@ -1681,18 +1721,19 @@ screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
   newn = 0 ;
   for (j=0; j<*nsac; j++)
     {
-      if( opt->rms_in[j]*opt->wgt[j] < opt->th_val )
+      //if( opt->rms_in[j]*opt->wgt[j] < opt->th_val )
+      if( opt->rms_in[j] < opt->th_val )
 	{
 	  fprintf( o_log,"%-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
 		   hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
 		   hd_synt[j].user[2], hd_synt[j].user[3]) ; 
 	  data_name[newn] = data_name[j] ;
-	  data[newn] = data[j]  ;
-	  G[newn]        = G[j] ;
-	  hd_synt[newn]  = hd_synt[j] ;
-	  opt->p2p[newn] = opt->p2p[j] ;
-	  opt->avg[newn] = opt->avg[j] ;
-	  opt->wgt[newn] = opt->wgt[j] ;
+	  data[newn]      = data[j]  ;
+	  G[newn]         = G[j] ;
+	  hd_synt[newn]   = hd_synt[j] ;
+	  opt->p2p[newn]  = opt->p2p[j] ;
+	  opt->avg[newn]  = opt->avg[j] ;
+	  opt->wgt[newn]  = opt->wgt[j] ;
 	  newn++ ;	  
 	}
       else
@@ -1927,6 +1968,7 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"  -wz real_value          weight for LHZ channels (%f)\n",opt->wZ);
   fprintf(stderr,"  -wn real_value          weight for LHN channels (%f)\n",opt->wN);
   fprintf(stderr,"  -we real_value          weight for LHE channels (%f)\n",opt->wE);
+  fprintf(stderr,"  -azp                    azimuth weighting (no az. ponderation)\n");
   fprintf(stderr,"  -med                    screening data before inversion (no pre-screening)\n") ;
   fprintf(stderr,"  -th real_value          reject data using a rms threshold (no rms threshold)\n") ; 
 
@@ -2072,6 +2114,7 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->dts_min   = 0. ;
   opt->dts_max   = 0. ;
   opt->dts_step  = 0. ;
+  opt->azp       = 0. ;
 
   opt->Nit       = 1 ;
 
@@ -2161,6 +2204,9 @@ get_opt(numarg1, numarg2, argv, opt, eq)
       if (!strncmp(argv[j],"-we",3)){
 	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wE) ;
 	k+=2 ;}
+      if (!strncmp(argv[j],"-azp",4)){
+	opt->azp = 1 ;
+	k+=1 ;}
       if (!strncmp(argv[j],"-med",4)){
 	opt->med_val = 1 ;	
 	k++ ;}
@@ -2192,7 +2238,7 @@ get_param1(argc, argv, M, opt, eq, flag)
      structopt *opt ; 
 {
   int numarg1, numarg2 ;
-  int max = 46 ;
+  int max = 47 ;
 
   numarg1 = 0              ;
   numarg2 = argc-numarg1-1 ;
