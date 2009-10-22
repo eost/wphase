@@ -1943,7 +1943,7 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"  -gfdir path             Green's function directory (./GF/)\n");
   
   fprintf(stderr,"\nOutput files: \n");  
-  fprintf(stderr,"  -ref                    read reference solution in input CMTSOLUTION file (ref. sol. used)\n") ;
+  fprintf(stderr,"  -noref                  do not read the reference solution in the input CMTSOLUTION file (ref. sol. used)\n") ;  
   fprintf(stderr,"  -ocmtf cmtfil           output CMTSOLUTION file (%s)\n",opt->o_cmtf) ;
   fprintf(stderr,"  -ocovf o_covariance     covariance file (%s)\n",opt->o_covf) ;
   fprintf(stderr,"  -pdata calc_dat_txtfil  predicted data filename (%s)\n",opt->p_data) ;

@@ -1721,7 +1721,6 @@ screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
   newn = 0 ;
   for (j=0; j<*nsac; j++)
     {
-      //if( opt->rms_in[j]*opt->wgt[j] < opt->th_val )
       if( opt->rms_in[j] < opt->th_val )
 	{
 	  fprintf( o_log,"%-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
