@@ -321,7 +321,7 @@ pz2res (double w, int nz, complex *zr, int np, complex *pl, double sg, int *ierr
 /*                     yl : log10(y) (nf floats)             */
 /*                                                           */
 void 
-compresp (int nf, double *f, double nz, complex *zr, double np, complex *pl, double sg, double **y, float **yl, int *ierror)
+compresp (int nf, double *f, int nz, complex *zr, int np, complex *pl, double sg, double **y, float **yl, int *ierror)
 {
   int     i ;
   double  w ;
