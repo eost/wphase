@@ -170,12 +170,12 @@ conj_c (complex u)
 complex 
 sqrt_c (complex u)
 {
-       complex         w ;
-	   float           arg, norm ; 
-	   arg    = atan2(u.imag, u.real)/2. ;
-	   norm   = sqrt(sqrt(u.real*u.real+u.imag*u.imag)) ;
-	   w.real = norm*cos(arg) ;
-	   w.imag = norm*sin(arg) ;
+       complex w ;
+       double  arg, norm ; 
+       arg    = atan2(u.imag, u.real)/2. ;
+       norm   = sqrt(sqrt(u.real*u.real+u.imag*u.imag)) ;
+       w.real = norm*cos(arg) ;
+       w.imag = norm*sin(arg) ;
        return (w) ;
 }
 
