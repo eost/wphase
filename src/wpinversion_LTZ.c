@@ -427,8 +427,8 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.3)        ;  
   if (flag == 2) 
     {
-      eq->pdeline[60]=' ' ;
-      fprintf(ps, "(%s) show\n", &eq->pdeline[61]) ;
+      /* eq->pdeline[60]=' ' ; */
+      /* fprintf(ps, "(%s) show\n", &eq->pdeline[61]) ; */
       get_planes(eq->vm[1], &TMb, &eval3b, &s1b,&d1b,&r1b, &s2b,&d2b,&r2b) ;
       M0b = ((fabs(eval3b[0]) + fabs(eval3b[2])) * (double)POW) / 2. ; 
       Mwb = (log10(M0b) - 16.1) / 1.5 ;
