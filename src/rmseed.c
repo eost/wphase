@@ -64,18 +64,23 @@ read_ms_file(str_quake_params *eq, int year, int yday, hptime_t t0_in, \
       while ( (retcode = ms_readmsr (&msr, msfil, -1, NULL, NULL, 1, 1, 0)) == MS_NOERROR )
 	{
 	  t0 = msr->starttime+(double)msr->numsamples*(double)HPTMODULUS/msr->samprate;
-	  if (t0_in <= t0 && t1_in > msr->starttime)
+	  if (t0_in <= t0 && t1_in >= msr->starttime)
 	    {
 	      if (fill_sac(o_hd, o_x, msr))
 		{
-		  fprintf(stderr," file: %s rejected\n",msfil);
+		  fprintf(stderr," Warning: (rmseed) file %s rejected\n",msfil);
 		  break ;
 		}
 	    }
-	  else if ( t1_in <= msr->starttime )
+	  else if ( t1_in < msr->starttime )
 	    {
-	      retcode = MS_ENDOFFILE ;
-	      flag = 0 ;
+	      if (o_hd->npts ==  -12345) /* Data missing */
+		flag = 1;
+	      else
+		{
+		  retcode = MS_ENDOFFILE ;
+		  flag = 0 ;
+		}
 	      break    ;
 	    }
 	  totalrecs++ ;
@@ -102,7 +107,6 @@ read_ms_file(str_quake_params *eq, int year, int yday, hptime_t t0_in, \
 	  fprintf(stderr,"             ... No problem encountered while reading next file\n");           
 	}
     }
-
 
   return flag ;
 }
