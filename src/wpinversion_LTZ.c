@@ -1320,8 +1320,8 @@ azpond (sachdr *hd_synt, int ns, structopt *opt)
   double moy, std, mok ;
   double *aztab, *azcov ;
 
-  aztab = double_alloc(ns) ;
-  azcov = double_alloc(ns) ;
+  aztab = double_calloc(ns) ;
+  azcov = double_calloc(ns) ;
 
   for (i=0; i<ns; i++)
     aztab[i] = hd_synt[i].az ;
