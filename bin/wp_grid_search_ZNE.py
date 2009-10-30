@@ -325,7 +325,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 					latopt[i] = eq_gs.lat
 					lonopt[i] = eq_gs.lon
 					break
-			tmp_table.write(format%(ncel,-99,ts,hd,eq_gs.lat,eq_gs.lon,eq_gs.dep,rms,nrms))
+			tmp_table.write(format%(ncel,it,ts,hd,eq_gs.lat,eq_gs.lon,eq_gs.dep,rms,nrms))
 			tmp_table.flush()
 			ncel += 1
 		fid.write('Optimum centroid location: %8.3f %8.3f;  rms = %12.7f mm\n'%(latopt[0], lonopt[0], rmsopt[0]))
