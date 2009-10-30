@@ -19,17 +19,19 @@ if WPHOME[-1] != '/':
 
 BIN = WPHOME+'bin/'
 
+
 REPREPARE_TS = BIN+'reprepare_wp_ts_ZNE.csh'
 WPINV_TS     = BIN+'wpinversion_ZNE -imas ts_i_master -ifil o_wpinversion -ofil ts_o_wpinversion -ocmtf ts_WCMTSOLUTION '+\
                    '-ps ts_p_wpinversion -wpbm ts_wpinv.pgm -log LOG/_ts_wpinversion.log -osyndir ts_SYNTH -pdata ts_fort.15'
 
 RECALCSYN_XY = BIN+'recalc_fast_synths_ZNE.csh'
 REPREPARE_XY = BIN+'reprepare_wp_xy_ZNE.csh'
-WPINV_XY     = BIN+'wpinversion_ZNE -imas xy_i_master -ifil xy_o_wpinversion -ofil xy_o_wpinversion -ocmtf xy_WCMTSOLUTION '+\
+WPINV_XY     = BIN+'wpinversion_ZNE -imas xy_i_master -ifil xy_o_wpinversion -ofil xy_o_wpinversion '+\
                    '-ps xy_p_wpinversion -wpbm xy_wpinv.pgm -log LOG/_xy_wpinversion.log -osyndir xy_SYNTH -pdata xy_fort.15'
 
 WPINV_DP     = BIN+'wpinversion_ZNE -imas dp_i_master -ifil dp_o_wpinversion -ofil dp_o_wpinversion '+\
                    '-wpbm dp_wpinv.pgm -log LOG/_dp_wpinversion.log -osyndir dp_SYNTH -pdata dp_fort.15'
+
 
 
 def grep(chaine, file):
@@ -257,6 +259,10 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 		shutil.rmtree('xy_SYNTH')
 	if os.access('xy_DATA',os.F_OK):
 		shutil.rmtree('xy_DATA')
+	if os.access('xy_WCMTs',os.F_OK):
+		shutil.rmtree('xy_WCMTs')
+
+	os.mkdir('xy_WCMTs')
 	os.mkdir('xy_SYNTH')
 	os.mkdir('xy_DATA')
 
@@ -304,7 +310,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
  			eq_gs.wcmtfile(cmttmp,ts,hd)
 			os.system(RECALCSYN_XY+' > LOG/_log_py_recalsyn_xy')
 			os.system(REPREPARE_XY+'> LOG/_log_py_reprepare_xy')
-			os.system(WPINV_XY+' -noref > LOG/_log_py_wpinv_xy')
+			os.system(WPINV_XY+' -ocmtf xy_WCMTs/xy_WCMTSOLUTION_%03d -noref > LOG/_log_py_wpinv_xy'%ncel)
 			out  = grep(r'^W_cmt_err:', 'LOG/_xy_wpinversion.log')
 			rms  = float(out[0].strip('\n').split()[1])
 			nrms = float(out[0].strip('\n').split()[2])
@@ -319,9 +325,9 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 					latopt[i] = eq_gs.lat
 					lonopt[i] = eq_gs.lon
 					break
-			ncel += 1
-			tmp_table.write(format%(-99,-99,ts,hd,eq_gs.lat,eq_gs.lon,eq_gs.dep,rms,nrms))
+			tmp_table.write(format%(ncell,-99,ts,hd,eq_gs.lat,eq_gs.lon,eq_gs.dep,rms,nrms))
 			tmp_table.flush()
+			ncel += 1
 		fid.write('Optimum centroid location: %8.3f %8.3f;  rms = %12.7f mm\n'%(latopt[0], lonopt[0], rmsopt[0]))
 
 	tmp_table.close()
@@ -346,9 +352,11 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 		fr = "-noref"
 	if flag:
 		fid.close()
-		os.system(WPINV_XY+' %s >> '%fr+fileout)
+		os.system(WPINV_XY+' -ocmtf xy_WCMTSOLUTION %s >> '%fr+fileout)
 	else:
-		os.system(WPINV_XY+' %s'%fr)
+		os.system(WPINV_XY+' -ocmtf xy_WCMTSOLUTION %s'%fr)
+	
+	shutil.copy('xy_WCMTSOLUTION','xy_WCMTs')	
 
 	# Set Mww
 	out  = grep(r'^Wmag:', 'LOG/_xy_wpinversion.log')
@@ -384,9 +392,13 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 		elif eq.mag <8.0:
 			ts1 =  8. 
 			ts2 = 48. 
-		else: 
+		elif eq.mag < 8.5: 		
 			ts1 = 14. 
 			ts2 = 56. 
+		else: 
+			ts1 = 22. 
+			ts2 = 168. 
+
 	########################################
 
 
@@ -505,9 +517,12 @@ def fast_grid_search_ts_old(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flag
 		elif eq.mag <8.0:
 			ts1 =  8. 
 			ts2 = 48. 
-		else: 
+		elif eq.mag < 8.5: 		
 			ts1 = 14. 
 			ts2 = 56. 
+		else: 
+			ts1 = 22. 
+			ts2 = 168. 
 	########################################
 	
 	cmttmp = cmtref+'_ts_tmp'
@@ -621,10 +636,13 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 			ts2 = 30. 
 		elif eq.mag <8.0:
 			ts1 =  8. 
-			ts2 = 48. 
-		else: 
+			ts2 = 48.
+		elif eq.mag < 8.5: 		
 			ts1 = 14. 
 			ts2 = 56. 
+		else: 
+			ts1 = 22. 
+			ts2 = 168. 
 
 	#######################################
 	
