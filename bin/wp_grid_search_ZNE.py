@@ -386,17 +386,14 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 		if ts2 > 60.:
 			ts2 = 60.	
 	else:
+		ts1 =  1. 
 		if eq.mag <= 7.0:
-			ts1 =  1. 
 			ts2 = 30. 
 		elif eq.mag <8.0:
-			ts1 =  8. 
 			ts2 = 48. 
 		elif eq.mag < 8.5: 		
-			ts1 = 14. 
 			ts2 = 56. 
 		else: 
-			ts1 = 22. 
 			ts2 = 168. 
 
 	########################################
@@ -511,17 +508,14 @@ def fast_grid_search_ts_old(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flag
 		if ts2 > 60.:
 			ts2 = 60.	
 	else:
+		ts1 =  1. 
 		if eq.mag <= 7.0:
-			ts1 =  1. 
 			ts2 = 30. 
 		elif eq.mag <8.0:
-			ts1 =  8. 
 			ts2 = 48. 
 		elif eq.mag < 8.5: 		
-			ts1 = 14. 
 			ts2 = 56. 
 		else: 
-			ts1 = 22. 
 			ts2 = 168. 
 	########################################
 	
@@ -631,17 +625,14 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 		if ts2 > 60.:
 			ts2 = 60.	
 	else:
+		ts1 =  1. 
 		if eq.mag <= 7.0:
-			ts1 =  1. 
 			ts2 = 30. 
 		elif eq.mag <8.0:
-			ts1 =  8. 
 			ts2 = 48.
 		elif eq.mag < 8.5: 		
-			ts1 = 14. 
 			ts2 = 56. 
 		else: 
-			ts1 = 22. 
 			ts2 = 168. 
 
 	#######################################

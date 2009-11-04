@@ -156,13 +156,13 @@ main(int argc, char *argv[])
 		&sacfiles, &hd_synt, &data, &G, &opt, &eq, o_log) ; 
   
   /* Screening            */
-  if (opt.med_val > 0) 
+  if (opt.med_val > 0.) 
     {
       median(&nsac, &opt)   ;
       screen_med(&nsac, sacfiles, data, G, hd_synt, &opt, o_log) ; 
     }
 
-  if (opt.th_val > 0)
+  if (opt.th_val > 0.)
     screen_rms(&nsac, sacfiles, data, G, hd_synt, &opt, o_log) ;
   
   if (nsac < 1) 
@@ -193,7 +193,7 @@ main(int argc, char *argv[])
   w_o_saclst(opt.o_saclst, &nsac, sacfiles, hd_synt, rms, &opt, flag) ; 
 
   /* Time-shift grid search */
-  if (opt.dts_step > 0)
+  if (opt.dts_step > 0.)
     {
       fast_ts_gridsearch(nsac,M,sacfiles,hd_synt,data,G,&dcalc,&rms,&global_rms,&opt,&eq,&rmsini,&tsopt,&rmsopt,o_log);
       /* Optimum solution */
@@ -1049,7 +1049,7 @@ inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
   
   /* Conditioning */
   nk = *M;
-  if (opt->cth_val <= 0) /* Remove the eigenvalues smaller than max(eigval)/10000 if any */
+  if (opt->cth_val <= 0.) /* Remove the eigenvalues smaller than max(eigval)/10000 if any */
     {
       *Cond = eigvals[0] / eigvals[nk-1] ;
       if (*Cond > 1.e4)
@@ -1071,7 +1071,7 @@ inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
 	}
       *Cond = eigvals[0] / eigvals[nk-1] ;
     }
-  if (opt->dts_step <= 0)
+  if (opt->dts_step <= 0.)
     {
       printf("##############\n%d significant eigenvalues: \n", nk) ;
       for (i=0 ; i<nk; i++) 
@@ -1461,7 +1461,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
       for(j=0; j<6; j++)
 	strcat(gf_file[j],GF);
        
-      /* Set time window  */
+      /* Data Time Window  */
       gcarc = (double) hd_data.gcarc ;
       if (opt->dmin > gcarc)
 	opt->dmin = gcarc ;
@@ -1486,41 +1486,55 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
       flag     = 0 ;
       if (flag2)
 	(*G)[ns] = double_alloc2(6,npts) ;      
-      for(j=0; j<6; j++)      /* GF  */
+      for(j=0; j<6; j++)      /* GF components */
 	{
-	  rhdrsac( gf_file[j], &hd_GF, &ierror) ;
-	  if (hd_GF.delta != hd_data.delta) {
-	    fprintf(stderr,"**** Incorrect sampling period, rejected trace : %s\n", datafile) ;
-	    fprintf( o_log,"**** Incorrect sampling period, rejected trace : %s\n", datafile) ;
-	    for(j=0; j<6; j++)
-	      free((void *) (*G)[ns][j]) ;
-	    free((void**)(*G)[ns]) ;
-	    flag = 1 ;
-	    break ;                         }
-
+	  rhdrsac( gf_file[j], &hd_GF, &ierror) ; /* Read Header */
+	  if (hd_GF.delta != hd_data.delta) 
+	    {
+	      fprintf(stderr,"**** Incorrect sampling period, rejected trace : %s\n", datafile) ;
+	      fprintf( o_log,"**** Incorrect sampling period, rejected trace : %s\n", datafile) ;
+	      for(j=0; j<6; j++)
+		free((void *) (*G)[ns][j]) ;
+	      free((void**)(*G)[ns]) ;
+	      flag = 1 ;
+	      break ;                         
+	    }
+	  /* GF Time Window */
 	  t0 = Ptt + (double)hd_GF.o ;
 	  //n1_GF = (int)((t0 + twp_beg - (double)hd_GF.b - opt->dts_val)  / ((double)hd_GF.delta)) - 1 ; /* Error **** first GF Sample */
 	  n1_GF = (int)((t0 + twp_beg - (double)hd_GF.b - opt->dts_val)  / ((double)hd_GF.delta)) ; /* first GF Sample (corrected) */
 	  n2_GF = n1_GF + (int)((twp_end - twp_beg) / ((double)hd_GF.delta)) ;                      /* Last GF Sample */
-	  if ( (n1_GF < 0) || n2_GF >= hd_GF.npts ) {
-	    fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_data.kstnm, 
-		     hd_data.knetwk, hd_data.kcmpnm, hd_data.gcarc, hd_data.az, 
-		     hd_data.user[2], hd_data.user[3]) ; 
-	    fprintf(stderr,"**** Incomplete GF, rejected : %s  (%d!=0 || %d>=%d)\n", 
-		    gf_file[j], n1_GF, n2_GF, hd_GF.npts) ;
-	    fprintf( o_log,"**** Incomplete GF, rejected : %s\n"  , gf_file[j]) ; 
-	    for(j=0; j<6; j++)
-	      free((void *) (*G)[ns][j]) ;
-	    free((void**)(*G)[ns]) ;
-	    flag = 1 ;
-	    break ;                              }
-
+	  if ( (n1_GF < 0) )              /* Fill negative samples with zeros */
+	    {
+	      fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_data.kstnm, 
+		       hd_data.knetwk, hd_data.kcmpnm, hd_data.gcarc, hd_data.az, 
+		       hd_data.user[2], hd_data.user[3]) ; 
+	      fprintf(stderr,"**** Incomplete GF, filling with zeros : %s  (%d!=0 || %d>=%d)\n", 
+		      gf_file[j], n1_GF, n2_GF, hd_GF.npts) ;
+	      fprintf( o_log,"**** Incomplete GF, filling with zeros : %s\n"  , gf_file[j]) ; 
+	      for(k=n1_GF; k<0; k++)
+		(*G)[ns][j][k-n1_GF] = 0. ;
+	      n1_GF = 0 ;
+	    }
+	  else if ( n2_GF >= hd_GF.npts ) /* GF Rejected */
+	    {
+	      fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_data.kstnm, 
+		       hd_data.knetwk, hd_data.kcmpnm, hd_data.gcarc, hd_data.az, 
+		       hd_data.user[2], hd_data.user[3]) ; 
+	      fprintf(stderr,"**** Incomplete GF, rejected : %s  (%d!=0 || %d>=%d)\n", 
+		      gf_file[j], n1_GF, n2_GF, hd_GF.npts) ;
+	      fprintf( o_log,"**** Incomplete GF, rejected : %s\n"  , gf_file[j]) ; 
+	      for(j=0; j<6; j++)
+		free((void *) (*G)[ns][j]) ;
+	      free((void**)(*G)[ns]) ;
+	      flag = 1 ;
+	      break ;                              
+	    }
 	  /* Read GF samples */
 	  hd_GF.npts = n2_GF + 1 ;
 	  rdatsac(gf_file[j], &hd_GF, tmparray, &ierror) ;
 	  for(k=0; k<npts; k++)
 	    (*G)[ns][j][k] = tmparray[n1_GF + k] ;
-	  
 	}
       free((void*) GF) ; 
 
@@ -1559,14 +1573,16 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
       strcpy((*hd_synt)[ns].kcmpnm, hd_data.kcmpnm) ; 
 
       
-      if (opt->op_pa <= 0) {
-	(*hd_synt)[ns].az    = hd_data.az    ;
-	(*hd_synt)[ns].gcarc = hd_data.gcarc ;
-	calc_stat( npts, (*data)[ns], &opt->p2p[ns], &opt->avg[ns]);  
-	opt->p2p[ns] *= 1000                 ;
-	opt->avg[ns] *= 1000                 ; }
+      if (opt->op_pa <= 0.) 
+	{
+	  (*hd_synt)[ns].az    = hd_data.az    ;
+	  (*hd_synt)[ns].gcarc = hd_data.gcarc ;
+	  calc_stat( npts, (*data)[ns], &opt->p2p[ns], &opt->avg[ns]);  
+	  opt->p2p[ns] *= 1000                 ;
+	  opt->avg[ns] *= 1000                 ; 
+	}
 
-      if (opt->th_val <= 0 && opt->med_val <=0)
+      if (opt->th_val <= 0. && opt->med_val <= 0.)
 	fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", (*hd_synt)[ns].kstnm, 
 		 (*hd_synt)[ns].knetwk, (*hd_synt)[ns].kcmpnm, (*hd_synt)[ns].gcarc, (*hd_synt)[ns].az, 
 		 (*hd_synt)[ns].user[2], (*hd_synt)[ns].user[3]) ;
@@ -1577,7 +1593,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   fclose(i_sac) ;
   
   /* Azimuth ponderation */
-  if (opt->azp)
+  if (opt->azp > 0.)
     azpond(*hd_synt,ns,opt) ;
 
   /* Memory Freeing */
@@ -1780,7 +1796,7 @@ screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
       val = opt->p2p[j];
       if ( (min < val) && (val < max) && (fabs(opt->avg[j]) < (opt->p2p_med)/2.) )
 	{
-	  if (opt->th_val <= 0)
+	  if (opt->th_val <= 0.)
 	    fprintf( o_log,"%-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
 		     hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
 		     hd_synt[j].user[2], hd_synt[j].user[3]) ; 
