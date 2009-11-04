@@ -89,16 +89,16 @@ $(BIN)/FAST:
 # MT rotation
 
 $(BIN)/rot_horiz_cmp: rot_horiz_cmp.o proto_alloc.o rwsacs.o \
-	rwtextfiles.o read_i_files.o distaz.o 
+	rwtextfiles.o read_i_files.o distaz.o
 	@ $(CC) $(LDFLAGS) rot_horiz_cmp.o proto_alloc.o rwsacs.o \
-	rwtextfiles.o read_i_files.o distaz.o -o $(BIN)/rot_horiz_cmp -lm
+	rwtextfiles.o read_i_files.o distaz.o -o $(BIN)/rot_horiz_cmp -lm 
 
 rot_horiz_cmp.o:rot_horiz_cmp.c
 	@ $(CC) $(CFLAGS) -c rot_horiz_cmp.c
 
 
 $(BIN)/change_sac_headers: change_sac_headers.o proto_alloc.o rwsacs.o \
-	rwtextfiles.o read_i_files.o distaz.o 
+	rwtextfiles.o read_i_files.o distaz.o
 	@ $(CC) $(LDFLAGS) change_sac_headers.o proto_alloc.o rwsacs.o \
 	rwtextfiles.o read_i_files.o distaz.o -o $(BIN)/change_sac_headers -lm
 

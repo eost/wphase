@@ -69,7 +69,7 @@ void calc_rms_sub(int npts, double *data, double **dcalc, double *rms,
 		   int flag) ;
 void calc_rms(int *ns, sachdr *hd_synt, double **data, double ***dcalc, 
 	       double **rms, double *global_rms, structopt *opt, int flag) ;
-
+void azpond(sachdr *hd_synt, int ns, structopt *opt) ;
 
 /* Inversion routines and linear algebra */
 void comp_GtG( int *M, int *nsac, sachdr *hd_synt, double ***G, double **GtG, structopt *opt) ;
@@ -135,10 +135,11 @@ main(int argc, char *argv[])
   eq.vm    = double_alloc2p(2)  ;
   eq.vm[0] = double_calloc(6)   ; 
   eq.vm[1] = double_calloc(6)   ;
-  opt.rms_in = NULL ;
-  opt.p2p = NULL    ;
-  opt.avg = NULL    ;
-  opt.wgt = NULL    ;
+
+  /* Initialize some pointers */
+  data       = NULL ; G       = NULL ; opt.wgt = NULL ;
+  opt.rms_in = NULL ; opt.p2p = NULL ; opt.avg = NULL ;
+  sacfiles   = NULL ; 
 
   /* Get input parameters */
   fflush(stdout) ;
@@ -152,7 +153,7 @@ main(int argc, char *argv[])
   w_log_header(argv, &opt, &eq, eq.wp_win4, o_log) ;
   
   /* Set G and data       */
-  set_matrices (opt.i_saclst, &eq.evdp, eq.wp_win4, &nsac, &nsini,
+  set_matrices (opt.i_saclst, &eq.pde_evdp, eq.wp_win4, &nsac, &nsini,
 		&sacfiles, &hd_synt, &data, &G, &opt, &eq, o_log) ; 
   
   /* Screening            */
@@ -199,7 +200,7 @@ main(int argc, char *argv[])
       /* Optimum solution */
       opt.dts_val = tsopt ;
       realloc_gridsearch(nsac, &rms, &global_rms, &eq.vm[0], &dcalc, flag) ;
-      set_matrices (opt.i_saclst, &eq.evdp, eq.wp_win4, &nsac, &nsini,
+      set_matrices (opt.i_saclst, &eq.pde_evdp, eq.wp_win4, &nsac, &nsini,
 		    &sacfiles, &hd_synt, &data, &G, &opt, &eq, o_log) ;    
       inversion(&M, &nsac, hd_synt, G, data, eq.vm[0], &Cond, &opt, o_log) ;   
       calc_data(&nsac, hd_synt, G, eq.vm, data, dcalc, &opt, flag)    ;
@@ -347,17 +348,21 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
       buf2[nb2] = '\0' ;
       for(j=0; j<k; j++)
 	{
-	  if (strcmp(buf,sta[j]) == 0) {
-	    strcat(cmp[j],",")   ;
-	    strcat(cmp[j], buf2) ;
-	    nbcmp[j]++;
-	    break ; }
+	  if (strcmp(buf,sta[j]) == 0) 
+	    {
+	      strcat(cmp[j],",")   ;
+	      strcat(cmp[j], buf2) ;
+	      nbcmp[j]++;
+	      break ; 
+	    }
 	}
-      if (j==k) {
-	strcpy(sta[k], buf)  ;
-	strcpy(cmp[k], buf2) ;
-	nbcmp[k] = 1         ;
-	k++ ; }
+      if (j==k) 
+	{
+	  strcpy(sta[k], buf)  ;
+	  strcpy(cmp[k], buf2) ;
+	  nbcmp[k] = 1         ;
+	  k++ ; 
+	}
     }
   
   fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont\n") ;
@@ -1375,31 +1380,32 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   *nsac = *nsini ;
 
   /* Allocating memory */
-  dv  = double_alloc(nd) ;
-  tv  = double_alloc(nd) ;
+  dv       = double_alloc(nd) ;
+  tv       = double_alloc(nd) ;
   tmparray = double_alloc((int)__LEN_SIG__) ;  
-  datafile  = char_alloc(FSIZE)     ;  
-  gf_file   = char_alloc2(6, FSIZE) ;
-  buf       = char_alloc(LSIZE)     ;
-  dum         = char_alloc(32)      ;  
+  datafile = char_alloc(FSIZE)     ;  
+  gf_file  = char_alloc2(6, FSIZE) ;
+  buf      = char_alloc(LSIZE)     ;
+  dum      = char_alloc(32)      ;  
   hdr_alloc(&hd_data) ;
   hdr_alloc(&hd_GF)   ;
   flag2 = 0 ;
-  if (*data == NULL)
+  if (*data == NULL    && *G == NULL       &&  opt->wgt == NULL && opt->rms_in == NULL && \
+      opt->p2p == NULL && opt->avg == NULL && *sacfiles == NULL) 
     {
       *data     = double_alloc2p( *nsac )  ;
       *G        = double_alloc3p( *nsac )  ;
       opt->wgt  = double_alloc( *nsac )    ;
       *sacfiles = char_alloc2(*nsac,FSIZE) ;
-      opt->rms_in = double_alloc(*nsac) ;
-      opt->p2p    = double_alloc(*nsac) ;
-      opt->avg    = double_alloc(*nsac) ;
-      hdr_tab(hd_synt, *nsac)           ; 
+      opt->rms_in = double_alloc(*nsac)    ;
+      opt->p2p    = double_alloc(*nsac)    ;
+      opt->avg    = double_alloc(*nsac)    ;
+      hdr_tab(hd_synt, *nsac)              ; 
       flag2 = 1 ;
     }
   
   /* Set travel times */
-  ierror = 1 ;
+  ierror = 1 ; /* error flag */
   trav_time_init(&nh, &nd, evdp, dv, tv, &ierror) ;  
 
   /* Set GFs and data matrix */
@@ -1426,7 +1432,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	  check_scan(12, flag, buf, i_sac) ;
 	} 
       
-      /* Read data header and weight */
+      /* Read data header and weights */
       rhdrsac(datafile,  &hd_data, &ierror) ;
       set_wgt(ns, &hd_data, opt)            ;      
       if (opt->wgt[ns] <= 0.)
@@ -1649,7 +1655,7 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
 	  /* Free memory */
 	  realloc_gridsearch(nsac, rms, global_rms, &eq->vm[0], dcalc, flag) ;
 	  /* Compute inversion for opt->dts_val */
-	  set_matrices (opt->i_saclst, &eq->evdp, eq->wp_win4, &nsac, &nsini,
+	  set_matrices (opt->i_saclst, &eq->pde_evdp, eq->wp_win4, &nsac, &nsini,
 			&sacfiles, &hd_synt, &data, &G, opt, eq, o_log) ;    
 	  inversion(&M, &nsac, hd_synt, G, data, eq->vm[0], &Cond, opt, o_log) ;
 	  calc_data(&nsac, hd_synt, G, eq->vm, data, (*dcalc), opt, flag)    ;   
@@ -1659,7 +1665,7 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
 	  Err = 1000.*(*global_rms)[0] ;
 	  ts  = eq->ts+opt->dts_val    ;
 	  fprintf( tmp,"%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n",k,ts,
-		   eq->evla,eq->evlo,eq->evdp,Err,(*global_rms)[0]/(*global_rms)[1]);
+		   eq->evla,eq->evlo,eq->pde_evdp,Err,(*global_rms)[0]/(*global_rms)[1]);
 	  printf("        ts = %5.1f rms = %12.7f mm\n",ts, Err) ;
 	  if (Err < *rmsopt)
 	    {
@@ -1724,12 +1730,12 @@ screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
 		   hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
 		   hd_synt[j].user[2], hd_synt[j].user[3]) ; 
 	  data_name[newn] = data_name[j] ;
-	  data[newn] = data[j]  ;
-	  G[newn]        = G[j] ;
-	  hd_synt[newn]  = hd_synt[j] ;
-	  opt->p2p[newn] = opt->p2p[j] ;
-	  opt->avg[newn] = opt->avg[j] ;
-	  opt->wgt[newn] = opt->wgt[j] ;
+	  data[newn]      = data[j]      ;
+	  G[newn]         = G[j]         ;
+	  hd_synt[newn]   = hd_synt[j]   ;
+	  opt->p2p[newn]  = opt->p2p[j]  ;
+	  opt->avg[newn]  = opt->avg[j]  ;
+	  opt->wgt[newn]  = opt->wgt[j]  ;
 	  newn++ ;	  
 	}
       else
@@ -1761,7 +1767,7 @@ screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
   
   min = 0.1 * (opt->p2p_med) ;
   max = 3.0 * (opt->p2p_med) ;
-
+  
   fprintf(o_log,"screen_med:\n") ;
   fprintf(o_log,"   p2p_med: %15.8f\n",opt->p2p_med) ;
   fprintf(o_log,"   reject p2p < : %15.8f or > %15.8f\n",min,max) ;
@@ -1876,10 +1882,10 @@ w_log_header(argv, opt, eq, wp_win4, o_log)
 
 
 void get_param2(file, opt, eq,  flag)
-     int    *flag    ;
-     char   *file    ;
-     structopt *opt  ;
-     str_quake_params *eq      ;
+     int    *flag   ;
+     char   *file   ;
+     structopt *opt ;
+     str_quake_params *eq ;
 {
   int  i=0, nimas ;
   char **keys     ;
@@ -1931,7 +1937,7 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"WPHASE INVERSION \n\n") ;
   dispsynt(argv) ;  
   fprintf(stderr,"\nAll parameters are optional :\n");
-
+  
   fprintf(stderr,"\nInput files: \n");
   fprintf(stderr,"  -imas imasterfile       imaster file (%s)\n",opt->i_master);
   fprintf(stderr,"  -ifil stalistfile       input sac file list (%s)\n",opt->i_saclst);
@@ -1955,7 +1961,7 @@ disphelp(char **argv,structopt *opt)
   
   fprintf(stderr,"\nOutput paths: \n");
   fprintf(stderr,"  -osyndir out_synt_dir   output synthetic directory (%s)\n",opt->osacdir) ;
-
+  
   fprintf(stderr,"\nInversion :\n");  
   fprintf(stderr,"  -nont                   no constraints on the moment tensor trace (zero trace)\n") ;
   fprintf(stderr,"  -cth real_value         set conditioning threshold (no conditioning)\n") ;
@@ -1975,8 +1981,8 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"  -ts tsmin dts tsmax     fast time-shift grid-search (no grid-search)\n") ;
   fprintf(stderr,"  -Nit                    nb. of iteration for time_shift grid-search (%d)\n",opt->Nit) ;
   fprintf(stderr,"  -ogsf outputfile        grid-search output filename (%s)\n",opt->gsfile) ; 
-
-
+  
+  
   fprintf(stderr,"\n  -h, --help              display this help and exit\n\nReport bugs to: <zacharie.duputel@eost.u-strasbg.fr>\n") ;
   exit(0);
 }

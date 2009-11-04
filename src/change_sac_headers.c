@@ -30,9 +30,10 @@ void distaz(double    cmt_lat,  double    cmt_lon,  float*    stlats,  float*   
 int 
 main(int argc, char *argv[])
 {
-  int    MAX, flag,ierror, nl;
-  long   int nerr                   ;
-  double stla, stlo, stel, az, xdeg ;
+  int    MAX, flag,ierror, nl ;
+  long   int nerr             ; 
+  float  az, xdeg, dum        ;
+  double stla, stlo, stel     ;
   double *x_in1 ;
   char   *i_fil, **h_fil, *o_fil, *scr_lst, *o_lst ;
   char   *o_dir, *sta, *net, *cmp, *prev_sta       ;
@@ -66,7 +67,7 @@ main(int argc, char *argv[])
 
   flag   = 0 ;
   ierror = 1 ;
-  while( (nl=fscanf (istaf, "%s %s %s %s %lf %lf %lf %lf %lf", i_fil, sta, net, cmp, &stla, &stlo, &stel, &az, &xdeg)) != EOF )
+  while( (nl=fscanf (istaf, "%s %s %s %s %lf %lf %lf %f %f", i_fil, sta, net, cmp, &stla, &stlo, &stel, &az, &xdeg)) != EOF )
     {
       if (nl == 0)
 	break;
@@ -76,10 +77,8 @@ main(int argc, char *argv[])
       o_fil = get_gf_filename(o_dir, sta, net, cmp, ".data.sac") ;
       rhdrsac(i_fil, &hdr1, &ierror)        ;
       rdatsac(i_fil, &hdr1, x_in1, &ierror) ;
-      distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &hdr1.dist, &hdr1.az, &hdr1.baz, &hdr1.gcarc, &nerr) ;
-      az   = (double) hdr1.az     ;
-      xdeg = (double) hdr1.gcarc  ;
-      hdr1.evdp = (float) eq.evdp ;
+      /* az, baz, xdeg are not writen in sac files since we use PDE for the W phase time window */
+      distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &dum, &az, &dum, &xdeg, &nerr) ; 
       fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
 	      o_fil,sta,net,cmp,stla,stlo,stel,az,xdeg) ;
       whdrsac(  o_fil, &hdr1) ;

@@ -120,7 +120,7 @@ main(int argc, char *argv[])
   double s1, d1, r1, s2, d2, r2, gap, Cond            ;
   double tsopt,rmsopt,rmsini,M0, Mw, diplow, M0_12    ;
   double *eval3, *global_rms, **TM  ;
-  double **data,  **rms, ***G, ***dcalc ;
+  double **data,  **rms, ***G = NULL, ***dcalc ;
   
 
   char **sacfiles ;
@@ -152,7 +152,7 @@ main(int argc, char *argv[])
   w_log_header(argv, &opt, &eq, eq.wp_win4, o_log) ;
   
   /* Set G and data       */
-  set_matrices (opt.i_saclst, &eq.evdp, eq.wp_win4, &nsac, &nsini,
+  set_matrices (opt.i_saclst, &eq.pde_evdp, eq.wp_win4, &nsac, &nsini,
 		&sacfiles, &hd_synt, &data, &G, &opt, &eq, o_log) ; 
   
   /* Screening            */
@@ -199,7 +199,7 @@ main(int argc, char *argv[])
       /* Optimum solution */
       opt.dts_val = tsopt ;
       realloc_gridsearch(nsac, &rms, &global_rms, &eq.vm[0], &dcalc, flag) ;
-      set_matrices (opt.i_saclst, &eq.evdp, eq.wp_win4, &nsac, &nsini,
+      set_matrices (opt.i_saclst, &eq.pde_evdp, eq.wp_win4, &nsac, &nsini,
 		    &sacfiles, &hd_synt, &data, &G, &opt, &eq, o_log) ;    
       inversion(&M, &nsac, hd_synt, G, data, eq.vm[0], &Cond, &opt, o_log) ;   
       calc_data(&nsac, hd_synt, G, eq.vm, data, dcalc, &opt, flag)    ;
@@ -328,9 +328,11 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.25) ;
   fprintf(ps,"(WCMT - RMS: %9.5f mm (%6.3f),  Gap: %5.1f\\312,  C#%9.0f) show\n",
 	  1000.*global_rms[0], global_rms[0]/global_rms[1], *gap, *Cond);
-  if (flag == 2) {
-    fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.4) ;
-    fprintf(ps,"(GCMT - RMS = %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  }
+  if (flag == 2) 
+    {
+      fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.4) ;
+      fprintf(ps,"(GCMT - RMS = %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  
+    }
 
   /* used stations */
 
@@ -366,6 +368,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.6)             ;
   fprintf(ps,"(Used stations (%d, %d channels) : ) show\n", k, *nsac ) ;
   fprintf(ps,"/Courier      findfont .07 scalefont setfont")  ;
+
   j  = 0;
   nb = 1;
   fprintf(ps,"%15.6f %15.6f moveto\n(", -1., -2.7) ;
@@ -385,7 +388,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(ps, "(WPWIN: %-8.2f %-8.2f %-8.2f %-8.2f ) show\n"
 	  , eq->wp_win4[0], eq->wp_win4[1], eq->wp_win4[2], eq->wp_win4[3]) ;
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.8-((double)nb)/8.) ;
-  fprintf(ps, "(Dmin : %-8.2f Dmax:%-8.2f) show\n", opt->dmin, opt->dmax) ;
+  fprintf(ps, "(Dmin : %-8.2f Dmax :%-8.2f) show\n", opt->dmin, opt->dmax) ;
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.9-((double)nb)/8.) ;
   fprintf(ps, "(wN   : %-8.2f wE   :%-8.2f wZ   :%-8.2f) show\n", opt->wN, opt->wE, opt->wZ);  
 
@@ -463,12 +466,14 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   printf("Eigenvalues: %-12.5f %-12.5f %-12.5f\n", eval3a[0], eval3a[1], eval3a[2]) ;
   printf("WCMT: RMS = %-9.5f mm (%-6.3f) Gap: %-6.1f deg, C#: %-10.0f\n",
 	 1000.*global_rms[0], global_rms[0]/global_rms[1], *gap, *Cond);
-  if (flag == 2) { 
-    printf("GCMT: RMS = %-9.5f mm (%-6.3f)\n", 1000.*global_rms[2], global_rms[2]/global_rms[3])  ;      
-    diplow = d2b ;
-    if (d1b < d2b)
-      diplow = d1b ;
-    M0_12b = M0b * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ; }
+  if (flag == 2) 
+    { 
+      printf("GCMT: RMS = %-9.5f mm (%-6.3f)\n", 1000.*global_rms[2], global_rms[2]/global_rms[3])  ;      
+      diplow = d2b ;
+      if (d1b < d2b)
+	diplow = d1b ;
+      M0_12b = M0b * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ; 
+    }
   printf("Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",*Mwa,*M0a,*M0_12a) ;
   
 
@@ -481,14 +486,16 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(o_log,"W_cmt_err:          %-12.8f %-12.8f\n", 1000.*global_rms[0], global_rms[0]/global_rms[1])    ;
   fprintf(o_log,"Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",*Mwa,*M0a,*M0_12a) ;
 
-  if (flag == 2) {
-    printf("Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b) ;
-    printf("ratio = %5.2f ;  epsilon = %6.3f\n",M0b/(*M0a),mc) ;
-    fprintf(o_log,"R_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",s1b,d1b,r1b, s2b,d2b,r2b) ;
-    fprintf(o_log,"R_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3b[0], eval3b[1], eval3b[2])           ;
-    fprintf(o_log,"R_cmt_err:          %-12.8f %-12.8f\n", 1000.*global_rms[2], global_rms[2]/global_rms[3])  ;
-    fprintf(o_log,"Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b)                           ;
-    fprintf(o_log,"ratio = %12.8f ;  epsilon = %12.8f\n",M0b/(*M0a),mc) ;}
+  if (flag == 2) 
+    {
+      printf("Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b) ;
+      printf("ratio = %5.2f ;  epsilon = %6.3f\n",M0b/(*M0a),mc) ;
+      fprintf(o_log,"R_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",s1b,d1b,r1b, s2b,d2b,r2b) ;
+      fprintf(o_log,"R_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3b[0], eval3b[1], eval3b[2])           ;
+      fprintf(o_log,"R_cmt_err:          %-12.8f %-12.8f\n", 1000.*global_rms[2], global_rms[2]/global_rms[3])  ;
+      fprintf(o_log,"Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b)                           ;
+      fprintf(o_log,"ratio = %12.8f ;  epsilon = %12.8f\n",M0b/(*M0a),mc) ;
+    }
   
   
 
@@ -775,7 +782,7 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
 	}
       for(j=0 ; j<f2 ; j++) 
 	{
-	  global_rms[j] += (opt->wgt[i]*opt->wgt[i])*rms[i][j] ;
+	  global_rms[j] += (opt->wgt[i]*opt->wgt[i]) * rms[i][j] ;
 	  rms[i][j] = sqrt(rms[i][j]/(double)hd_synt[i].npts); 
 	}
     }
@@ -1427,7 +1434,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	  check_scan(12, flag, buf, i_sac) ;
 	} 
       
-      /* Read data header */
+      /* Read data header and weights */
       rhdrsac(datafile,  &hd_data, &ierror);
       set_wgt(ns, &hd_data, opt) ;
       if (opt->wgt[ns] <= 0.)
@@ -1563,7 +1570,6 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", (*hd_synt)[ns].kstnm, 
 		 (*hd_synt)[ns].knetwk, (*hd_synt)[ns].kcmpnm, (*hd_synt)[ns].gcarc, (*hd_synt)[ns].az, 
 		 (*hd_synt)[ns].user[2], (*hd_synt)[ns].user[3]) ;
-      
       strcpy( (*sacfiles)[ns], datafile) ;
       ns++ ;
     }
@@ -1635,7 +1641,6 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
   it   = 0 ;
   k    = 0 ;
   flag = 1 ;
-
   *tsopt  = 0. ;
   tsopt2  = dtmin  ;
   *rmsini = 1000.*(*global_rms)[0] ;
@@ -1652,7 +1657,7 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
 	  /* Free memory */
 	  realloc_gridsearch(nsac, rms, global_rms, &eq->vm[0], dcalc, flag) ;
 	  /* Compute inversion for opt->dts_val */
-	  set_matrices (opt->i_saclst, &eq->evdp, eq->wp_win4, &nsac, &nsini,
+	  set_matrices (opt->i_saclst, &eq->pde_evdp, eq->wp_win4, &nsac, &nsini,
 			&sacfiles, &hd_synt, &data, &G, opt, eq, o_log) ;    
 	  inversion(&M, &nsac, hd_synt, G, data, eq->vm[0], &Cond, opt, o_log) ;
 	  calc_data(&nsac, hd_synt, G, eq->vm, data, (*dcalc), opt, flag)    ;   
@@ -1727,9 +1732,9 @@ screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
 		   hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
 		   hd_synt[j].user[2], hd_synt[j].user[3]) ; 
 	  data_name[newn] = data_name[j] ;
-	  data[newn]      = data[j]  ;
-	  G[newn]         = G[j] ;
-	  hd_synt[newn]   = hd_synt[j] ;
+	  data[newn]      = data[j]     ;
+	  G[newn]         = G[j]        ;
+	  hd_synt[newn]   = hd_synt[j]  ;
 	  opt->p2p[newn]  = opt->p2p[j] ;
 	  opt->avg[newn]  = opt->avg[j] ;
 	  opt->wgt[newn]  = opt->wgt[j] ;
@@ -1906,8 +1911,8 @@ void get_param2(file, opt, eq,  flag)
   strcpy(keys[i++],"filt_pass") ;
 
   get_i_master(file, keys, nimas, eq) ;  
-  *flag = get_cmtf(eq, *flag)     ;
-  if (*flag == 1)
+  *flag = get_cmtf(eq, *flag) ;
+  if (*flag ==1)
     opt->ref_val = 0. ;    
   
   for(i=0 ; i<nimas ; i++)
@@ -1932,17 +1937,17 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"WPHASE INVERSION \n\n") ;
   dispsynt(argv) ;  
   fprintf(stderr,"\nAll parameters are optional :\n");
-
+  
   fprintf(stderr,"\nInput files: \n");
   fprintf(stderr,"  -imas imasterfile       imaster file (%s)\n",opt->i_master);
   fprintf(stderr,"  -ifil stalistfile       input sac file list (%s)\n",opt->i_saclst);
   fprintf(stderr,"  -icmtf cmtfile          input CMTSOLUTION file (specified in i_master)\n");
   fprintf(stderr,"  -old                    using output sta. list file as input sta. list file, and read\n") ;
   fprintf(stderr,"                                additional parameters from this file (don't read additional params)\n") ;   
-
+  
   fprintf(stderr,"\nInput paths: \n");
   fprintf(stderr,"  -gfdir path             Green's function directory (./GF/)\n");
-
+  
   fprintf(stderr,"\nOutput files: \n");  
   fprintf(stderr,"  -noref                  do not read the reference solution in the input CMTSOLUTION file (ref. sol. used)\n") ;
   fprintf(stderr,"  -ocmtf cmtfil           output CMTSOLUTION file (%s)\n",opt->o_cmtf) ;
@@ -1953,16 +1958,16 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"  -ps ps_filename         ps filename (%s)\n",opt->psfile) ;
   fprintf(stderr,"  -wpbm wp_pgm            wphase solution pgm file (no pgmfile)\n") ;
   fprintf(stderr,"  -refbm ref_pgm          reference solution pgm file (no pgmfile)\n") ; 
-
+  
   fprintf(stderr,"\nOutput paths: \n");
   fprintf(stderr,"  -osyndir out_synt_dir   output synthetic directory (%s)\n",opt->osacdir) ;
-
+  
   fprintf(stderr,"\nInversion :\n");  
   fprintf(stderr,"  -nont                   no constraints on the moment tensor trace (zero trace)\n") ;
   fprintf(stderr,"  -cth real_value         set conditioning threshold (no conditioning)\n") ;
   fprintf(stderr,"  -df real_value          set the damping factor to use when the conditioning threshold\n");
   fprintf(stderr,"                                specified by -cth is reached (no conditioning)\n") ;
-
+  
   fprintf(stderr,"\n data weighting and screening: \n");  
   fprintf(stderr,"  -wz real_value          weight for LHZ channels (%f)\n",opt->wZ);
   fprintf(stderr,"  -wn real_value          weight for LHN channels (%f)\n",opt->wN);
@@ -1970,14 +1975,14 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"  -azp                    azimuth weighting (no az. ponderation)\n");
   fprintf(stderr,"  -med                    screening data before inversion (no pre-screening)\n") ;
   fprintf(stderr,"  -th real_value          reject data using a rms threshold (no rms threshold)\n") ; 
-
+  
   fprintf(stderr,"\nTime-shift grid-search :\n");
   fprintf(stderr,"  -dts real_value         apply a time-shift to Green's functions (no time-shift)\n");
   fprintf(stderr,"  -ts tsmin dts tsmax     fast time-shift grid-search (no grid-search)\n") ;
   fprintf(stderr,"  -Nit                    nb. of iteration for time_shift grid-search (%d)\n",opt->Nit) ;
   fprintf(stderr,"  -ogsf outputfile        grid-search output filename (%s)\n",opt->gsfile) ; 
-
-
+  
+  
   fprintf(stderr,"\n  -h, --help              display this help and exit\n\nReport bugs to: <zacharie.duputel@eost.u-strasbg.fr>\n") ;
   exit(0);
 }

@@ -177,7 +177,7 @@ main(int argc, char *argv[])
 	}
       else
 	{
-	  fprintf(stderr,"Warning: (trim_sac_files) rejected incomplete file : %s (%d -- %d)\n",
+	  fprintf(stderr,"Warning: (trim_sac_files_qrt) rejected incomplete file : %s (%d -- %d)\n",
 		  scfil, sampstart, hdr.npts);
 	}
     }
