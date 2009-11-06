@@ -1,0 +1,287 @@
+#!/bin/csh -f
+
+source $WPHASE_HOME/bin/WP_HEADER.CSH
+
+#####################################
+
+set ylim_auto = 'yes'        # 'yes'  or  'non'
+
+if($ylim_auto != 'yes') then
+  set ymin      = -0.5       #  mm
+  set ymax      =  0.5       #  mm
+  set ticks     =  0.1       #  mm
+endif
+
+set length    = 1000         # traces length in secs
+
+set XY1       = "-Xa1c -Ya15c"
+set red       = 200/20/20
+set green     = 50/200/50
+set black     = 0/0/0
+set K1        = "-K"
+set K2        = "-K -O"
+set K3        = "   -O"
+set Rg        = -R0/360/-90/90
+
+####################################
+set my_argv = ($ARGV)
+set sol_id   = 'W'
+set SOLFILE = WCMTSOLUTION
+set SYNDIR  = SYNTH
+if ($#my_argv < 1) then
+    echo "using default parameters"
+else if ($#my_argv == 2) then
+    set SOLFILE    = $my_argv[1]
+    set SYNDIR     = $my_argv[2]
+else if ($#my_argv == 3) then
+    set ymin       = $my_argv[1]
+    set ymax       = $my_argv[2]
+    set ticks      = $my_argv[3]
+    set ylim_auto  = 'non'      
+else if ($#my_argv == 5) then
+    set SOLFILE    = $my_argv[1]
+    set SYNDIR     = $my_argv[2]
+    set ymin       = $my_argv[3]
+    set ymax       = $my_argv[4]
+    set ticks      = $my_argv[5]
+    set ylim_auto  = 'non'  
+else if ($#my_argv == 6) then
+    set SOLFILE    = $my_argv[1]
+    set SYNDIR     = $my_argv[2]
+    set ymin       = $my_argv[3]
+    set ymax       = $my_argv[4]
+    set ticks      = $my_argv[5]
+    set sol_id     = $my_argv[6]
+    set ylim_auto  = 'non'
+else
+    echo "*** ERROR ($0) ***"
+    echo "Syntax: $0 [ymin ymax dy] [WCMTFILE OUTPUTDIR [ymin ymax dy [ID]]] "
+    exit    
+endif
+
+
+${ECHO} "Using $SOLFILE"
+
+# Creating synthetic filtered traces
+${FIND} . -name "*.complete_synth*.sac" -exec ${RM} \{\} \;
+${ECHO} "Writing synthetic filtered traces        ( >! _tmp_synths_v4 )"
+${ECHO} ' ' > tmp
+${ECHO} ' ' >> tmp
+${CAT} i_wpinversion >> tmp
+${MV} tmp i_wpinversion
+$SYNTHS i_master ${SOLFILE} o_wpinversion ${SYNDIR} >! _tmp_synths_v4 ##############A CHANGER
+
+# Title
+if (-e i_master) then
+        ${GREP} -v "^#" i_master | ${SED} -e 's/ *:/:/' >! i_tmp
+else
+        ${ECHO} "Error: file  i_master not available"
+        exit
+endif
+
+set evname = `${GREP} -v "^#" i_tmp | ${GREP}  EVNAME    | ${CUT} -d: -f2 | ${HEAD} -1`
+set forder = `${GREP} -v "^#" i_tmp | ${GREP} filt_order | ${CUT} -d: -f2 | ${HEAD} -1`
+set cfreq1 = `${GREP} -v "^#" i_tmp | ${GREP} filt_cf1   | ${CUT} -d: -f2 | ${HEAD} -1`
+set cfreq2 = `${GREP} -v "^#" i_tmp | ${GREP} filt_cf2   | ${CUT} -d: -f2 | ${HEAD} -1`
+set fpass  = `${GREP} -v "^#" i_tmp | ${GREP} filt_pass  | ${CUT} -d: -f2 | ${HEAD} -1`
+set title  = "$evname   ( $cfreq1 Hz - $cfreq2 Hz, n = $forder, $sol_id )"
+
+$GMTSET PAPER_MEDIA              letter+
+$GMTSET PLOT_DEGREE_FORMAT       +ddd:mm:ss
+$GMTSET DEGREE_SYMBOL            degree
+$GMTSET CHAR_ENCODING            ISO-8859-1
+$GMTSET GRID_CROSS_SIZE 	    0  
+$GMTSET ANNOT_FONT_SIZE_PRIMARY     10 
+$GMTSET LABEL_FONT_SIZE 	    10 
+$GMTSET LABEL_OFFSET 		    0c
+
+set fics_1 = `${CAT} o_wpinversion  | ${AWK} '{print $1}'`
+set evla   = `$SACLST evla f  $fics_1[1] | ${AWK} '{print $2}'`
+set evlo   = `$SACLST evlo f  $fics_1[1] | ${AWK} '{print $2}'`
+set EPI    = $evlo/$evla
+
+# Creating a station coordinates file
+if -e _tmp_stat_xy ${RM} _tmp_stat_xy
+foreach file ($fics_1)
+    $SACLST kstnm stla stlo f $file | ${AWK} '{print $2,$3,$4}' >> _tmp_stat_xy 
+end
+
+set npages = `${ECHO} $#fics_1 | ${AWK} '{printf "%2d", ($1/6 + 0.99)}'`
+
+${RM} -f page_6t_??_$sol_id.ps  page_6t_??_$sol_id.pdf
+foreach page (`${SEQ} 1 $npages`)
+	${ECHO} "Preparing page: $page/$npages"
+	set PS     = `${ECHO} $page $sol_id | ${AWK} '{printf "page_6t_%02d_%s.ps", $1, $2}'`
+	
+	${ECHO} 1 0 12 0 6 BC "$page/$npages" |\
+	$PSTEXT -JX1 -R0/1/0/1 -N  $K1 -G1 -Xa25.5c -Ya0.8c  >! $PS
+	${ECHO} 1 0 20 0 7 BC $title |\
+	$PSTEXT -JX1 -R0/1/0/1 -N  $K2 -G1 -Xa13.5c -Ya19.c  >> $PS
+	
+	foreach item (1 2 3)
+		set nsta   = `${ECHO} $page $item | ${AWK} '{print 6*($1-1)+$2}'`
+		set fic1   = $fics_1[$nsta]
+		set kstnm  = `$SACLST kstnm  f $fic1 | ${AWK} '{print $2}'`
+		set knetwk = `$SACLST knetwk f $fic1 | ${AWK} '{print $2}'`
+		set kcmpnm = `$SACLST kcmpnm f $fic1 | ${AWK} '{print $2}'`
+		set stla   = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
+		set stlo   = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
+		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.complete_synth.bp.sac"
+		set YY     = `${ECHO} $item | ${AWK} '{print 6*(3-$1)+2}'` 
+		
+		# Maximal and minimal values
+		if ($ylim_auto == 'yes') then
+			set tmp    = `$SACLST depmin depmax f $fic2 | ${AWK} '{print $2, $3}'`
+			set ymin   = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$1}'`
+			set ymax   = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$2}'`
+			set ticks  = `${ECHO} $ymax | ${AWK} '{print int(100*$1/3)/100}'`
+		endif 
+
+		set reg_trace = 0/$length/$ymin/$ymax
+		set XX = -Xa1c
+		# Station name
+		${ECHO} "${kstnm}(${kcmpnm})" | ${AWK} '{print "0.4 0.9 16 0 6 BC", $1}' |\
+		$PSTEXT -JX4 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
+		
+		# Region
+		set reg = `${ECHO} $evlo $evla | ${AWK} '{print $1-12"/"$2-12"/"$1+3"/"$2+3"/r"}'`
+		$PSCOAST   -R${reg} -JS${EPI}/3c -Bg0 -Dl -Glightgray  $XX -Ya${YY}c $K2  >> $PS
+		${ECHO} $evlo $evla | $PSXY  -R${reg} -JS -G$red -Sa.4 $XX -Ya${YY}c $K2  >> $PS
+		${AWK} '{print $3, $2}' _tmp_stat_xy |\
+		$PSXY                     -R${reg} -JS -G$green -Sc.1  $XX -Ya${YY}c  $K2 >> $PS
+		${ECHO} $stlo $stla | $PSXY  -R${reg} -JS -G$red -Sc.2 $XX -Ya${YY}c $K2  >> $PS
+		#$PSBASEMAP -R0/360/0/90 -JE0/90/3c -B/g30a30      $XX -Ya${YY}c $K2  >> $PS		
+		
+		# Traces
+		set b1    = `$SACLST b      f $fic1 | ${AWK} '{print $2}'`
+		set o1    = `$SACLST o      f $fic1 | ${AWK} '{print $2}'`
+		set dt1   = `$SACLST delta  f $fic1 | ${AWK} '{print $2}'`
+		set n1    = `$SACLST npts   f $fic1 | ${AWK} '{print $2}'`
+		set gcarc = `$SACLST gcarc  f $fic1 | ${AWK} '{print $2}'`
+		set az    = `$SACLST az     f $fic1 | ${AWK} '{print $2}'`
+		####
+		set b2    = `$SACLST b      f $fic2 | ${AWK} '{print $2}'`
+		set o2    = `$SACLST o      f $fic2 | ${AWK} '{print $2}'`
+		set dt2   = `$SACLST delta  f $fic2 | ${AWK} '{print $2}'`
+		set n2    = `$SACLST npts   f $fic2 | ${AWK} '{print $2}'`
+		
+		${OD} -v -j 632 -t fF -w4 -An $fic1        | ${AWK} '{print 1000*$1}'      >! _tmp_Y1
+		${OD} -v -j 632 -t fF -w4 -An $fic2        | ${AWK} '{print 1000*$1}'      >! _tmp_Y2
+		${SEQ} 1 $n1 | ${SED} -e "s/^/$b1 $o1 $dt1 /" | ${AWK} '{print $1-$2+$3*$4}'  >! _tmp_X1
+		${SEQ} 1 $n2 | ${SED} -e "s/^/$b2 $o2 $dt1 /" | ${AWK} '{print $1-$2+$3*$4}'  >! _tmp_X2
+		
+		${PASTE} _tmp_X1 _tmp_Y1 >! _tmp_XY1
+		${PASTE} _tmp_X2 _tmp_Y2 >! _tmp_XY2
+		
+		set XX = -Xa5.5c
+		${CAT} _tmp_XY1 | $PSXY -R$reg_trace -JX8/4 -W$black $XX -Ya${YY}c $K2 -B1000:sec:/${ticks}:mm:SWne >> $PS
+		${CAT} _tmp_XY2 | $PSXY -R$reg_trace -JX8/4 -W$red   $XX -Ya${YY}c $K2 -B0/0SWne >> $PS
+		
+		#### Wp window
+		set wnb   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $6}'`
+		set wne   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $7}'`
+		set wtb   = `${ECHO} $b1 $o1 $wnb $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
+		set wte   = `${ECHO} $b1 $o1 $wne $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
+		set size  = "0.2"
+		${ECHO} $wtb 0 | $PSXY -R$reg_trace -JX8/4 -W$red -G$red -Sc$size $XX -Ya${YY}c $K2 >> $PS
+		${ECHO} $wte 0 | $PSXY -R$reg_trace -JX8/4 -W$red -G$red -Sc$size $XX -Ya${YY}c $K2 >> $PS
+		###
+		
+		set string = `${ECHO} $az $gcarc | ${AWK} '{printf "(@~f,D@~) = %7.1f\\272, %7.1f\\272", $1,$2}'`
+		${ECHO} "4.5 3. 10 0 6 BL  $string" | $PSTEXT -JX1 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
+		
+		if ($nsta == $#fics_1) then
+			${ECHO} 0 0 | $PSXY -R0/1/0/1 -JX1 -W$black $K3 -Xa0c -Ya0c >> $PS
+			${PS2PDF} $PS
+			break
+		endif
+	end
+	if ($nsta == $#fics_1) break
+
+	#####################
+	###  Second column
+	#####################
+	
+	foreach item (1 2 3)
+		set nsta    = `${ECHO} $page $item | ${AWK} '{print 6*($1-1)+3+$2}'`
+		set fic1    = $fics_1[$nsta]
+		set kstnm   = `$SACLST kstnm  f $fic1 | ${AWK} '{print $2}'`
+		set knetwk  = `$SACLST knetwk f $fic1 | ${AWK} '{print $2}'`
+		set kcmpnm  = `$SACLST kcmpnm f $fic1 | ${AWK} '{print $2}'`
+		set stla    = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
+		set stlo    = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
+		set fic2    = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.complete_synth.bp.sac"
+		set YY      = `${ECHO} $item | ${AWK} '{print 6*(3-$1)+2}'` 
+		
+		# Maximal and minimal values
+		if ($ylim_auto == 'yes') then
+		set tmp     = `$SACLST depmin depmax f $fic2 | ${AWK} '{print $2, $3}'`
+		set ymin    = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$1}'`
+		set ymax    = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$2}'`
+		set ticks   = `${ECHO} $ymax | ${AWK} '{print int(100*$1/3)/100}'`
+		endif 
+		
+		set reg_trace = 0/$length/$ymin/$ymax
+		set XX = -Xa14.5c
+		# Station name
+		${ECHO} "$kstnm(${kcmpnm})" | ${AWK} '{print "0.4 0.9 16 0 6 BC", $1}' |\
+		$PSTEXT -JX4 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
+		
+		# Region
+		set reg = `${ECHO} $evlo $evla | ${AWK} '{print $1-12"/"$2-12"/"$1+3"/"$2+3"/r"}'`
+		$PSCOAST   -R${reg} -JS${EPI}/3c -Bg0 -Dc -Glightgray  $XX -Ya${YY}c $K2  >> $PS
+		${ECHO} $evlo $evla | $PSXY -R${reg} -JS -G$red -Sa.4  $XX -Ya${YY}c $K2  >> $PS
+		${AWK} '{print $3, $2}' _tmp_stat_xy |\
+		$PSXY                     -R${reg} -JS -G$green -Sc.1  $XX -Ya${YY}c $K2  >> $PS
+		${ECHO} $stlo $stla | $PSXY -R${reg} -JS -G$red -Sc.2  $XX -Ya${YY}c $K2  >> $PS
+		#$PSBASEMAP -R0/360/0/90 -JE0/90/3c -B/g30a30      $XX -Ya${YY}c $K2  >> $PS
+		
+		# Traces
+		set b1      = `$SACLST b     f $fic1 | ${AWK} '{print $2}'`
+		set o1      = `$SACLST o     f $fic1 | ${AWK} '{print $2}'`
+		set dt1     = `$SACLST delta f $fic1 | ${AWK} '{print $2}'`
+		set n1      = `$SACLST npts  f $fic1 | ${AWK} '{print $2}'`
+		set gcarc   = `$SACLST gcarc f $fic1 | ${AWK} '{print $2}'`
+		set az      = `$SACLST az    f $fic1 | ${AWK} '{print $2}'`
+		####
+		set b2      = `$SACLST b     f $fic2 | ${AWK} '{print $2}'`
+		set o2      = `$SACLST o     f $fic2 | ${AWK} '{print $2}'`
+		set dt2     = `$SACLST delta f $fic2 | ${AWK} '{print $2}'`
+		set n2      = `$SACLST npts  f $fic2 | ${AWK} '{print $2}'`
+		
+		${OD} -v -j 632 -t fF -w4 -An $fic1           | ${AWK} '{print 1000*$1}'      >! _tmp_Y1
+		${OD} -v -j 632 -t fF -w4 -An $fic2           | ${AWK} '{print 1000*$1}'      >! _tmp_Y2
+		${SEQ} 1 $n1 | ${SED} -e "s/^/$b1 $o1 $dt1 /" | ${AWK} '{print $1-$2+$3*$4}'  >! _tmp_X1
+		${SEQ} 1 $n2 | ${SED} -e "s/^/$b2 $o2 $dt1 /" | ${AWK} '{print $1-$2+$3*$4}'  >! _tmp_X2
+		
+		${PASTE} _tmp_X1 _tmp_Y1 >! _tmp_XY1
+		${PASTE} _tmp_X2 _tmp_Y2 >! _tmp_XY2
+		
+		set XX = -Xa19c
+		${CAT} _tmp_XY1 | $PSXY -R$reg_trace -JX8/4 -W$black $XX -Ya${YY}c $K2 -B1000:sec:/${ticks}:mm:SWne >> $PS
+		${CAT} _tmp_XY2 | $PSXY -R$reg_trace -JX8/4 -W$red   $XX -Ya${YY}c $K2 -B0/0SWne >> $PS
+		
+		#### Wp window
+		set wnb   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $6}'`
+		set wne   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $7}'`
+		set wtb   = `${ECHO} $b1 $o1 $wnb $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
+		set wte   = `${ECHO} $b1 $o1 $wne $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
+		set size  = "0.2"
+		${ECHO} $wtb 0 | $PSXY -R$reg_trace -JX8/4 -W$red -G$red -Sc$size $XX -Ya${YY}c $K2 >> $PS
+		${ECHO} $wte 0 | $PSXY -R$reg_trace -JX8/4 -W$red -G$red -Sc$size $XX -Ya${YY}c $K2 >> $PS
+		###
+		
+		set string = `${ECHO} $az $gcarc | ${AWK} '{printf "(@~f,D@~) = %7.1f\\272, %7.1f\\272", $1,$2}'`
+		${ECHO} "4.5 3. 10 0 6 BL  $string" | $PSTEXT -JX1 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
+		
+		if ($nsta == $#fics_1) then
+			${ECHO} 0 0 | $PSXY -R0/1/0/1 -JX1 -W$black $K3 -Xa0c -Ya0c >> $PS
+			${PS2PDF} $PS
+			break
+		endif
+	end
+	if ($nsta >= $#fics_1) break
+	${ECHO} 0 0 | $PSXY -R0/1/0/1 -JX1 -W$black $K3 -Xa0c -Ya0c >> $PS
+	${PS2PDF} $PS
+end
+${RM} -rf i_tmp
