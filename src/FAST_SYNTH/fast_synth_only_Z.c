@@ -154,6 +154,9 @@ main(int argc, char **argv)
          if (tapering == YES)  
 	   taper(Z, &hdr.npts, &hdr.delta, &(xdegs[jstat]), tv, dv, &nd);
       /* Writing the output sac files */
+	 hdr.gcarc = xdegs[jstat];
+	 hdr.az = azs[jstat];
+	 hdr.baz = bazs[jstat];
          save_sac(stats[jstat], nets[jstat], "LHZ", &stlats[jstat] , &stlons[jstat], &hdr,Z); 
       /* Memory Freeing */
          free((void *)Z  ); 

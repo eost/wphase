@@ -158,6 +158,9 @@ main(int argc, char **argv)
          if (tapering == YES)
 	   taper(Z, TH, PH, &hdr.npts, &hdr.delta, &(xdegs[jstat]), tv, dv, &nd) ;
       /* Writing the output sac files */
+	 hdr.gcarc = xdegs[jstat];
+	 hdr.az = azs[jstat];
+	 hdr.baz = bazs[jstat];
          save_sac(stats[jstat], nets[jstat], "LHZ", &stlats[jstat] , &stlons[jstat], &hdr, Z) ;
          save_sac(stats[jstat], nets[jstat], "LHL", &stlats[jstat] , &stlons[jstat], &hdr,TH) ;
          save_sac(stats[jstat], nets[jstat], "LHT", &stlats[jstat] , &stlons[jstat], &hdr,PH) ; 
