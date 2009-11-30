@@ -1067,7 +1067,7 @@ inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
 	  fprintf(stderr,"Conditioning threshold: %e\n", opt->cth_val) ;
 	  fprintf(stderr,"Damping factor:         %e\n", opt->df_val)  ;
 	  for(i=1; i<=nk ; i++)
-	    eigvals[i] = eigvals[i] + eigvals[1]*(opt->df_val) ;
+	    eigvals[i] = eigvals[i] + eigvals[0]*(opt->df_val) ;
 	}
       *Cond = eigvals[0] / eigvals[nk-1] ;
     }
