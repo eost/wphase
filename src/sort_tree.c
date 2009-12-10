@@ -223,8 +223,6 @@ build (struct tree * root, struct tree *mod, int flag)
       else
 	  build(beg->d, new, flag) ;
     }
-  else if ((new->xdeg) == (beg->xdeg))
-    beg->occur++;
   else if ((new->xdeg) < (beg->xdeg))
     {
       if (beg->g == NULL)
