@@ -223,7 +223,7 @@ build (struct tree * root, struct tree *mod, int flag)
       else
 	  build(beg->d, new, flag) ;
     }
-  else if ((new->xdeg) < (beg->xdeg))
+  else if ((new->xdeg) <= (beg->xdeg))
     {
       if (beg->g == NULL)
 	  beg->g = addfile(new) ;
