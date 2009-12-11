@@ -187,9 +187,15 @@ get_params(int argc, char **argv, int *un, char **i_sacs, char **o_sacs,
   
   if ( argc < 4 ) {
     fprintf (stderr, "*** ERROR (minimum of 3 params needed (%d given)) ***",argc-1)        ;
-    fprintf (stderr, "Syntax : %s i_master(in) i_sac_list(in) o_sac_list(out) [-u]\n", argv[0]) ;
+    fprintf (stderr, "Syntax : %s i_master(in) i_sac_list(in) o_sac_list(out) [-u(unique network)  -a(all channels)]\n", argv[0]) ;
     exit(1) ; }
- 
+
+  *un = 0 ; 
+  if (!strncmp(argv[argc-1],"-u",2))
+    *un = 1  ;
+  else if (!strncmp(argv[argc-1],"-a",2))
+    *un = -1 ;
+
   i_tmp     = char_alloc(FSIZE) ;  
   (*i_sacs) = char_alloc(FSIZE) ;
   (*o_sacs) = char_alloc(FSIZE) ;
@@ -197,11 +203,6 @@ get_params(int argc, char **argv, int *un, char **i_sacs, char **o_sacs,
   strcpy((*i_sacs), argv[2]) ;
   strcpy((*o_sacs), argv[3]) ;
   eq->cmtfile[0] = '\0';
-
-  if (!strncmp(argv[argc-1],"-u",2))
-    *un = 0 ;
-  else
-    *un = 1 ;
 
   i = 0;
   keys = char_alloc2(4, 16)   ;

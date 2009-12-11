@@ -5,6 +5,13 @@
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 set CHANS = "LHE LHN LHZ"
 
+set my_argv = ($ARGV)
+if ($#my_argv < 1) then
+    set trim_flag = "-u"
+else if ($#my_argv == 1) then
+
+    set trim_flag = $my_argv[1]
+endif
 set DATA = DATA
 set LOG  = LOG
 ########################################
@@ -50,8 +57,8 @@ cd ../
 foreach CHAN ($CHANS)
     ${LS}  ${DATA}/*${CHAN}*.SAC    >> ${DATA}/_sac_files_list
 end
-$TRIM_SAC_FILES i_master ${DATA}/_sac_files_list scr_dat_fil_list -u
 
+$TRIM_SAC_FILES i_master ${DATA}/_sac_files_list scr_dat_fil_list ${trim_flag}
 
 ########################
 # Responses Lookup table

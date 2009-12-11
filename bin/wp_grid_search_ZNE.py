@@ -107,7 +107,8 @@ def grid_search_dep(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,
 	elif dep2 > 760.5:
 		dep2 = 760.5
 	
-	os.system('cat o_wpinversion | sed \'s/^/dp_/\' > dp_o_wpinversion')
+	#os.system('cat o_wpinversion | sed \'s/^/dp_/\' > dp_o_wpinversion')
+	shutil.copy('o_wpinversion','dp_o_wpinversion')
 	cmttmp = cmtref+'_dp_tmp'	
 	eq.wimaster(datdir,ftable,cmttmp,'dp_i_master',dmin,dmax,'./dp_GF/',wpwin) 	
 	if os.access('dp_SYNTH',os.F_OK):
@@ -253,7 +254,8 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	if os.access(o_file,os.F_OK):
 		os.remove(o_file)
 
-	os.system('cat o_wpinversion | sed \'s/^/xy_/\' > xy_o_wpinversion')
+	#os.system('cat o_wpinversion | sed \'s/^/xy_/\' > xy_o_wpinversion')
+	shutil.copy('o_wpinversion','xy_o_wpinversion')
 	eq.wimaster(datdir,ftable,cmttmp,'xy_i_master',dmin,dmax,'./xy_GF/',wpwin) 	
 	if os.access('xy_SYNTH',os.F_OK):
 		shutil.rmtree('xy_SYNTH')

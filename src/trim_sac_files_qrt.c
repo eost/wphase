@@ -253,6 +253,12 @@ get_params(int argc, char **argv, int *un, char **i_locs, char **o_sacdir, char 
     fprintf (stderr, "*** ERROR (minimum of 4 params needed (%d given)) ***\n",argc-1)        ;
     fprintf (stderr, "Syntax : %s i_master(in) i_loc_lst(in) o_sac_dir o_sac_lst(out) [-u]\n", argv[0]) ;
     exit(1) ;     }
+
+  *un = 0 ; 
+  if (!strncmp(argv[argc-1],"-u",2))
+    *un = 1  ;
+  else if (!strncmp(argv[argc-1],"-a",2))
+    *un = -1 ;
   
   /* Allocate memory */
   i_tmp       = char_alloc(FSIZE) ;
@@ -268,11 +274,6 @@ get_params(int argc, char **argv, int *un, char **i_locs, char **o_sacdir, char 
   strcpy((*o_sacdir), argv[3])    ;
   strcpy((  *o_sacs), argv[4])    ;
 
-  if (!strncmp(argv[argc-1],"-u",2))
-    *un = 0 ;
-  else
-    *un = 1 ;
-  
   add_slash(*o_sacdir);
 
   /* Read i_masterfile and cmtfile */

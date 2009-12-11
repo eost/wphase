@@ -18,7 +18,6 @@
 #include "sort_tree.h"  
 
 
-
 /**************************************************/
 /*             new = alloctree()                  */
 /**************************************************/
@@ -141,12 +140,12 @@ build (struct tree * root, struct tree *mod, int flag)
   struct tree   *new = mod;
 
   
-  if (flag)
+  if (flag <= 0)
     i = strcmp(new->net,beg->net) ;
   else
     i = 0 ;
-  j = strcmp(new->sta,beg->sta) ;
-  k = strcmp(new->cmp,beg->cmp) ;
+  j   = strcmp(new->sta,beg->sta)   ;
+  k   = strcmp(new->cmp,beg->cmp)   ;
 
   if ((i == 0) && (j == 0) && (k == 0)) /* same network, station and channel */
     {
@@ -157,63 +156,73 @@ build (struct tree * root, struct tree *mod, int flag)
 	    { 
 	      beg->npts = new->npts       ; 
 	      strcpy(beg->file,new->file) ;
-	      if (!flag)
+	      if (flag > 0)
 		strcpy(beg->net,new->net) ;
 	    }
 	}
-      else if (strcmp(beg->locid,"--") == 0) /* Priority to empty locid */
-	return ;
-      else if (strcmp(beg->locid,"00") == 0) /* then 00 */
+      else if ( flag >= 0 )
 	{
-	  if (strcmp(new->locid,"--") == 0)
+	  if (strcmp(beg->locid,"--") == 0) /* Priority to empty locid */
+	    return ;
+	  else if (strcmp(beg->locid,"00") == 0) /* then 00 */
 	    {
-	      if ((new->xdeg) != (beg->xdeg))
-		fprintf(stderr,"Warning (sort tree): station position in files : %s - %s\n",new->file,beg->file);
-	      strcpy(beg->file,new->file)   ;
-	      strcpy(beg->locid,new->locid) ;
-	      beg->npts = new->npts         ;
-	      beg->occur = 1                ;
-	      if (!flag)
-		strcpy(beg->net,new->net) ;
+	      if (strcmp(new->locid,"--") == 0)
+		{
+		  if ((new->xdeg) != (beg->xdeg))
+		    fprintf(stderr,"Warning (sort tree): station position in files : %s - %s\n",new->file,beg->file);
+		  strcpy(beg->file,new->file)   ;
+		  strcpy(beg->locid,new->locid) ;
+		  beg->npts = new->npts         ;
+		  beg->occur = 1                ;
+		  if (flag > 0)
+		    strcpy(beg->net,new->net) ;
+		}
 	    }
-	}
-      else if (strcmp(beg->locid,"10") == 0) /* then 10 */
-	  { 
-	    if ( (strcmp(new->locid,"--") == 0) || (strcmp(new->locid,"00") == 0) )
-	      {
-		if ((new->xdeg) != (beg->xdeg))
-		  fprintf(stderr,"Warning (sort tree): station position in files : %s - %s\n",new->file,beg->file);
-		beg->occur = 1;
-		strcpy(beg->file,new->file)   ;
-		strcpy(beg->locid,new->locid) ;
-		if (!flag)
-		  strcpy(beg->net,new->net)   ;
-	      }
-	  }
-      else                                  /* then largest npts */
-	{
-	  i = strcmp(new->locid,"--") ;
-	  j = strcmp(new->locid,"00") ;
-	  k = strcmp(new->locid,"10") ;
-	  if ( (i==0) || (j==0) || (k==0) )
-	    {
-	      if ((new->xdeg) != (beg->xdeg))
-		fprintf(stderr,"Warning (sort tree): station position in files : %s - %s\n",new->file,beg->file);
-	      beg->occur = 1               ;
-	      strcpy(beg->file,new->file)  ;
-	      strcpy(beg->locid,new->locid);
-	      if (!flag)
-		strcpy(beg->net,new->net)  ;
-	    }
-	  else if (beg->npts < new->npts) 
+	  else if (strcmp(beg->locid,"10") == 0) /* then 10 */
 	    { 
-	      beg->occur = 1                ;
-	      beg->npts  = new->npts        ; 	      
-	      strcpy(beg->file,new->file)   ;
-	      strcpy(beg->locid,new->locid) ;
-	      if (!flag)
-		strcpy(beg->net,new->net)   ;
+	      if ( (strcmp(new->locid,"--") == 0) || (strcmp(new->locid,"00") == 0) )
+		{
+		  if ((new->xdeg) != (beg->xdeg))
+		    fprintf(stderr,"Warning (sort tree): station position in files : %s - %s\n",new->file,beg->file);
+		  beg->occur = 1;
+		  strcpy(beg->file,new->file)   ;
+		  strcpy(beg->locid,new->locid) ;
+		  if (flag > 0)
+		    strcpy(beg->net,new->net)   ;
+		}
 	    }
+	  else                                  /* then largest npts */
+	    {
+	      i = strcmp(new->locid,"--") ; 
+	      j = strcmp(new->locid,"00") ;
+	      k = strcmp(new->locid,"10") ;
+	      if ( (i==0) || (j==0) || (k==0) )
+		{
+		  if ((new->xdeg) != (beg->xdeg))
+		    fprintf(stderr,"Warning (sort tree): station position in files : %s - %s\n",new->file,beg->file);
+		  beg->occur = 1               ;
+		  strcpy(beg->file,new->file)  ;
+		  strcpy(beg->locid,new->locid);
+		  if ( flag > 0)
+		    strcpy(beg->net,new->net)  ;
+		}
+	      else if (beg->npts < new->npts) 
+		{ 
+		  beg->occur = 1                ;
+		  beg->npts  = new->npts        ; 	      
+		  strcpy(beg->file,new->file)   ;
+		  strcpy(beg->locid,new->locid) ;
+		  if ( flag > 0)
+		    strcpy(beg->net,new->net)   ;
+		}
+	    }
+	}
+      else
+	{
+	  if (beg->g == NULL)
+	    beg->g = addfile(new) ;
+	  else
+	    build(beg->g, new, flag);
 	}
     }
   else if ((i == 0) && (j == 0) && (k != 0)) /* same station but different channel */

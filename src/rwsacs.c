@@ -88,20 +88,20 @@ hdr_alloc(sachdr *hdr)
   /* hdr->kt    = char_alloc2(10,9) ; */
   /* hdr->kuser = char_alloc2(3,9) ;  */
 
-  strcpy(hdr->kstnm,"-12345  ");
-  strcpy(hdr->kevnm,"-12345  ");
-  strcpy(hdr->khole,"-12345  ");
-  strcpy(hdr->ko,"-12345  ");
-  strcpy(hdr->ka,"-12345  ");
+  strcpy(hdr->kstnm,     "-12345  ");
+  strcpy(hdr->kevnm,     "-12345          ");
+  strcpy(hdr->khole,     "-12345  ");
+  strcpy(hdr->ko,        "-12345  ");
+  strcpy(hdr->ka,        "-12345  ");
   for (i=0 ; i<10 ; i++)
-    strcpy(hdr->kt[i],"-12345  ");
-  strcpy(hdr->kf,"-12345  ");
+    strcpy(hdr->kt[i],   "-12345  ");
+  strcpy(hdr->kf,        "-12345  ");
   for (i=0 ; i<3 ; i++)
     strcpy(hdr->kuser[i],"-12345  ");
-  strcpy(hdr->kcmpnm,"-12345  ");
-  strcpy(hdr->knetwk,"-12345  ");
-  strcpy(hdr->kdatrd,"-12345  ");
-  strcpy(hdr->kinst,"-12345  ");
+  strcpy(hdr->kcmpnm,    "-12345  ");
+  strcpy(hdr->knetwk,    "-12345  ");
+  strcpy(hdr->kdatrd,    "-12345  ");
+  strcpy( hdr->kinst,    "-12345  ");
 }
 
 /*********************************************/

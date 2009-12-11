@@ -124,6 +124,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set kstnm  = `$SACLST kstnm  f $fic1 | ${AWK} '{print $2}'`
 		set knetwk = `$SACLST knetwk f $fic1 | ${AWK} '{print $2}'`
 		set kcmpnm = `$SACLST kcmpnm f $fic1 | ${AWK} '{print $2}'`
+		set khole  = `$SACLST khole f $fic1 | ${AWK} '{print $2}'`
 		set stla   = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo   = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
 		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.complete_synth.bp.sac"
@@ -208,6 +209,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set kstnm   = `$SACLST kstnm  f $fic1 | ${AWK} '{print $2}'`
 		set knetwk  = `$SACLST knetwk f $fic1 | ${AWK} '{print $2}'`
 		set kcmpnm  = `$SACLST kcmpnm f $fic1 | ${AWK} '{print $2}'`
+		set khole  = `$SACLST khole f $fic1 | ${AWK} '{print $2}'`	      
 		set stla    = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo    = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
 		set fic2    = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.complete_synth.bp.sac"

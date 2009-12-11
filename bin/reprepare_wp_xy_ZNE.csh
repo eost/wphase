@@ -13,7 +13,7 @@ endif
 
 set CHANS   = "LHN LHE LHZ"
 set LOG     = LOG
-set DATA    = ${pre}DATA
+set DATA    = DATA
 
 ########################################
 
@@ -40,8 +40,8 @@ endif
 
 ################################################
 # Rotation of data horizontal components (from E/N to L/T)
-${ECHO} "Rotation of horizontal components...               ( >! ${LOG}/_log_rot_data )"
-$CHANGE_SAC_HEADERS dec_bp_dat_fil_list upd_dec_bp_dat_fil_list ${DATA} -icmtf ${CMTFILE} >! ${LOG}/_log_rot_data
+#${ECHO} "Rotation of horizontal components...               ( >! ${LOG}/_log_rot_data )"
+#$CHANGE_SAC_HEADERS dec_bp_dat_fil_list upd_dec_bp_dat_fil_list ${DATA} -icmtf ${CMTFILE} >! ${LOG}/_log_rot_data
 
 ################################################
 # Synthetics preparatio:convolution and filter #

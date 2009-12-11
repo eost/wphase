@@ -123,6 +123,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set kstnm  = `$SACLST kstnm  f $fic1 | ${AWK} '{print $2}'`
 		set knetwk = `$SACLST knetwk f $fic1 | ${AWK} '{print $2}'`
 		set kcmpnm = `$SACLST kcmpnm f $fic1 | ${AWK} '{print $2}'`
+		set khole  = `$SACLST khole f $fic1 | ${AWK} '{print $2}'`
 		set stla   = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo   = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
 		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.complete_synth.bp.sac"
@@ -139,7 +140,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set reg_trace = 0/$length/$ymin/$ymax
 		set XX = -Xa1c
 		# Station name
-		${ECHO} "${kstnm}(${kcmpnm})" | ${AWK} '{print "0.4 0.9 16 0 6 BC", $1}' |\
+		${ECHO} "${kstnm}(${khole},${kcmpnm})" | ${AWK} '{print "0.4 0.9 16 0 6 BC", $1}' |\
 		$PSTEXT -JX4 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
 		
 		# Globe
@@ -206,6 +207,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set kstnm   = `$SACLST kstnm  f $fic1 | ${AWK} '{print $2}'`
 		set knetwk  = `$SACLST knetwk f $fic1 | ${AWK} '{print $2}'`
 		set kcmpnm  = `$SACLST kcmpnm f $fic1 | ${AWK} '{print $2}'`
+		set khole  = `$SACLST khole f $fic1 | ${AWK} '{print $2}'`		
 		set stla    = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo    = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
 		set fic2    = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.complete_synth.bp.sac"
@@ -222,7 +224,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set reg_trace = 0/$length/$ymin/$ymax
 		set XX = -Xa14.5c
 		# Station name
-		${ECHO} "$kstnm(${kcmpnm})" | ${AWK} '{print "0.4 0.9 16 0 6 BC", $1}' |\
+		${ECHO} "$kstnm(${khole},${kcmpnm})" | ${AWK} '{print "0.4 0.9 16 0 6 BC", $1}' |\
 		$PSTEXT -JX4 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
 		
 		# Globe
