@@ -467,8 +467,22 @@ wdatsac(char *file, sachdr *hdr, double *data)
   d = float_alloc(hdr->npts) ;
   for (i=0 ; i<hdr->npts ; i++)
       d[i] = (float)data[i];
-
   fwrite(d,sizeof(float),hdr->npts,f);
+
+  /* rewrite e    */
+  hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
+  i = fseek(f,24,SEEK_SET);
+  if (i!=0) {
+    fprintf(stderr,"ERROR writing data in file %s\n",file);
+    exit(1);}
+  fwrite(&hdr->e,sizeof(float),1,f);
+
+  /* rewrite npts */
+  i = fseek(f,316,SEEK_SET);
+  if (i!=0) {
+    fprintf(stderr,"ERROR writing data in file %s\n",file);
+    exit(1);}
+  fwrite(&hdr->npts,sizeof(int),1,f); 
   free((void*)d);
   fclose(f);
 }
