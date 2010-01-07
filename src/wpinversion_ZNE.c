@@ -749,69 +749,20 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
 {
   int    i, j, n0, f2;
 
-  int    nZ=0,nL=0,nT=0;
-  double  rmsZ=0,  rmsL=0,  rmsT=0 ;
-  double nrmsZ=0, nrmsL=0, nrmsT=0 ;
-
   f2  = 2*flag;
   n0 = 0 ;
   for(i=0 ; i<*ns ; i++)
     {
       calc_rms_sub(hd_synt[i].npts, data[i], dcalc[i], rms[i], flag) ;
       n0 += hd_synt[i].npts ;
-      if (flag == 2)
-	{
-	  if (!strncmp(hd_synt[i].kcmpnm,"LHZ",3))
-	    {
-	      rmsZ  += rms[i][2]   ;
-	      nrmsZ += rms[i][3]   ;
-	      nZ    += hd_synt[i].npts ;
-	    }
-	  if (!strncmp(hd_synt[i].kcmpnm,"LHN",3))
-	    {
-	      rmsL  += rms[i][2];
-	      nrmsL += rms[i][3];
-	      nL    += hd_synt[i].npts ;
-	    }
-	  if (!strncmp(hd_synt[i].kcmpnm,"LHE",3))
-	    {
-	      rmsT  += rms[i][2];
-	      nrmsT += rms[i][3];
-	      nT    += hd_synt[i].npts ;
-	    }
-	}
       for(j=0 ; j<f2 ; j++) 
 	{
-	  global_rms[j] += (opt->wgt[i]*opt->wgt[i]) * rms[i][j] ;
+	  global_rms[j] += rms[i][j] ;
 	  rms[i][j] = sqrt(rms[i][j]/(double)hd_synt[i].npts); 
 	}
     }
   for(j=0; j<f2; j++)
     global_rms[j] = sqrt(global_rms[j]/n0) ;
-  
-  if (flag == 2)
-    {
-      rmsZ  = sqrt(rmsZ/(double)nZ)  ; 
-      nrmsZ = sqrt(nrmsZ/(double)nZ) ;     
-      rmsL  = sqrt(rmsL/(double)nL)  ; 
-      nrmsL = sqrt(nrmsL/(double)nL) ;     
-      rmsT  = sqrt(rmsT/(double)nT)  ; 
-      nrmsT = sqrt(nrmsT/(double)nT) ; 
-      printf("##################################################\n");
-      printf("Ref. solution misfits:\n");
-      printf("LHZ_rms : %15.6e mm (%15.6f)\n",rmsZ,rmsZ/nrmsZ);
-      printf("LHN_rms : %15.6e mm (%15.6f)\n",rmsL,rmsL/nrmsL);
-      printf("LHE_rms : %15.6e mm (%15.6f)\n",rmsT,rmsT/nrmsT);
-      rmsL = rmsZ/rmsL ;      
-      rmsT = rmsZ/rmsT ;
-      nrmsL = nrmsL*rmsL/nrmsZ ;
-      nrmsT = nrmsT*rmsT/nrmsZ ;
-      printf("(LHZ_rms/LHN_rms) : %15.6e mm (%15.6f)\n",rmsL,nrmsL);
-      printf("(LHZ_rms/LHE_rms) : %15.6e mm (%15.6f)\n",rmsT,nrmsT);
-      printf("(LHZ_rms/LHN_rms)^2 : %15.6e mm (%15.6f)\n",rmsL*rmsL,nrmsL*nrmsL);
-      printf("(LHZ_rms/LHE_rms)^2 : %15.6e mm (%15.6f)\n",rmsT*rmsT,nrmsT*nrmsT);
-    }
-
 }
 
 
@@ -1642,7 +1593,7 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
      str_quake_params *eq  ; 
      FILE *o_log ;
 {
-  int    it,k, flag, nsini;
+  int    it, k, Nexp, flag, nsini;
   double Err, Cond, dt, ts ,dtmin, dtmax,tsopt2,rmsopt2; 
   FILE   *tmp, *o_gs   ;
 
@@ -1656,6 +1607,7 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
 
   it   = 0 ;
   k    = 0 ;
+  Nexp = 0 ;
   flag = 1 ;
   *tsopt  = 0. ;
   tsopt2  = dtmin  ;
@@ -1699,6 +1651,14 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
 	  k++ ;
 	}
       printf("Optimum values: time_shift = %5.1f rms = %12.7f mm \n",eq->ts+*tsopt,*rmsopt) ;
+      if (dtmax <= *tsopt + dt && Nexp < 5)
+	{
+           printf("Optimum value on the maximum explored time-shift\n   ... extending the time-shift grid-search area\n");
+	   dtmin = *tsopt + dt   ;
+	   dtmax = *tsopt + 4*dt ;
+	   Nexp++;
+	   continue ;
+	}
       if (it>0)
 	dt = dt/2. ;
       if (tsopt2 <= *tsopt)
