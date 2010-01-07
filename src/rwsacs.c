@@ -55,7 +55,7 @@ hdr_alloc(sachdr *hdr)
   hdr->yminimum=-12345. ;
   hdr->ymaximum=-12345. ;  
 
-  hdr->nzyr=-12345;  
+  hdr->nzyear=-12345;  
   hdr->nzjday=-12345;  
   hdr->nzhour=-12345;
   hdr->nzmin=-12345;  
@@ -194,7 +194,7 @@ rhdrsac(char *file, sachdr *hdr, int *ierror)
   fread(&hdr->yminimum,sizeof(float),1,f);
   fread(&hdr->ymaximum,sizeof(float),1,f);  
   fseek(f,7*sizeof(float),SEEK_CUR);
-  fread(&hdr->nzyr,sizeof(int),1,f);  
+  fread(&hdr->nzyear,sizeof(int),1,f);  
   fread(&hdr->nzjday,sizeof(int),1,f);  
   fread(&hdr->nzhour,sizeof(int),1,f);
   fread(&hdr->nzmin,sizeof(int),1,f);  
@@ -241,6 +241,8 @@ rhdrsac(char *file, sachdr *hdr, int *ierror)
   fgets(hdr->knetwk,9,f);
   fgets(hdr->kdatrd,9, f);
   fgets(hdr->kinst,9,f);
+  /* e */
+  hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
   fclose(f);
 }
 
@@ -286,6 +288,8 @@ rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
   fread(d,sizeof(float),hdr->npts,f);
   for (i=0 ; i<hdr->npts ; i++)
     data[i] = (double)d[i]; /* conversion from float to double */
+  /* e */
+  hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
   free((void*)d);
   fclose(f);
 }
@@ -336,6 +340,8 @@ whdrsac(char *file, sachdr *hdr)
   fwrite(&hdr->scale,sizeof(float),1,f);
   fwrite(&hdr->odelta,sizeof(float),1,f);
   fwrite(&hdr->b,sizeof(float),1,f);
+  /* e */
+  hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
   fwrite(&hdr->e,sizeof(float),1,f);
   fwrite(&hdr->o,sizeof(float),1,f);
   fwrite(&hdr->a,sizeof(float),1,f);
@@ -372,7 +378,7 @@ whdrsac(char *file, sachdr *hdr)
   for (i=0; i<7; i++)
     fwrite(&dumf,sizeof(float),1,f);
   /*fseek(f,7*sizeof(float),SEEK_CUR);*/
-  fwrite(&hdr->nzyr,sizeof(int),1,f);  
+  fwrite(&hdr->nzyear,sizeof(int),1,f);  
   fwrite(&hdr->nzjday,sizeof(int),1,f);  
   fwrite(&hdr->nzhour,sizeof(int),1,f);
   fwrite(&hdr->nzmin,sizeof(int),1,f);  

@@ -33,7 +33,7 @@ typedef struct
      float t[10], resp[10], user[10], f;
      float xminimum, xmaximum, yminimum, ymaximum;
      float internal1,internal2, internal3;
-     int   nzyr, nzjday, nzhour, nzmin, nzsec, nzmsec, npts;
+     int   nzyear, nzjday, nzhour, nzmin, nzsec, nzmsec, npts;
      int   nvhdr, norid, nevid, nwfid, nxsize, nysize;
      int   iftype, idep, iztype, iinst, istreg, ievreg,ievtyp;
      int   iqual, isynth, imagtyp, imagsrc;

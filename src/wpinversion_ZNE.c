@@ -1502,7 +1502,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
       /* set synthetic header */
       (*hd_synt)[ns].delta  = hd_data.delta  ;
       (*hd_synt)[ns].npts   = npts           ;
-      (*hd_synt)[ns].nzyr   = hd_data.nzyr   ;
+      (*hd_synt)[ns].nzyear = hd_data.nzyear ;
       (*hd_synt)[ns].nzjday = hd_data.nzjday ;
       (*hd_synt)[ns].nzhour = hd_data.nzhour ;
       (*hd_synt)[ns].nzmin  = hd_data.nzmin  ;

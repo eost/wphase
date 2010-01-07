@@ -15,7 +15,7 @@ read_cmt(str_quake_params *eq, sachdr *hdr)
 {
   get_cmtf(eq, 2) ;
   
-  hdr->nzyr   = eq->ot_ye    ;
+  hdr->nzyear   = eq->ot_ye    ;
   hdr->nzhour = eq->ot_ho    ;
   hdr->nzmin  = eq->ot_mi    ;
 
@@ -30,5 +30,5 @@ read_cmt(str_quake_params *eq, sachdr *hdr)
   hdr->nzsec  = floor(eq->ot_se) ;
   hdr->nzmsec = (int) (1000.*(eq->ot_se - hdr->nzsec) + .5) ;
 
-  hdr->nzjday = yyyymmdd2jjj(hdr->nzyr, eq->ot_mo, eq->ot_dm);
+  hdr->nzjday = yyyymmdd2jjj(hdr->nzyear, eq->ot_mo, eq->ot_dm);
 }

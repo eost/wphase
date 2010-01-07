@@ -94,7 +94,7 @@ main(int argc, char *argv[])
 
       /* Set event origin time in sac header variable 'o' (relative to the reference time) */
       delta_t2(&eq.ot_ye, &eq.ot_mo, &eq.ot_dm, &eq.ot_ho, &eq.ot_mi, &eq.ot_se, &eq.ot_ms,
-	       &hdr.nzyr, &hdr.nzjday, &hdr.nzhour, &hdr.nzmin, &hdr.nzsec, &hdr.nzmsec, &tdiff) ;
+	       &hdr.nzyear, &hdr.nzjday, &hdr.nzhour, &hdr.nzmin, &hdr.nzsec, &hdr.nzmsec, &tdiff) ;
       otime = tdiff ;
       hdr.t[0]  = (float)(P_tt + tdiff) ; /* P arrival         */
 

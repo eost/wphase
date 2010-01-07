@@ -174,7 +174,7 @@ check_hdr(sachdr *hdr, MSRecord *msr)
   hpt_beg = msr->starttime -  MS_EPOCH2HPTIME((hdr->npts)/msr->samprate);
   ms_hptime2btime (hpt_beg,&bt_beg);
 
-  if (bt_beg.year  != (uint16_t) hdr->nzyr )
+  if (bt_beg.year  != (uint16_t) hdr->nzyear )
     {
       error_mseed("year");
       return 1;
@@ -198,7 +198,7 @@ check_hdr(sachdr *hdr, MSRecord *msr)
       /*       ms_hptime2btime (msr->starttime,&bt_beg); */
       /*       printf("npts = %d\n",hdr->npts); */
       /*       printf("bt_ini = %d %d %d:%d:%d.%d\n",bt_beg.year,bt_beg.day,bt_beg.hour,bt_beg.min,bt_beg.sec,bt_beg.fract/10.); */
-      /*       printf("hdr    = %d %d %d:%d:%d.%d\n",hdr->nzyr,hdr->nzjday,hdr->nzhour,hdr->nzmin,hdr->nzsec,hdr->nzmsec); */
+      /*       printf("hdr    = %d %d %d:%d:%d.%d\n",hdr->nzyear,hdr->nzjday,hdr->nzhour,hdr->nzmin,hdr->nzsec,hdr->nzmsec); */
       return 1;
     }
   if (bt_beg.sec   !=  (uint8_t) hdr->nzsec  )
@@ -243,7 +243,7 @@ fill_sac(sachdr *hdr, double *o_x, MSRecord *msr)
       hdr->delta  = (float)(1./(msr->samprate));
       hdr->b      = (float)0.;
       hdr->e      = (float)((double)(msr->numsamples-1)/msr->samprate);
-      hdr->nzyr   = (int) t_beg.year ;
+      hdr->nzyear = (int) t_beg.year ;
       hdr->nzjday = (int) t_beg.day  ;
       hdr->nzhour = (int) t_beg.hour ;
       hdr->nzmin  = (int) t_beg.min  ;

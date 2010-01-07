@@ -106,7 +106,7 @@ check_hdr(sachdr *hdr, MSRecord *msr)
   hpt_beg = msr->starttime -  MS_EPOCH2HPTIME((hdr->npts)/msr->samprate);
   ms_hptime2btime (hpt_beg,&bt_beg);
 
-  if (bt_beg.year  != (uint16_t) hdr->nzyr )
+  if (bt_beg.year  != (uint16_t) hdr->nzyear )
     return 1;
   if (bt_beg.day   != (uint16_t) hdr->nzjday )
     return 1;
@@ -150,7 +150,7 @@ fill_sac(sachdr *hdr, double *o_x, MSRecord *msr, int first, int npts)
       hdr->delta  = (float)(1./(msr->samprate));
       hdr->b      = (float)0.;
       hdr->e      = (float)((double)(msr->numsamples-1)/msr->samprate);
-      hdr->nzyr   = (int) t_beg.year ;
+      hdr->nzyear = (int) t_beg.year ;
       hdr->nzjday = (int) t_beg.day  ;
       hdr->nzhour = (int) t_beg.hour ;
       hdr->nzmin  = (int) t_beg.min  ;
