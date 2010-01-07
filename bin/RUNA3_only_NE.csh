@@ -46,12 +46,7 @@ foreach th ($ths)
     -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
     -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th}\
     -gfdir ${gf_dir} -old
-
-#     set NBSTA = `${CAT} o_wpinversion | ${WC}  -l`
-#     if ( $NBSTA < 20 ) then
-#  	${ECHO} "${NBSTA} stations : stop for th=${th}"
-#  	break
-#     endif
+    if ($status == 1) exit(1)
     ${CP} -f o_wpinv.th_$th o_wpinversion        
 end
 

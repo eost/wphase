@@ -63,7 +63,6 @@ foreach th ($ths)
     -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
     -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir}\
     -wn ${wN} -we ${wE} -wz ${wZ} -old 
-
     ${CP} -f o_wpinv.th_$th o_wpinversion        
     set NBSTA = `${CAT} o_wpinversion | ${WC}  -l`
     if ( $NBSTA < 25 ) then
