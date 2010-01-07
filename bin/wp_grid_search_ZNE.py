@@ -57,26 +57,6 @@ def grep2(list, file):
 				break
 	return(out)
 
-def find_pde_rms(FILES):
-	max_mtime = -1.
-	for f in FILES:
-		if os.path.exists(f):
-			stmtime = os.stat(f).st_mtime
-			if max_mtime < 0.:
-				max_mtime = stmtime
-				max_file  = f
-			elif max_mtime < stmtime:
-				max_mtime = stmtime
-				max_file  = f
-	if max_mtime >= 0.:
-		out = grep(r'^W_cmt_err:', max_file) 
-		rmsini   = float(out[0].strip('\n').split()[1])
-		nrmsini  = float(out[0].strip('\n').split()[2])
-	else: 
-		rmsini  = -12345.
-		nrmsini = -12345.
-	return [rmsini,nrmsini]
-
 def addrefsol(cmtref,cmtfile):
 	cmtf = open(cmtref,'r')
 	L=cmtf.readlines()
@@ -306,8 +286,17 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 		lonopt.append(lon1)
 
 	# Grid search 
-	ncel = 0
 	
+	# Compute initial solution
+	eq_gs.wcmtfile(cmttmp,ts,hd)
+	os.system(RECALCSYN_XY+' > LOG/_log_py_recalsyn_xy')
+	os.system(REPREPARE_XY+'> LOG/_log_py_reprepare_xy')
+	os.system(WPINV_XY+' -ocmtf xy_WCMTs/xy_WCMTSOLUTION_ini -noref > LOG/_log_py_wpinv_xy')
+	out  = grep(r'^W_cmt_err:', 'LOG/_xy_wpinversion.log')
+	rmsini  = float(out[0].strip('\n').split()[1])
+	nrmsini = float(out[0].strip('\n').split()[2])
+	
+	ncel = 0
 	tmp_table = open(tmpfile, 'w')	
 	format    = '%03d %03d %8.2f %8.2f %8.2f %8.2f %8.2f %12.7f %12.7f\n'	
  	for it in xrange(Nit):
@@ -324,7 +313,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
  				add_coor(coor,latopt[i]-dx,lonopt[i]-dx)
  				add_coor(coor,latopt[i]   ,lonopt[i]-dx)
 
- 		fid.write('Iteration %d:\n' % (it+1))
+		fid.write('Iteration %d:\n' % (it+1))
  		for cds in coor:
  			eq_gs.lat = cds[0]
  			eq_gs.lon = cds[1]
@@ -351,7 +340,6 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 			ncel += 1
 		fid.write('Optimum centroid location: %8.3f %8.3f;  rms = %12.7f mm\n'%(latopt[0], lonopt[0], rmsopt[0]))
 	tmp_table.close()
-	rmsini,nrmsini = find_pde_rms(['LOG/wpinversion.log','LOG/_ts_wpinversion.log'])
 	tmp_table = open(tmpfile, 'r')
 	out_table = open(o_file, 'w')
 	out_table.write('%8.3f %8.3f %12.7f\n'%(latopt[0], lonopt[0], rmsopt[0]))
@@ -508,124 +496,6 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 
 	return [tsopt,tsopt]
 
-def fast_grid_search_ts_old(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,out='stdout'):
-	if out == 'stdout':
-		fid = sys.stdout
-		flag = 0
-	else:
-		fid = open(out,'w')
-		flag = 1
-	fid.write('FAST CENTROID TIME DELAY GRID SEARCH\n')
-
-	# Initialize variables #################
-	o_file = 'grid_search_ts_out'
-	tmpfile = '_tmp_ts_table'
-
-	Nit = 3
-	Sts = [4.,4.,2.,1.]	
-	if eq.mag < 5.5:
-	 	ts1 = 1.
-		ts2 = tsini*3.	
-		if ts2 > 60.:
-			ts2 = 60.	
-	else:
-		ts1 =  1. 
-		if eq.mag <= 7.0:
-			ts2 = 30. 
-		elif eq.mag <8.0:
-			ts2 = 48. 
-		elif eq.mag < 8.5: 		
-			ts2 = 56. 
-		else: 
-			ts2 = 168. 
-	########################################
-	
-	cmttmp = cmtref+'_ts_tmp'
-	eq.wcmtfile(cmttmp,tsini,hdini)
-	eq.wimaster(datdir,ftable,cmttmp,'ts_i_master',dmin ,dmax,'ts_GF',wpwin)
-	if os.access('ts_SYNTH',os.F_OK):
-		shutil.rmtree('ts_SYNTH')
-	os.mkdir('ts_SYNTH')
-	if os.access('ts_GF',os.F_OK):
-		shutil.rmtree('ts_GF')
-	shutil.copytree('GF','./ts_GF')
-	if os.access(o_file,os.F_OK):  
-		os.remove(o_file)
-
-	# Grid search
-	out     = grep(r'^W_cmt_err:', 'LOG/wpinversion.log') 
-	rmsini  = float(out[0].strip('\n').split()[1])
-	nrmsini = float(out[0].strip('\n').split()[2])
-	format  = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
-	its    = 0
-	tsopt  = 0.
-	rmsopt = rmsini
-	tsopt2 = ts1 - tsini
-	rmsopt2 = 1.1e10
-	os.system(REPREPARE_TS+'> LOG/_log_py_reprepare_ts')
-	tmp_table  = open(tmpfile, 'w')
-	for j in xrange(Nit):
-		sts = Sts[j]
-		if j>0:
-			if (tsopt2 <= tsopt):
-				ts1 = tsopt2 - sts/2
-				ts2 = tsopt  + sts/2 
-			elif(tsopt2 > tsopt):
-				ts1 = tsopt  - sts/2 
-				ts2 = tsopt2 + sts/2 
-			if ts1 < (1. - tsini):
-				ts1 += abs(2. - tsini)
-		fid.write('iteration %d (%f<=ts<=%f)\n'% (j+1,ts1+tsini,ts2+tsini))
-		ts = ts1
-		while ts < ts2+sts:
-			os.system(WPINV_TS+' -noref -dts %4.1f > LOG/_log_py_wpinv_ts'% ts)
-			out  = grep(r'^W_cmt_err:', 'LOG/_ts_wpinversion.log')			
-			rms  = float(out[0].strip('\n').split()[1])
-			nrms = float(out[0].strip('\n').split()[2])
-			tmp_table.write(format%(its, ts+tsini, eq.lat, eq.lon, eq.dep, rms, nrms))
-			tmp_table.flush()
-			if rms < rmsopt:
-				tsopt2  = tsopt
-				rmsopt2 = rmsopt
-				tsopt   = ts
-				rmsopt  = rms
-			elif rms < rmsopt2:
-				tsopt2  = ts
-				rmsopt2 = rms
-			fid.write('   ts = %4.1f sec, rms = %12.7f mm\n'% (ts+tsini,rms))
-			its += 1
-			ts += sts
-		fid.write('   after iteration %d : tsopt=%4.1f sec rms =%12.7f mm\n'%(j+1,tsopt+tsini, rmsopt))
-	fid.write('\nFinal Optimum values: time_shift =  %5.1f   rms = %12.7f mm\n'%(tsopt+tsini, rmsopt))
-	tmp_table.close()
-	tmp_table = open(tmpfile, 'r')
-	out_table = open(o_file,'w')
-	out_table.write('%5.1f%12.7f\n'%(tsopt+tsini, rmsopt))	
-	out_table.write('%5.1f%12.7f\n'%(tsini, rmsini))
-	out_table.write(tmp_table.read())
-	out_table.close()
-	tmp_table.close()
-	os.remove(tmpfile)
-
-	eq.wcmtfile(cmttmp,tsopt+tsini,tsopt+tsini)
-	os.system(REPREPARE_TS)
-	if flagref:
-		addrefsol(cmtpde,cmttmp)
-		os.system(WPINV_TS)
-	else:
-		os.system(WPINV_TS+' -noref')
-		
-
-	if flag:
-		fid.close()
-
-	# Set Mww
-	out  = grep(r'^Wmag:', 'LOG/_ts_wpinversion.log')
-	eq.mag = float(out[0].split()[1]) ;
-
-	return [tsopt+tsini,tsopt+tsini]
-
-
 def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
 	if fileout == 'stdout':
 		fid  = sys.stdout
@@ -672,7 +542,6 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 
 	# Grid search
 	fid.write('  ts1 = %5.1f sec, step = %5.1f sec, ts2 = %5.1f sec \n'%(ts1,sts,ts2))  	
-	rmsini,nrmsini = find_pde_rms(['LOG/wpinversion.log'])
 	format  = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
  	print WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,o_file)
 	if flag:
