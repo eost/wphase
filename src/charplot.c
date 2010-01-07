@@ -37,18 +37,16 @@ charplot(double *M, double s1, double d1, double s2, double d2,
   double  x, y, z, amp     ;
   char    **figure         ;
   
-  /* figure = (char **)malloc(2*ry+1, sizeof(char*)); */
   figure = char_calloc2(2*ry+1,2*rx+1) ;
   jxP = 0; jyP=0; jxT=0; jyT=0;
   aP = M[0]; aT = M[0]; 	
   for(jy = ry; jy >= -ry; jy--)
     {
-      /* figure[ry+jy] = (char *)calloc(2*rx+1, sizeof(char)); */
       for(jx = -rx; jx <= rx; jx++)
 	{
 	  radius = hypot((double)jx, (double)jy*(double)rx/(double)ry);
 	  figure[ry+jy][rx+jx] = W;
-	  if (radius < rx)
+	  if (radius <= rx)
 	    {
 	      figure[ry+jy][rx+jx] = D;
 	      ain = 2.*asin(radius/(double)rx/M_SQRT2);
@@ -93,7 +91,7 @@ charplot(double *M, double s1, double d1, double s2, double d2,
 	  for(jx = -rx; jx <= rx; jx++)
 	    fprintf(stream,"%c", figure[ry+jy][rx+jx]);
 	  fprintf(stream,"\n");
-    }
+	}
     }
   else            /* Nodal planes */
     {  
@@ -107,6 +105,7 @@ charplot(double *M, double s1, double d1, double s2, double d2,
 	  fprintf(stream,"\n");
 	}
     }
+  fprintf(stream,"22\n");
   
   return(1);
 }
