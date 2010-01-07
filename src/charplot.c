@@ -105,7 +105,6 @@ charplot(double *M, double s1, double d1, double s2, double d2,
 	  fprintf(stream,"\n");
 	}
     }
-  fprintf(stream,"22\n");
   
   return(1);
 }

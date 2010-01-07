@@ -57,6 +57,26 @@ def grep2(list, file):
 				break
 	return(out)
 
+def find_pde_rms(FILES):
+	max_mtime = -1.
+	for f in FILES:
+		if os.path.exists(f):
+			stmtime = os.stat(f).st_mtime
+			if max_mtime < 0.:
+				max_mtime = stmtime
+				max_file  = f
+			elif max_mtime < stmtime:
+				max_mtime = stmtime
+				max_file  = f
+	if max_mtime >= 0.:
+		out = grep(r'^W_cmt_err:', max_file) 
+		rmsini   = float(out[0].strip('\n').split()[1])
+		nrmsini  = float(out[0].strip('\n').split()[2])
+	else: 
+		rmsini  = -12345.
+		nrmsini = -12345.
+	return [rmsini,nrmsini]
+
 def addrefsol(cmtref,cmtfile):
 	cmtf = open(cmtref,'r')
 	L=cmtf.readlines()
@@ -76,7 +96,6 @@ def add_coor(coor,lat,lon):
 			return coor
 	coor.append([lat,lon])
 	return coor
-
 
 def grid_search_dep(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
 	if fileout == 'stdout':
@@ -238,13 +257,13 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	o_file = 'grid_search_xy_out'
 	tmpfile = '_tmp_xy_table'
 
-	Nit  = 2
-
+	Nit    = 2
 	dx   = 0.4
 	lat1 = eq.lat - 1.2
 	lat2 = eq.lat + 1.2
 	lon1 = eq.lon - 1.2
 	lon2 = eq.lon + 1.2
+
 	########################################
 	cmttmp = cmtref+'_xy_tmp'
 
@@ -331,12 +350,12 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 			tmp_table.flush()
 			ncel += 1
 		fid.write('Optimum centroid location: %8.3f %8.3f;  rms = %12.7f mm\n'%(latopt[0], lonopt[0], rmsopt[0]))
-
 	tmp_table.close()
+	rmsini,nrmsini = find_pde_rms(['LOG/wpinversion.log','LOG/_ts_wpinversion.log'])
 	tmp_table = open(tmpfile, 'r')
 	out_table = open(o_file, 'w')
 	out_table.write('%8.3f %8.3f %12.7f\n'%(latopt[0], lonopt[0], rmsopt[0]))
-	out_table.write('%8.3f %8.3f %12.7f\n'%(   eq.lat,    eq.lon, rmsopt[0]))	
+	out_table.write('%8.3f %8.3f %12.7f\n'%(   eq.lat,    eq.lon, rmsini))	
        	out_table.write(tmp_table.read())
        	out_table.close()
        	tmp_table.close()
@@ -653,9 +672,7 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 
 	# Grid search
 	fid.write('  ts1 = %5.1f sec, step = %5.1f sec, ts2 = %5.1f sec \n'%(ts1,sts,ts2))  	
-	out     = grep(r'^W_cmt_err:', 'LOG/wpinversion.log') 
-	rmsini  = float(out[0].strip('\n').split()[1])
-	nrmsini = float(out[0].strip('\n').split()[2])
+	rmsini,nrmsini = find_pde_rms(['LOG/wpinversion.log'])
 	format  = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
  	print WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,o_file)
 	if flag:
