@@ -280,13 +280,16 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   double diplow, **TMb, *eval3b       ;
   char   *buf, *buf2, **sta, **cmp    ;
   FILE   *ps, *o_bitmap               ;
+
+  char   date_stmp[64] ;
+  time_t now           ; 
   
   nbcmp = int_alloc(*nsac)        ;
   buf   = char_alloc(9)           ;
   buf2  = char_alloc(32)          ;
   sta   = char_calloc2(*nsac, 9)  ;
   cmp   = char_calloc2(*nsac, 30) ;  
-
+  
   /* PS FILE */
   ps = openfile_wt(opt->psfile) ;
   /* header */
@@ -304,6 +307,14 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., +1.3) ;
   fprintf(ps,"(%s) show\n", eq->evnm) ;
  
+  /* Time stamp */
+  time(&now) ;
+  fprintf(ps,"/Times-Roman findfont .1 scalefont setfont\n") ;
+  strftime(date_stmp,64,"Processed Date : %a %b %02d %02H:%02M:%02S %Y UT",gmtime(&now));
+  date_stmp[44] = '\0';
+  fprintf(ps,"%15.6f %15.6f moveto\n", -2.45, 1.7) ;
+  fprintf(ps,"(%s) show\n", date_stmp) ;
+
   /* tensor elem., moment, planes, eigvalues */
   fprintf(ps,"/Times-Roman findfont .1 scalefont setfont\n") ;
   fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.45) ;

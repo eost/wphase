@@ -549,7 +549,7 @@ if __name__ == "__main__":
 				 r'^WP_WIN'], i_master)
  	dat    = out[0].replace(':','').strip('\n').split()[1]
  	cmtpde = out[1].replace(':','').strip('\n').split()[1]
-	evname = out[2]
+	evname = out[2].split(':')[1].strip().replace(' ','_').replace(',','')
 	wpwin  = map(float,out[5].replace(':','').strip('\n').split()[1:])
 	ftable = []
  	ftable.append(float(out[3].replace(':','').strip('\n').split()[1]))
