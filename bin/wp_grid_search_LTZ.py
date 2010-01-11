@@ -21,7 +21,6 @@ if WPHOME[-1] != '/':
 BIN = WPHOME+'bin/'
 
 
-
 REPREPARE_TS = BIN+'reprepare_wp_ts_LTZ.csh'
 WPINV_TS     = BIN+'wpinversion_LTZ -imas ts_i_master -ifil o_wpinversion -ofil ts_o_wpinversion -ocmtf ts_WCMTSOLUTION '+\
                    '-ps ts_p_wpinversion -wpbm ts_wpinv.pgm -log LOG/_ts_wpinversion.log -osyndir ts_SYNTH -pdata ts_fort.15'
@@ -33,6 +32,7 @@ WPINV_XY     = BIN+'wpinversion_LTZ -imas xy_i_master -ifil xy_o_wpinversion -of
 
 WPINV_DP     = BIN+'wpinversion_LTZ -imas dp_i_master -ifil dp_o_wpinversion -ofil dp_o_wpinversion '+\
                    '-wpbm dp_wpinv.pgm -log LOG/_dp_wpinversion.log -osyndir dp_SYNTH -pdata dp_fort.15'
+
 
 def grep(chaine, file):
 	out = [];
@@ -117,9 +117,9 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 
 	lat = lat1
 	coor = []
-	while lat <= lat2:
+	while int(100*lat) <= int(100*lat2):
 		lon = lon1
-		while lon <= lon2:
+		while int(100*lon) <= int(100*lon2):
 			coor.append([lat,lon])
 			lon += dx
 		lat += dx
@@ -228,26 +228,28 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 						if lat < lat1 or lat > lat1:
 							if lats.count(lat) == 0:
 								lats.append(lat)
-					minlat,maxlat = min(lats),max(lats)
-					minlon,maxlon = min(lons),max(lons)
-					if minlat < lat1:
-						lat1 = minlat
-					if maxlat > lat2:
-						lat2 = maxlat
-					if minlon < lon1:
-						lon1 = minlon
-					if maxlon > lon1:
-						lon2 = maxlon
-					for clat in lats:
-						lon = lon1
-						while lon <= lon2:
-							add_coor(coor,clat,lon,prevcoor)
-							lon += dx
-					for clon in lons:
-						lat = lat1
-						while lat <= lat2:
-							add_coor(coor,lat,clon,prevcoor)
-							lat += dx
+					if len(lats) > 0:
+						minlat,maxlat = min(lats),max(lats)
+						if minlat < lat1:
+							lat1 = minlat
+						if maxlat > lat2:
+							lat2 = maxlat
+						for clat in lats:
+							lon = lon1
+							while lon <= lon2:
+								add_coor(coor,clat,lon,prevcoor)
+								lon += dx						
+					if len(lons) > 0:
+						minlon,maxlon = min(lons),max(lons)
+						if minlon < lon1:
+							lon1 = minlon
+						if maxlon > lon1:
+							lon2 = maxlon
+						for clon in lons:
+							lat = lat1
+							while lat <= lat2:
+								add_coor(coor,lat,clon,prevcoor)
+								lat += dx
 					Nexp += 1
 					continue
 				else:

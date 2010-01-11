@@ -118,9 +118,9 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 
 	lat = lat1
 	coor = []
-	while lat <= lat2:
+	while int(100*lat) <= int(100*lat2):
 		lon = lon1
-		while lon <= lon2:
+		while int(100*lon) <= int(100*lon2):
 			coor.append([lat,lon])
 			lon += dx
 		lat += dx
@@ -229,26 +229,28 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 						if lat < lat1 or lat > lat1:
 							if lats.count(lat) == 0:
 								lats.append(lat)
-					minlat,maxlat = min(lats),max(lats)
-					minlon,maxlon = min(lons),max(lons)
-					if minlat < lat1:
-						lat1 = minlat
-					if maxlat > lat2:
-						lat2 = maxlat
-					if minlon < lon1:
-						lon1 = minlon
-					if maxlon > lon1:
-						lon2 = maxlon
-					for clat in lats:
-						lon = lon1
-						while lon <= lon2:
-							add_coor(coor,clat,lon,prevcoor)
-							lon += dx
-					for clon in lons:
-						lat = lat1
-						while lat <= lat2:
-							add_coor(coor,lat,clon,prevcoor)
-							lat += dx
+					if len(lats) > 0:
+						minlat,maxlat = min(lats),max(lats)
+						if minlat < lat1:
+							lat1 = minlat
+						if maxlat > lat2:
+							lat2 = maxlat
+						for clat in lats:
+							lon = lon1
+							while lon <= lon2:
+								add_coor(coor,clat,lon,prevcoor)
+								lon += dx						
+					if len(lons) > 0:
+						minlon,maxlon = min(lons),max(lons)
+						if minlon < lon1:
+							lon1 = minlon
+						if maxlon > lon1:
+							lon2 = maxlon
+						for clon in lons:
+							lat = lat1
+							while lat <= lat2:
+								add_coor(coor,lat,clon,prevcoor)
+								lat += dx
 					Nexp += 1
 					continue
 				else:
