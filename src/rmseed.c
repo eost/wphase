@@ -130,10 +130,10 @@ get_msname(sachdr *hdr, str_quake_params *eq, int year, int day, char *msfil)
   khole[i] = '\0';
 
   if (!strcmp(hdr->khole,"--"))
-    sprintf(msfil,"%s%s/%s/%s.%s.%s.%s.%d.%d",eq->seed,knetwk,kstnm,
+    sprintf(msfil,"%s%s/%s/%s.%s.%s.%s.%04d.%03d",eq->seed,knetwk,kstnm,
 	    knetwk,kstnm,"",kcmpnm,year,day);
   else
-    sprintf(msfil,"%s%s/%s/%s.%s.%s.%s.%d.%d",eq->seed,knetwk,kstnm,
+    sprintf(msfil,"%s%s/%s/%s.%s.%s.%s.%04d.%03d",eq->seed,knetwk,kstnm,
 	    knetwk,kstnm,khole,kcmpnm,year,day);
 }
 
