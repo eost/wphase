@@ -26,7 +26,7 @@ main(int argc, char *argv[])
 {
   int    i,MAX, flag,ind, ierror, nl;
   long   int nerr                   ; 
-  float  dum, az, baz, xdeg ;
+  float  dum, az, baz=0, xdeg ;
   double stla, stlo, stel   ;
   double *x_in1, *x_in2, tmp, co, si ;
   char   *i_fil, **h_fil, *o_fil, *scr_lst, *o_lst ;
@@ -59,7 +59,7 @@ main(int argc, char *argv[])
   /* Open Data File List    */
   istaf = openfile_rt( scr_lst, &nl);
   ostaf = openfile_wt( o_lst);
-
+  dum   = -1 ;
   flag   = 0 ;
   ierror = 1 ;
   while( (nl=fscanf (istaf, "%s %s %s %s %lf %lf %lf %f %f", i_fil, sta, net, cmp, &stla, &stlo, &stel, &az, &xdeg)) != EOF )
@@ -75,6 +75,9 @@ main(int argc, char *argv[])
 	  rhdrsac(i_fil, &hdr1, &ierror)        ;
 	  rdatsac(i_fil, &hdr1, x_in1, &ierror) ;
 	  /* az, baz, xdeg are not writen in sac files since we use PDE for the W phase time window */
+	  az   = 0. ;
+	  baz  = 0. ;
+	  xdeg = 0. ;
 	  distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &dum, &az, &baz, &xdeg, &nerr) ; 
 	  fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
 		  o_fil,sta,net,cmp,stla,stlo,stel,az,xdeg) ;

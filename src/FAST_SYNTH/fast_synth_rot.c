@@ -49,36 +49,28 @@ int
 main(int argc, char **argv)
 {
 
+  int j ;
   /* CMT variables */
-  char   *stat_file       ; 
+  char   stat_file[FSIZE] ; 
   double *M1_cmt, *M2_cmt ; 
   str_quake_params eq     ;  
-
-  /* Travel times variables */
-  int    nh=NDEPTHS, nd=NDISTAS ;
-  double *tv, *dv               ;
-
   /* Stations variables */
   char  **stats, **nets             ;
   float *stlats,*stlons             ;
   float *dists, *azs, *bazs, *xdegs ;
   int   jstat, nstat                ;
-
   /* Sac header variables */
-  long int nerr                  ;
-  char     *segm1, *segm2        ;
+  long int nerr ;
+  char     segm1[FSIZE], segm2[FSIZE] ;
   float    best_depth, best_dist ;  
   sachdr   hdr, hdrg             ; 
-
-  /* GFs */
-  double **GFs ;
-  int    j     ;
-
   /* Seismograms */
+  double **GFs ;
   double *Z, *TH, *PH, *E, *N ;
-
-  /* Flag */
-  int tapering = NON ;
+  /* Tapering */
+  int    tapering = NON ;
+  int    nh=NDEPTHS, nd=NDISTAS ;
+  double *tv, *dv    ;
 
   /* Input parameters */
   if(argc != 3 && argc != 4)
@@ -86,11 +78,6 @@ main(int argc, char **argv)
       fprintf(stderr,"Error: syntax: fast_synth cmt_file stats_file [-t]\n") ;
       exit(1) ;
     }
-
-  /* String allocations */
-  stat_file = char_alloc(FSIZE) ;
-  segm1     = char_alloc(FSIZE) ;
-  segm2     = char_alloc(FSIZE) ;
 
   /* Double allocations */
   GFs    = double_alloc2(10,__LEN_SIG__);/* GFs: Rrr, Rtt, Rpp, Rrt */
@@ -144,7 +131,7 @@ main(int argc, char **argv)
       /* Rotating the moment tensor */
          rotate_cmt(M1_cmt, M2_cmt, (double)azs[jstat]) ;
          get_prefix(hdr.evdp, xdegs[jstat], segm1, segm2, &best_depth, &best_dist) ;
-      /* Computing the vertical seismograms */
+      /* Computing seismograms */
          hdr.npts  = get_length(segm1, segm2) ;
          if (hdr.npts > __LEN_SIG__) hdr.npts = __LEN_SIG__ ;
          Z  = double_calloc(hdr.npts) ; /* Memory allocation */
@@ -153,23 +140,21 @@ main(int argc, char **argv)
 	 E  = double_calloc(hdr.npts) ; /* Memory allocation */
 	 N  = double_calloc(hdr.npts) ; /* Memory allocation */
          summ_up(M2_cmt, segm1, segm2, GFs, Z, TH, PH, &hdr, &hdrg) ;
-
-	 rotate_traces(TH, PH, bazs[jstat], hdr.npts, N, E)             ;
-
-	 /* true distance correction (group velocity ~ 9km/s)  */
-	 /*      hdr.b += (xdegs[jstat] - best_dist)*111.1/9.0;*/
+	 rotate_traces(TH, PH, bazs[jstat], hdr.npts, N, E)         ;
+      /* true distance correction (group velocity ~ 9km/s)  */
+      /*      hdr.b += (xdegs[jstat] - best_dist)*111.1/9.0;*/
          if (tapering == YES)
 	   taper(Z, TH, PH, &hdr.npts, &hdr.delta, &(xdegs[jstat]), tv, dv, &nd) ;
-	 /* Writing the output sac files */
+      /* Writing the output sac files */
 	 hdr.gcarc = xdegs[jstat];
 	 hdr.az = azs[jstat];
 	 hdr.baz = bazs[jstat];
          save_sac(stats[jstat], nets[jstat], "LHZ", &stlats[jstat] , &stlons[jstat], &hdr, Z) ;
-         save_sac(stats[jstat], nets[jstat], "LHL", &stlats[jstat] , &stlons[jstat], &hdr,TH) ;
-         save_sac(stats[jstat], nets[jstat], "LHT", &stlats[jstat] , &stlons[jstat], &hdr,PH) ; 
+         /* save_sac(stats[jstat], nets[jstat], "LHL", &stlats[jstat] , &stlons[jstat], &hdr,TH) ; */
+         /* save_sac(stats[jstat], nets[jstat], "LHT", &stlats[jstat] , &stlons[jstat], &hdr,PH) ; */
          save_sac(stats[jstat], nets[jstat], "LHE", &stlats[jstat] , &stlons[jstat], &hdr, E) ;
          save_sac(stats[jstat], nets[jstat], "LHN", &stlats[jstat] , &stlons[jstat], &hdr, N) ; 
-	 /* Memory Freeing */
+      /* Memory Freeing */
          free((void *)  Z) ; 
 	 free((void *) PH) ; 
 	 free((void *) TH) ; 
@@ -184,14 +169,24 @@ main(int argc, char **argv)
   free((void *)M1_cmt)    ;
   free((void *)M2_cmt)    ;
   free((void**)eq.vm)     ;
-  free((void *)stat_file) ;
-  free((void *)segm1)     ;
-  free((void *)segm2)     ;
   free((void *)dists)     ;
   free((void *)azs)       ;
   free((void *)bazs)      ;
   free((void *)xdegs)     ;
-
+  for (j=0;j< nstat;j++)
+    {
+      free((void *) stats[j]) ;
+      free((void *) nets[j])  ;
+    }
+  free((void **) stats) ;
+  free((void **) nets)  ;
+  free((void *) stlats) ;
+  free((void *) stlons) ;
+  if(tapering == YES) 
+    {
+      free((void *) tv);
+      free((void *) dv);
+    }
   printf("\n");
   exit(0);
 }

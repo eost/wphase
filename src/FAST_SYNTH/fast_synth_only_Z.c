@@ -48,37 +48,27 @@ void taper(double *Z, int *npts, float *delta, float *gcarc, double *tv, double 
 int 
 main(int argc, char **argv)
 {
-
+  int    j     ;
   /* CMT variables */
-  char   *stat_file       ; 
+  char   stat_file[FSIZE] ; 
   double *M1_cmt, *M2_cmt ; 
   str_quake_params eq     ;  
-
-  /* Travel times variables */
-  int    nh=NDEPTHS, nd=NDISTAS ;
-  double *tv, *dv               ;
-
   /* Stations variables */
   char  **stats, **nets             ;
   float *stlats,*stlons             ;
   float *dists, *azs, *bazs, *xdegs ;
   int   jstat, nstat                ;
-
   /* Sac header variables */
-  long int nerr                  ;
-  char     *segm1, *segm2        ;
-  float    best_depth, best_dist ;  
-  sachdr   hdr, hdrg             ; 
-
-  /* GFs */
-  double **GFs ;
-  int    j     ;
-
+  long int nerr                      ;
+  char     segm1[FSIZE], segm2[FSIZE];
+  float    best_depth, best_dist     ;  
+  sachdr   hdr, hdrg                 ; 
   /* Seismograms */
-  double *Z ;
-
-  /* Flag */
+  double **GFs, *Z ;
+  /* Tapering */
   int tapering = NON ;
+  int    nh=NDEPTHS, nd=NDISTAS ;
+  double *tv, *dv               ;
 
   /* Input parameters */
   if(argc != 3 && argc != 4)
@@ -86,11 +76,6 @@ main(int argc, char **argv)
       fprintf(stderr,"Error: syntax: fast_synth_only_Z  cmt_file stats_file [-t]\n") ;
       exit(1) ;
     }
-
-  /* String allocations */
-  stat_file = char_alloc(FSIZE) ;
-  segm1     = char_alloc(FSIZE) ;
-  segm2     = char_alloc(FSIZE) ;
 
   /* Double allocations */
   GFs    = double_alloc2(4,__LEN_SIG__);/* GFs: Rrr, Rtt, Rpp, Rrt */
@@ -169,14 +154,24 @@ main(int argc, char **argv)
   free((void *)M1_cmt)    ;
   free((void *)M2_cmt)    ;
   free((void**)eq.vm)     ;
-  free((void *)stat_file) ;
-  free((void *)segm1)     ;
-  free((void *)segm2)     ;
   free((void *)dists)     ;
   free((void *)azs)       ;
   free((void *)bazs)      ;
   free((void *)xdegs)     ;
-
+  for (j=0;j< nstat;j++)
+    {
+      free((void *) stats[j]) ;
+      free((void *) nets[j])  ;
+    }
+  free((void **) stats) ;
+  free((void **) nets)  ;
+  free((void *) stlats) ;
+  free((void *) stlons) ;
+  if(tapering == YES) 
+    {
+      free((void *) tv);
+      free((void *) dv);
+    }
   printf("\n");
   exit(0);
 }

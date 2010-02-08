@@ -86,7 +86,7 @@ main(int argc, char *argv[])
       az   = 0. ;
       baz  = 0. ;
       xdeg = 0. ;
-      distaz(eq.pde_evla, eq.pde_evlo, &hdr.stla, &hdr.stlo, tmp, &dist, &az, &baz, &xdeg, &nerr) ;
+      distaz(eq.pde_evla, eq.pde_evlo, &hdr.stla, &hdr.stlo, 1, &dist, &az, &baz, &xdeg, &nerr) ;
 
       /* Set travel time */
       xdegd = (double) xdeg                         ;
