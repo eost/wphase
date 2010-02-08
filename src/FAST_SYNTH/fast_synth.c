@@ -171,7 +171,7 @@ main(int argc, char **argv)
     }
 
   /* Freeing memory */
-  for(j=0; j<4; j++)
+  for(j=0; j<10; j++)
     free((void *)GFs[j])  ;
   free((void**)GFs)       ;  
   free((void *)M1_cmt)    ;
