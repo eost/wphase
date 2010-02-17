@@ -45,11 +45,6 @@ if ! $status then
 endif
 ${RM} -f i_tmp
 
-# ${RM} -rf GF
-# ${CP} -f /home/zac/WP6/run_test_martinique07/*.dec.bp.int DATA/
-# ${CP} -rf /home/zac/WP6/run_test_martinique07/GF ./
-
-
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
 	 -pdata fort.15.noth -wl ${wL} -wt ${wT} -wz ${wZ} 
 

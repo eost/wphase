@@ -1,6 +1,5 @@
 #!/bin/csh -f
 
-source /home/zac/.tcshrc
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 ##################################
 

@@ -27,7 +27,7 @@ WPINV_TS     = BIN+'wpinversion_LTZ -imas ts_i_master -ifil o_wpinversion -ofil 
 
 RECALCSYN_XY = BIN+'recalc_fast_synths_LTZ.csh'
 REPREPARE_XY = BIN+'reprepare_wp_xy_LTZ.csh'
-WPINV_XY     = BIN+'wpinversion_LTZ -imas xy_i_master -ifil xy_o_wpinversion -ofil xy_o_wpinversion -ocmtf xy_WCMTSOLUTION '+\
+WPINV_XY     = BIN+'wpinversion_LTZ -imas xy_i_master -ifil xy_o_wpinversion -ofil xy_o_wpinversion '+\
                    '-ps xy_p_wpinversion -wpbm xy_wpinv.pgm -log LOG/_xy_wpinversion.log -osyndir xy_SYNTH -pdata xy_fort.15'
 
 WPINV_DP     = BIN+'wpinversion_LTZ -imas dp_i_master -ifil dp_o_wpinversion -ofil dp_o_wpinversion '+\
@@ -72,27 +72,25 @@ def addrefsol(cmtref,cmtfile):
 
 def find_coor(coor,lat,lon):
 	for cds in coor:
-		if int(lat*100) == int(cds[0]*100) and int(lon*100) == int(cds[1]*100):
+		if int(0.5+lat*100.) == int(0.5+cds[0]*100.) \
+		       and int(0.5+lon*100.) == int(0.5+cds[1]*100.):
 			return 1
 	return 0
-
-def search_emptyedges(coor,lat,lon,dx):
-	crds = [[lat+dx,lon-dx],[lat+dx,lon   ],[lat+dx,lon+dx],[lat   ,lon+dx],\
-		[lat-dx,lon+dx],[lat-dx,lon   ],[lat-dx,lon-dx],[lat   ,lon-dx]]
-	emptyedges = []
-	for crd in crds:
-		if find_coor(coor,crd[0],crd[1]) == 0:
-			emptyedges.append(crd)
-	return emptyedges
 
 def add_coor(coor,lat,lon,prevcoor=[]):
 	crds = []
 	crds.extend(coor)
 	crds.extend(prevcoor)
 	if find_coor(crds,lat,lon):
-		return coor
+		return 1
 	coor.append([lat,lon])
-	return coor
+	return 0
+
+def search_emptyedges(emptyedges,lat,lon,dx,prevcoor=[]):
+	crds = [[lat+dx,lon-dx],[lat+dx,lon   ],[lat+dx,lon+dx],[lat   ,lon+dx],\
+		[lat-dx,lon+dx],[lat-dx,lon   ],[lat-dx,lon-dx],[lat   ,lon-dx]]
+	for crd in crds:
+		add_coor(emptyedges,crd[0],crd[1],prevcoor)
 
 def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
 	if fileout == 'stdout':
@@ -113,8 +111,8 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	lat1 = eq.lat - 1.2
 	lat2 = eq.lat + 1.2
 	lon1 = eq.lon - 1.2
-	lon2 = eq.lon + 1.2
-
+	lon2 = eq.lon + 1.2 
+	
 	lat = lat1
 	coor = []
 	while int(100*lat) <= int(100*lat2):
@@ -213,22 +211,22 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 		# Spatial grid-search extension
 		if (Nexp < 5):
 			coor = []
-			coor.extend(search_emptyedges(prevcoor,eq.lat,eq.lon,dx))
+			search_emptyedges(coor,eq.lat,eq.lon,dx,prevcoor)
 			for j in xrange(Nopt[it]):
-				coor.extend(search_emptyedges(prevcoor,latopt[j],lonopt[j],dx))
-			if len(coor) != 0:
+				search_emptyedges(coor,latopt[j],lonopt[j],dx,prevcoor)
+			if len(coor):
 				print ' ... extending the spatial grid-search area ... '
 				if it == 0:
 					lons = []
 					lats = []
 					for lat,lon in coor:
 						if lon < lon1 or lon > lon2:
-							if lons.count(lon) == 0:
+							if not lons.count(lon):
 								lons.append(lon)
 						if lat < lat1 or lat > lat1:
-							if lats.count(lat) == 0:
+							if not lats.count(lat):
 								lats.append(lat)
-					if len(lats) > 0:
+					if len(lats):
 						minlat,maxlat = min(lats),max(lats)
 						if minlat < lat1:
 							lat1 = minlat
@@ -239,7 +237,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 							while lon <= lon2:
 								add_coor(coor,clat,lon,prevcoor)
 								lon += dx						
-					if len(lons) > 0:
+					if len(lons):
 						minlon,maxlon = min(lons),max(lons)
 						if minlon < lon1:
 							lon1 = minlon
@@ -255,6 +253,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 				else:
 					Nexp += 1
 					continue
+			prevcoor.extend(coor)
 		Nexp = 0
 		it += 1
 	tmp_table.close()

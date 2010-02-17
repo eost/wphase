@@ -5,9 +5,6 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 #set input = o_wpinversion
 set input = DATA/_sac_files_list
 
-set SACLST = /home/zac/WP6/bin/saclst                 ##############A CHANGER
-
-
 #####################################
 
 set XY1       = "-Xa1c -Ya15c"

@@ -275,11 +275,13 @@ rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
   
   if ((f=fopen(file,"rb"))==NULL)
     {
-      if (*ierror == 1)	{
-	fprintf(stderr,"ERROR opening %s to read data\n",file);
-	exit(1);	}
+      if (*ierror == 1)	
+	{
+	  fprintf(stderr,"ERROR opening %s to read data\n",file);
+	  exit(1);	
+	}
       *ierror = 1 ;
-      return;
+      return ;
     }
 
   fseek(f,632,SEEK_SET);
