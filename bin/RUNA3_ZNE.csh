@@ -56,7 +56,6 @@ set ths =  "5.0 3.0 0.9"
 
 
 foreach th ($ths)
-
     $WPINVER -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
     -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
     -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir} \

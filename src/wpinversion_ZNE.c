@@ -1442,7 +1442,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 
   /* Allocating memory */
   dum      = char_alloc(32)    ;
-  buf      = char_alloc(FSIZE) ;
+  buf      = char_alloc(LSIZE) ;
   gf_file  = char_alloc(FSIZE) ;
   datafile = char_alloc(FSIZE) ;
   dv       = double_alloc(nd)  ;

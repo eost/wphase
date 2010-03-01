@@ -92,6 +92,37 @@ def search_emptyedges(emptyedges,lat,lon,dx,prevcoor=[]):
 	for crd in crds:
 		add_coor(emptyedges,crd[0],crd[1],prevcoor)
 
+def rm(fd):
+	if os.path.islink(fd) or os.path.isfile(fd):
+		os.remove(fd)
+	else:
+		shutil.rmtree(fd)
+
+def addslash(direc):
+	if len(direc) > 0:
+		if direc[-1] != '/':
+			direc += '/'
+	return direc
+
+def copy_GF(idir,odir,include=r'.*\.SAC$',exclude=r'.*sac.*'):
+	if not os.path.exists(odir):
+		os.mkdir(odir)
+	idir = addslash(idir)
+	odir = addslash(odir)
+	b    = len(idir)
+	I    = re.compile(include)
+	E    = re.compile(exclude)
+	for li in os.walk(idir):
+		ipath = addslash(li[0])
+		opath = addslash(odir+li[0][b:])
+		for d in li[1]:
+			os.mkdir(opath+d)
+		for f in li[2]:
+			if E.match(f) and not I.match(f):
+				continue
+			else:
+				shutil.copy(ipath+f,opath)
+
 def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
 	if fileout == 'stdout':
 		fid = sys.stdout
@@ -134,15 +165,15 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	# Setting files and directories ########
 	cmttmp = cmtref+'_xy_tmp'
 	if os.access(o_file,os.F_OK):
-		os.remove(o_file)
+		rm(o_file)
 	shutil.copy('o_wpinversion','xy_o_wpinversion')
 	eq.wimaster(datdir,ftable,cmttmp,'xy_i_master',dmin,dmax,'./xy_GF/',wpwin) 	
 	if os.access('xy_SYNTH',os.F_OK):
-		shutil.rmtree('xy_SYNTH')
+		rm('xy_SYNTH')
 	if os.access('xy_DATA',os.F_OK):
-		shutil.rmtree('xy_DATA')
+		rm('xy_DATA')
 	if os.access('xy_WCMTs',os.F_OK):
-		shutil.rmtree('xy_WCMTs')
+		rm('xy_WCMTs')
 	os.mkdir('xy_WCMTs')
 	os.mkdir('xy_SYNTH')
 	os.mkdir('xy_DATA')
@@ -264,7 +295,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
        	out_table.write(tmp_table.read())
        	out_table.close()
        	tmp_table.close()
-       	os.remove(tmpfile)
+	rm(tmpfile)
 
 	eq_gs.lat,eq_gs.lon = latopt[0],lonopt[0]
 	eq_gs.wcmtfile(cmttmp,ts,hd)
@@ -320,20 +351,20 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 			ts2 = 56. 
 		else: 
 			ts2 = 168. 
-
 	########################################
 
 
 	cmttmp = cmtref+'_ts_tmp'
 	eq.wimaster(datdir,ftable,cmttmp,'ts_i_master',dmin,dmax,'ts_GF',wpwin)
+	
 	if os.access('ts_SYNTH',os.F_OK):
-		shutil.rmtree('ts_SYNTH')
+		rm('ts_SYNTH')
 	os.mkdir('ts_SYNTH')
-	if os.access('ts_GF',os.F_OK):
-		shutil.rmtree('ts_GF')
-	shutil.copytree('GF','./ts_GF')
+	if os.path.exists('ts_GF'):
+		rm('ts_GF')
+	copy_GF('GF','ts_GF')
 	if os.access(o_file,os.F_OK):
-		os.remove(o_file)
+		rm(o_file)
 	
 	# Grid search
 	out     = grep(r'^W_cmt_err:', 'LOG/wpinversion.log')			
@@ -391,7 +422,7 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 	out_table.write(tmp_table.read())
 	out_table.close()
 	tmp_table.close()
-	os.remove(tmpfile)
+	rm(tmpfile)
 	
 	eq.wcmtfile(cmttmp,tsopt,tsopt)
 	if flagref:
@@ -445,14 +476,13 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 	eq.wcmtfile(cmttmp,tsini,hdini)
 	eq.wimaster(datdir,ftable,cmttmp,'ts_i_master',dmin ,dmax,'ts_GF',wpwin)
 	if os.access('ts_SYNTH',os.F_OK):
-		shutil.rmtree('ts_SYNTH')
+		rm('ts_SYNTH')
 	os.mkdir('ts_SYNTH')
 	if os.access('ts_GF',os.F_OK):
-		shutil.rmtree('ts_GF')
-	shutil.copytree('GF','./ts_GF')
+		rm('ts_GF')
+	os.symlink('./GF','ts_GF')
 	if os.access(o_file,os.F_OK):
-		os.remove(o_file)
-
+		rm(o_file)
 	# Grid search
 	fid.write('  ts1 = %5.1f sec, step = %5.1f sec, ts2 = %5.1f sec \n'%(ts1,sts,ts2))  	
 	format  = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
@@ -468,7 +498,8 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 	tmp_table = open(o_file, 'r')
 	tsopt, rmsopt = map(float,tmp_table.readline().strip('\n').split())
  	tmp_table.close()
-
+	rm('ts_GF')
+	copy_GF('GF','ts_GF')
  	eq.wcmtfile(cmttmp,tsopt,tsopt)
 	if flagref:
 		addrefsol(cmtpde,cmttmp)

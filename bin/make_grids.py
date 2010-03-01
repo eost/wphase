@@ -41,7 +41,7 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.png',mksmin=1.,mksm
             rms.append(float(tmp[7]))
 
 	
-	# RMS Scale 
+	# RMS Scale
         minrms = rmsopt
 	maxrms = max(rms)        
 	pyl.figure(figsize=(7.6875, 6.125))
