@@ -10,7 +10,7 @@
 #include "butterworth.h"  /* butterworth_sin.c */
 #include "syn_conv_sub.h" /* syn_conv_sub.c */
 
-void get_filt_params(char *file, str_quake_params *eq)      ;
+void get_params(char *file, str_quake_params *eq)      ;
 void minimax(double *y, int np, double *ymin, double *ymax) ;
 
 
@@ -21,7 +21,9 @@ main(int argc, char *argv[])
   double *tmparray, *data, *x_conv, depmin, depmax, dt;  
   double *b1, *b2, *a1, *a2, gain; 
   char *i_master, *i_wpfilname, *datafile, *buf, *GF  ;
-  char **gf_file, *o_dir, *o_file  ;
+  char *gf_file, *o_dir, *o_file  ;
+  char  gfdirs[6][7] = {"gf_rr/","gf_tt/", "gf_pp/",
+			"gf_rt/", "gf_rp/","gf_tp/"} ;
   str_quake_params eq   ;
   sachdr hd_data, hd_GF ; 
   FILE *i_wp            ;
@@ -40,13 +42,13 @@ main(int argc, char *argv[])
   strcpy(   i_master, argv[1])     ;
   strcpy(i_wpfilname, argv[3])     ;
   strcpy(      o_dir, argv[4])     ;
-  get_filt_params(i_master, &eq)   ;
+  get_params(i_master, &eq)   ;
   strcpy( eq.cmtfile, argv[2])     ;
 
   /* Allocates memory */
   datafile = char_alloc(FSIZE) ;
   buf      = char_alloc(200) ;
-  gf_file  = char_alloc2(6, FSIZE) ;  
+  gf_file  = char_alloc(FSIZE) ;  
 
   eq.wp_win4  = double_alloc(4);
   eq.vm    = double_alloc2p(2) ;
@@ -72,30 +74,19 @@ main(int argc, char *argv[])
       rhdrsac(datafile,  &hd_data, &ierror)   ;
 
       /* Set GF filenames */
-      GF = get_gf_filename("", hd_data.kstnm, hd_data.knetwk, hd_data.kcmpnm, ".SAC") ;
-      strcpy(gf_file[0], "./GF/gf_rr/") ;
-      
-      strcpy(gf_file[1], "./GF/gf_tt/") ;
-      strcpy(gf_file[2], "./GF/gf_pp/") ;
-      strcpy(gf_file[3], "./GF/gf_rt/") ;
-      strcpy(gf_file[4], "./GF/gf_rp/") ;
-      strcpy(gf_file[5], "./GF/gf_tp/") ;
-      strcat(gf_file[0], GF) ;
-      strcat(gf_file[1], GF) ;
-      strcat(gf_file[2], GF) ;
-      strcat(gf_file[3], GF) ;
-      strcat(gf_file[4], GF) ;
-      strcat(gf_file[5], GF) ;
-      free((void*)GF) ;
       for(j=0; j<6; j++)      /* GF  */
 	{
-	  rhdrsac( gf_file[j], &hd_GF, &ierror)          ;
+	  strcpy(gf_file,eq.gf_dir) ;
+	  GF = get_gf_filename(gfdirs[j], hd_data.kstnm, hd_data.knetwk, hd_data.kcmpnm, ".SAC") ;
+	  strcat(gf_file,GF)         ;
+	  free((void*) GF)           ;
+	  rhdrsac( gf_file, &hd_GF, &ierror)          ;
 	  if (hd_GF.npts > (int)__LEN_SIG__)
 	    {
-	      fprintf(stderr, "WARNING : too much samples in file %s (truncated)", gf_file[j]) ;
+	      fprintf(stderr, "WARNING : too much samples in file %s (truncated)", gf_file) ;
 	      hd_GF.npts = (int)__LEN_SIG__ ;
 	    }
-	  rdatsac( gf_file[j], &hd_GF, tmparray, &ierror) ;
+	  rdatsac( gf_file, &hd_GF, tmparray, &ierror) ;
 	  if (j==0)
 	    for(k=0 ; k<hd_GF.npts ; k++)
 	      data[k]  = tmparray[k] * eq.vm[1][j] ;
@@ -145,9 +136,7 @@ main(int argc, char *argv[])
   free((void*)i_wpfilname);
   free((void*)datafile);
   free((void*)buf);
-  for (i=0; i<6; i++)
-    free((void*)gf_file[i]);
-  free((void**)gf_file);
+  free((void*)gf_file);
   free((void*)o_dir);
   return 0;
 }
@@ -155,26 +144,27 @@ main(int argc, char *argv[])
 
 
 /************************************************/
-/*           get_filt_params(file, eq)          */
+/*           get_params(file, eq)          */
 /************************************************/
 /*  > Read input file for recursive filtering   */
 void 
-get_filt_params(char *file, str_quake_params *eq)
+get_params(char *file, str_quake_params *eq)
 {
   int  i     ;
   char **keys ;
 
-  keys = char_alloc2(4, 16) ;
+  keys = char_alloc2(5, 16) ;
   i = 0 ;
   strcpy(keys[i++],"filt_order")  ;
   strcpy(keys[i++],"filt_cf1")    ;
   strcpy(keys[i++],"filt_cf2")    ;
   strcpy(keys[i++],"IDEC_2")      ;
+  strcpy(keys[i++],"GFDIR")      ;
   
   eq->cmtfile[0] = '\0'           ;
-  get_i_master(file, keys, 4, eq) ;
+  get_i_master(file, keys, 5, eq) ;
 
-  for(i=0 ; i<4 ; i++)
+  for(i=0 ; i<5 ; i++)
     free((void*)keys[i]) ;
   free((void**) keys )   ;
 }

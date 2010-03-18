@@ -102,7 +102,14 @@ main(int argc, char *argv[])
      
       /* Read input sac file */
       rhdrsac(datfil->file, &hdr, &ierror) ;
+      if (hdr.npts > MAX) hdr.npts = MAX ;	
       rdatsac(datfil->file, &hdr, x_in, &ierror) ;
+      if (hdr.npts < 2)
+	{
+	  fprintf(stderr,"Warning (rec_dec_filt) : %s (rejected) npts < 2\n",datfil->file);
+	  continue;
+	}
+
       /* Set the butterworth sos (samp. rate must be the same for all stations)*/
       if (count == 0 && i == 0)	
 	{
@@ -130,13 +137,13 @@ main(int argc, char *argv[])
       else if (eq.idtr == 2)                  /*   shift the base line, eq.preevent=duration over which the  */
         dtrd (x_in, hdr.npts, eq.preevent) ;  /*   base line is defined, eq.fend = dummy                     */
                                               /*   if eq.idtr=0 no detrend and taper                         */
-      
+
       /* Trapezoidal numerical integration */
       trapz(x_in, hdr.npts, (double)hdr.delta, x_int);
       
       /* Write header values and data in the sac input file */
-      whdrsac(x_int_fil, &hdr);
-      wdatsac(x_int_fil, &hdr, x_int);
+      whdrsac(x_int_fil, &hdr)        ;
+      wdatsac(x_int_fil, &hdr, x_int) ;
 
       makeid(id,&hdr);
       i = findid(id,ids,n);
@@ -287,7 +294,7 @@ get_id_dec(char *file, int *n, char ***id, double **a1, double **a2, double **a3
   
   for(i=0 ; i<(*n) ; i++)
     {
-      tmp = fscanf (decin, "%s %lf %lf %lf", (*id)[i],&(*a1)[i],&(*a2)[i],&(*a3)[i]);
+      tmp = fscanf (decin, "%s %lf %lf %lf", (*id)[i],(*a1)+i,(*a2)+i,(*a3)+i);
       check_scan(4,tmp,file,decin);
     }
   fclose(decin);

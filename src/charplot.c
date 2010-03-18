@@ -30,7 +30,7 @@ charplot(double *M, double s1, double d1, double s2, double d2,
 	     char D, char C, char W, char B, char sep, char pnod, int rx, 
 	     int ry, FILE *stream)
 {
-  int 	jx, jy             ;
+  int 	jx, jy, rint       ;
   int 	jxP, jxT, jyP, jyT ;
   double  radius, aP, aT   ;
   double  ain, azi         ;
@@ -45,8 +45,9 @@ charplot(double *M, double s1, double d1, double s2, double d2,
       for(jx = -rx; jx <= rx; jx++)
 	{
 	  radius = hypot((double)jx, (double)jy*(double)rx/(double)ry);
+	  rint   = (int) (radius+0.5) ;
 	  figure[ry+jy][rx+jx] = W;
-	  if (radius <= rx)
+	  if (rint <= rx)
 	    {
 	      figure[ry+jy][rx+jx] = D;
 	      ain = 2.*asin(radius/(double)rx/M_SQRT2);

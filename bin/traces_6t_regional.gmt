@@ -26,28 +26,28 @@ set Rg        = -R0/360/-90/90
 ####################################
 set my_argv = ($ARGV)
 set sol_id   = 'W'
+set IMASTER = i_master
 set SOLFILE = WCMTSOLUTION
-set SYNDIR  = SYNTH
+set SYNDIR  = SYNTH_traces
 if ($#my_argv < 1) then
     echo "using default parameters"
 else if ($#my_argv == 2) then
-    set SOLFILE    = $my_argv[1]
-    set SYNDIR     = $my_argv[2]
+    set IMASTER    = $my_argv[1]
+    set SOLFILE    = $my_argv[2]
 else if ($#my_argv == 3) then
-    set ymin       = $my_argv[1]
-    set ymax       = $my_argv[2]
-    set ticks      = $my_argv[3]
-    set ylim_auto  = 'non'      
+    set IMASTER    = $my_argv[1]
+    set SOLFILE    = $my_argv[2]
+    set SYNDIR     = $my_argv[3]
 else if ($#my_argv == 5) then
-    set SOLFILE    = $my_argv[1]
-    set SYNDIR     = $my_argv[2]
+    set IMASTER    = $my_argv[1]
+    set SOLFILE    = $my_argv[2]
     set ymin       = $my_argv[3]
     set ymax       = $my_argv[4]
     set ticks      = $my_argv[5]
     set ylim_auto  = 'non'  
 else if ($#my_argv == 6) then
-    set SOLFILE    = $my_argv[1]
-    set SYNDIR     = $my_argv[2]
+    set IMASTER    = $my_argv[1]
+    set SOLFILE    = $my_argv[2]
     set ymin       = $my_argv[3]
     set ymax       = $my_argv[4]
     set ticks      = $my_argv[5]
@@ -59,23 +59,19 @@ else
     exit    
 endif
 
-
-${ECHO} "Using $SOLFILE"
+${ECHO} "Using ${IMASTER} and ${SOLFILE}"
 
 # Creating synthetic filtered traces
 ${FIND} . -name "*.complete_synth*.sac" -exec ${RM} \{\} \;
-${ECHO} "Writing synthetic filtered traces        ( >! _tmp_synths_v4 )"
-${ECHO} ' ' > tmp
-${ECHO} ' ' >> tmp
-${CAT} i_wpinversion >> tmp
-${MV} tmp i_wpinversion
-$SYNTHS i_master ${SOLFILE} o_wpinversion ${SYNDIR} >! _tmp_synths_v4 ##############A CHANGER
+${ECHO} "Writing synthetic filtered traces in ${SYNDIR}  ( >! _tmp_synths_v4 )"
+if ( ! -e $SYNDIR ) ${MKDIR} $SYNDIR
+$SYNTHS ${IMASTER} ${SOLFILE} o_wpinversion ${SYNDIR} >! _tmp_synths_v4 ##############A CHANGER
 
 # Title
-if (-e i_master) then
-        ${GREP} -v "^#" i_master | ${SED} -e 's/ *:/:/' >! i_tmp
+if (-e ${IMASTER}) then
+        ${GREP} -v "^#" ${IMASTER} | ${SED} -e 's/ *:/:/' >! i_tmp
 else
-        ${ECHO} "Error: file  i_master not available"
+        ${ECHO} "Error: file  ${IMASTER} not available"
         exit
 endif
 
@@ -132,10 +128,16 @@ foreach page (`${SEQ} 1 $npages`)
 		
 		# Maximal and minimal values
 		if ($ylim_auto == 'yes') then
-			set tmp    = `$SACLST depmin depmax f $fic2 | ${AWK} '{print $2, $3}'`
-			set ymin   = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$1}'`
-			set ymax   = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$2}'`
-			set ticks  = `${ECHO} $ymax | ${AWK} '{print int(100*$1/3)/100}'`
+		    set tmp    = `$SACLST depmin depmax f $fic2 | ${AWK} '{print $2, $3}'`
+		    set ymin   = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$1}'`
+		    set ymax   = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$2}'`
+		    set ticks  = `${ECHO} $ymax | ${AWK} '{print int(100*$1/3)/100}'`
+		    if ( $ticks == 0 ) then
+			set ticks  = `${ECHO} $ymax | ${AWK} '{print int(1000.*$1/3.)/1000.}'`
+			if ( $ticks == 0 ) then
+			    set ticks  = `${ECHO} $ymax | ${AWK} '{print int(10000.*$1/3.)/10000.}'`
+			endif
+		    endif
 		endif 
 
 		set reg_trace = 0/$length/$ymin/$ymax
@@ -217,10 +219,16 @@ foreach page (`${SEQ} 1 $npages`)
 		
 		# Maximal and minimal values
 		if ($ylim_auto == 'yes') then
-		set tmp     = `$SACLST depmin depmax f $fic2 | ${AWK} '{print $2, $3}'`
-		set ymin    = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$1}'`
-		set ymax    = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$2}'`
-		set ticks   = `${ECHO} $ymax | ${AWK} '{print int(100*$1/3)/100}'`
+		    set tmp     = `$SACLST depmin depmax f $fic2 | ${AWK} '{print $2, $3}'`
+		    set ymin    = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$1}'`
+		    set ymax    = `${ECHO} $tmp  | ${AWK} '{print 1.1*1000*$2}'`
+		    set ticks   = `${ECHO} $ymax | ${AWK} '{print int(100*$1/3)/100}'`
+		    if ( $ticks == 0 ) then
+			set ticks  = `${ECHO} $ymax | ${AWK} '{print int(1000.*$1/3.)/1000.}'`
+			if ( $ticks == 0 ) then
+			    set ticks  = `${ECHO} $ymax | ${AWK} '{print int(10000.*$1/3.)/10000.}'`
+			endif
+		    endif
 		endif 
 		
 		set reg_trace = 0/$length/$ymin/$ymax

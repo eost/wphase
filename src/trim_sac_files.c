@@ -77,8 +77,7 @@ main(int argc, char *argv[])
 
       /* Read sac file */
       rhdrsac(fil, &hdr, &ierror)       ;
-      if (hdr.npts > (int)__LEN_SIG__)
-	hdr.npts = (int)__LEN_SIG__ ;
+      if (hdr.npts > (int)__LEN_SIG__)	hdr.npts = (int)__LEN_SIG__ ;
       rdatsac(fil, &hdr, x_in, &ierror) ;
 
       /* Set epicentral distances, azimuth, backazimuth */
@@ -101,9 +100,9 @@ main(int argc, char *argv[])
       /* Windowing -- Screening by distance */
       tdiff    += P_tt - (double)hdr.b - eq.preevent - (double)SAFETY_DELAY ;      /* time for the 1st sample */
       sampstart = (int) (tdiff/((double)hdr.delta) + 0.5)                   ;
-      if ((int)(hdr.delta * 1000.+0.5) != (int)((float)SAMPLEPERIOD * 1000.+0.5)) /* *************** MAY BE MODIFIED ***************** */
+      if ((int)(hdr.delta * 1000.+0.5) != (int)((float)SAMPLEPERIOD * 1000.+0.5)) /* Sampling period check    */
 	{
-	  fprintf(stderr, "WARNING: non uniform samp. period between sac files\n") ;
+	  fprintf(stderr, "WARNING: incorrect samp. period between sac files\n") ;
 	  fprintf(stderr, "     ...file : %s with dt = %e is rejected\n", fil, hdr.delta)  ;
 	  flag++   ;
 	  continue ;
@@ -113,8 +112,8 @@ main(int argc, char *argv[])
 	  /* Set new sac header variables */
 	  hdr.delta = (float) SAMPLEPERIOD  ;
 	  hdr.o     = (float) otime         ;   /* event origin time */
-	  //hdr.npts  = hdr.npts + 1 - sampstart;              /* Error **** nb of samples             */
-	  hdr.npts  = hdr.npts - sampstart ;                 /* nb of samples (corrected) */
+	  //hdr.npts  = hdr.npts + 1 - sampstart;            /* Error **** nb of samples              */
+	  hdr.npts  = hdr.npts - sampstart ;                 /* nb of samples (corrected)             */
 	  hdr.b     = hdr.b + ((float)sampstart)*hdr.delta ; /* shift of the first sample (corrected) */
 	  hdr.e     = hdr.b + (hdr.npts-1) * hdr.delta    ; 
 	  hdr.dist  = dist ; /* epicentral distance (km)                      */
@@ -153,8 +152,7 @@ main(int argc, char *argv[])
   fclose(i_sacf);
   if (flag > 1)
     {
-      fprintf(stderr, "WARNING: %d files have been rejected because of non uniform sampling period\n",
-	      flag);
+      fprintf(stderr, "WARNING: %d files have been rejected because of incorrect sampling period\n",flag);
       fprintf(stderr, "    ...: if to much files are rejected, please screen or decimate data files manually\n");
     }
   /* i_sacf = openfile_wt(i_sacs)     ; */

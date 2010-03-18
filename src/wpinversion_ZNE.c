@@ -22,7 +22,7 @@
 #endif
 
 #ifndef RX
-#define	RX 20
+#define	RX 17
 #endif
 
 #ifndef RY
@@ -35,7 +35,7 @@
 
 typedef struct
 {
-  int    Nit ;
+  int    Nit, ps ;
   double th_val, cth_val, df_val, med_val  ;
   double op_pa, p2p_med, p2p_low, p2p_high ;
   double dts_min,dts_step,dts_max, dts_val ; 
@@ -290,183 +290,189 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   buf   = char_alloc(9)           ;
   buf2  = char_alloc(32)          ;
   sta   = char_calloc2(*nsac, 9)  ;
-  cmp   = char_calloc2(*nsac, 30) ;  
+  cmp   = char_calloc2(*nsac,30)  ;  
   
-  /* PS FILE */
-  ps = openfile_wt(opt->psfile) ;
-  /* header */
-  fprintf(ps,"%%!PS\n300 600 translate\n100 100 scale\n");
-  fprintf(ps,"0 setlinewidth\n") ;
 
-  /* Focal mechanism display - WPhase Solution */
-  prad_pat(TMa, ps)              ;
-  pnod_pat(s1a, d1a, ps)           ;
-  pnod_pat(s2a, d2a, ps)           ;
-  fprintf(ps,"-0.3 000 translate\n") ;
-
-  /* title */
-  fprintf(ps,"/Times-Roman findfont .2 scalefont setfont\n") ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., +1.3) ;
-  fprintf(ps,"(%s) show\n", eq->evnm) ;
- 
-  /* Time stamp */
-  time(&now) ;
-  fprintf(ps,"/Times-Roman findfont .1 scalefont setfont\n") ;
-  strftime(date_stmp,64,"Processed Date : %a %b %02d %02H:%02M:%02S %Y UT",gmtime(&now));
-  date_stmp[44] = '\0';
-  fprintf(ps,"%15.6f %15.6f moveto\n", -2.45, 1.7) ;
-  fprintf(ps,"(%s) show\n", date_stmp) ;
-
-  /* tensor elem., moment, planes, eigvalues */
-  fprintf(ps,"/Times-Roman findfont .1 scalefont setfont\n") ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.45) ;
-  fprintf(ps,"(Moment Tensor:") ;
-  for(i=0 ; i<NM ; i++)
-    fprintf(ps," %11.5f",eq->vm[0][i]) ;
-  fprintf(ps,") show\n") ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.6) ;
-  fprintf(ps,"(Scalar moment: %9.2e dyn cm    (Mo_12 = %9.2e dyn cm)) show\n"
-	  , (*M0a), (*M0_12a)) ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.75) ;
-
-  fprintf(ps,"(Best nodal planes: %7.1f/%5.1f/%7.1f   %7.1f/%5.1f/%7.1f) show\n",
-	  *s1a,*d1a,*r1a,*s2a,*d2a,*r2a) ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.9) ;
-  fprintf(ps,"(Eigenvalues:%13.5f %13.5f %13.5f (Mw = %4.2f)) show\n",
-	  eval3a[0],eval3a[1],eval3a[2], *Mwa) ;
-
-  /* fit quality */
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.1) ;
-  fprintf(ps,"(Fit Quality:) show\n") ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.25) ;
-  fprintf(ps,"(WCMT - RMS: %9.5f mm (%6.3f),  Gap: %5.1f\\312,  C#%9.0f) show\n",
-	  1000.*global_rms[0], global_rms[0]/global_rms[1], *gap, *Cond);
-  if (flag == 2) 
+  /* Reference solution */
+  if (flag == 2)
     {
-      fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.4) ;
-      fprintf(ps,"(GCMT - RMS = %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  
-    }
-
-  /* used stations */
-  k = 0 ;
-  for(i=0; i<*nsac; i++) /* Set list of channels per stations */
-    {
-      nb = nbchar(hd_synt[i].kstnm)   ;
-      nb2 = nbchar(hd_synt[i].kcmpnm) ;      
-      strncpy(buf,hd_synt[i].kstnm,nb) ;
-      strncpy(buf2,hd_synt[i].kcmpnm,nb2) ;
-      buf[nb]   = '\0' ;
-      buf2[nb2] = '\0' ;
-      for(j=0; j<k; j++)
-	{
-	  if (strcmp(buf,sta[j]) == 0) 
-	    {
-	      strcat(cmp[j],",")   ;
-	      strcat(cmp[j], buf2) ;
-	      nbcmp[j]++;
-	      break ; 
-	    }
-	}
-      if (j==k) 
-	{
-	  strcpy(sta[k], buf)  ;
-	  strcpy(cmp[k], buf2) ;
-	  nbcmp[k] = 1         ;
-	  k++ ; 
-	}
-    }
-  
-  fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont\n") ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.6)             ;
-  fprintf(ps,"(Used stations (%d, %d channels) : ) show\n", k, *nsac ) ;
-  fprintf(ps,"/Courier      findfont .07 scalefont setfont")  ;
-
-  j  = 0;
-  nb = 1;
-  fprintf(ps,"%15.6f %15.6f moveto\n(", -1., -2.7) ;
-  for(i=0; i<k; i++)
-    {
-      j += 1 + nbcmp[i] ;
-      fprintf(ps, "  %s(%s)", sta[i], cmp[i]) ;
-      if (j >= 16) {
-	fprintf(ps,") show\n") ;
-	fprintf(ps,"%15.6f %15.6f moveto\n(", -1., -2.7-((double)nb)/8.) ;
-	j = 0 ;
-	nb++; }
-    }
-  fprintf(ps,") show\n")   ;
-  
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.7-((double)nb)/8.) ;
-  fprintf(ps, "(WPWIN: %-8.2f %-8.2f %-8.2f %-8.2f ) show\n"
-	  , eq->wp_win4[0], eq->wp_win4[1], eq->wp_win4[2], eq->wp_win4[3]) ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.8-((double)nb)/8.) ;
-  fprintf(ps, "(Dmin : %-8.2f Dmax :%-8.2f) show\n", opt->dmin, opt->dmax) ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.9-((double)nb)/8.) ;
-  fprintf(ps, "(wN   : %-8.2f wE   :%-8.2f wZ   :%-8.2f) show\n", opt->wN, opt->wE, opt->wZ);  
-
-  /* filter parameters */
-  fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont") ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -3.8) ;
-  fprintf(ps,"(Filter parameters: ) show\n") ;
-  fprintf(ps,"/Courier     findfont .1 scalefont setfont")  ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -3.9)   ;
-  fprintf(ps,"(filt_order: %-d) show\n", eq->filtorder) ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.025) ;
-  fprintf(ps,"(filt_cf1  : %-7.5f) show\n", eq->flow) ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.150) ;
-  fprintf(ps,"(filt_cf2  : %-7.5f) show\n", eq->fhigh) ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.275) ;
-  fprintf(ps,"(filt_pass : %-d) show\n", eq->filtnpass) ;
-  
-  /* pde and reference solution */
-  fprintf(ps,"/Courier-Bold findfont .07 scalefont setfont\n");
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.5) ;
-  fprintf(ps,"(PDE and Centroid: ) show\n")       ;
-  fprintf(ps,"/Courier      findfont .07 scalefont setfont\n");
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.6)    ;
-  nb = nb_blank(eq->pdeline) ;
-  eq->pdeline[60]='\0' ;
-  fprintf(ps,"(%s) show\n", &eq->pdeline[nb])             ;
-  fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.7)         ;
-  fprintf(ps, "(Event id     : %s) show\n", eq->evid)     ;
-  fprintf(ps, "%15.6f %15.6f moveto\n", -1., -4.8)        ;
-  fprintf(ps, "(Time shift   : %-6.1f s)  show\n", eq->ts);
-  fprintf(ps, "%15.6f %15.6f moveto\n", -1., -4.9)        ;
-  fprintf(ps, "(Half duration: %-6.1f s)  show\n", eq->hd);
-  fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.0)        ;
-  
-  fprintf(ps, "(Latitude     : %-8.3f) show\n", eq->evla) ;
-  fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.1)        ;
-  fprintf(ps, "(Longitude    : %-8.3f) show\n", eq->evlo) ;
-  fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.2)        ;
-  fprintf(ps, "(Depth        : %-8.3f) show\n", eq->evdp) ;
-  fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.3)        ;  
-  if (flag == 2) 
-    {
-      /* eq->pdeline[60]=' ' ; */
-      /* fprintf(ps, "(%s) show\n", &eq->pdeline[61]) ;*/
       get_planes(eq->vm[1], &TMb, &eval3b, &s1b,&d1b,&r1b, &s2b,&d2b,&r2b) ;
       M0b = ((fabs(eval3b[0]) + fabs(eval3b[2])) * (double)POW) / 2. ; 
       Mwb = (log10(M0b) - 16.1) / 1.5 ;
       residual_moment(eq->vm, &ma, &mb, &mc) ;
-      fprintf(ps,"1.8 -0.6 translate\n") ;
-      fprintf(ps,"0.4  0.4 scale\n") ;
-      fprintf(ps,"/Times-Roman findfont .2 scalefont setfont\n") ;
-      fprintf(ps, "%15.6f %15.6f moveto\n", -1.1, -1.4) ;
-      fprintf(ps,"(GCMT, Mw= %5.2f ) show\n", Mwb)      ;
-      fprintf(ps, "%15.6f %15.6f moveto\n", -1.1, -1.6) ;
-      /* fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/(*M0a),mc) ;*/
-      fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/(*M0a),mc) ;
-      fprintf(ps,".5 .5 .9 setrgbcolor\n") ;
-      prad_pat(TMb, ps)        ;
-      pnod_pat(&s1b, &d1b, ps) ;
-      pnod_pat(&s2b, &d2b, ps) ;
     }
 
-  
-  fprintf(ps,"showpage\n") ;
-  fclose(ps) ;
+  /* PS FILE */
+  if (opt->ps)
+    {
+      ps = openfile_wt(opt->psfile) ;
+      /* header */
+      fprintf(ps,"%%!PS\n300 600 translate\n100 100 scale\n");
+      fprintf(ps,"0 setlinewidth\n") ;
+      
+      /* Focal mechanism display - WPhase Solution */
+      prad_pat(TMa, ps)              ;
+      pnod_pat(s1a, d1a, ps)           ;
+      pnod_pat(s2a, d2a, ps)           ;
+      fprintf(ps,"-0.3 000 translate\n") ;
+      
+      /* title */
+      fprintf(ps,"/Times-Roman findfont .2 scalefont setfont\n") ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., +1.3) ;
+      fprintf(ps,"(%s) show\n", eq->evnm) ;
+      
+      /* Time stamp */
+      time(&now) ;
+      fprintf(ps,"/Times-Roman findfont .1 scalefont setfont\n") ;
+      strftime(date_stmp,64,"Processed Date : %a %b %02d %02H:%02M:%02S %Y UT",gmtime(&now));
+      date_stmp[44] = '\0';
+      fprintf(ps,"%15.6f %15.6f moveto\n", -2.45, 1.7) ;
+      fprintf(ps,"(%s) show\n", date_stmp) ;
+      
+      /* tensor elem., moment, planes, eigvalues */
+      fprintf(ps,"/Times-Roman findfont .1 scalefont setfont\n") ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.45) ;
+      fprintf(ps,"(Moment Tensor:") ;
+      for(i=0 ; i<NM ; i++)
+	fprintf(ps," %11.5f",eq->vm[0][i]) ;
+      fprintf(ps,") show\n") ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.6) ;
+      fprintf(ps,"(Scalar moment: %9.2e dyn cm    (Mo_12 = %9.2e dyn cm)) show\n"
+	      , (*M0a), (*M0_12a)) ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.75) ;
+      
+      fprintf(ps,"(Best nodal planes: %7.1f/%5.1f/%7.1f   %7.1f/%5.1f/%7.1f) show\n",
+	      *s1a,*d1a,*r1a,*s2a,*d2a,*r2a) ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.9) ;
+      fprintf(ps,"(Eigenvalues:%13.5f %13.5f %13.5f (Mw = %4.2f)) show\n",
+	      eval3a[0],eval3a[1],eval3a[2], *Mwa) ;
+      
+      /* fit quality */
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.1) ;
+      fprintf(ps,"(Fit Quality:) show\n") ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.25) ;
+      fprintf(ps,"(WCMT - RMS: %9.5f mm (%6.3f),  Gap: %5.1f\\312,  C#%9.0f) show\n",
+	      1000.*global_rms[0], global_rms[0]/global_rms[1], *gap, *Cond);
+      if (flag == 2) 
+	{
+	  fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.4) ;
+	  fprintf(ps,"(GCMT - RMS = %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  
+	}
 
+      /* used stations */
+      k = 0 ;
+      for(i=0; i<*nsac; i++) /* Set list of channels per stations */
+	{
+	  nb  = nbchar(hd_synt[i].kstnm)  ;
+	  nb2 = nbchar(hd_synt[i].kcmpnm) ;      
+	  strncpy(buf,hd_synt[i].kstnm,nb) ;
+	  strncpy(buf2,hd_synt[i].kcmpnm,nb2) ;
+	  buf[nb]   = '\0' ;
+	  buf2[nb2] = '\0' ;
+	  for(j=0; j<k; j++)
+	    {
+	      if (strcmp(buf,sta[j]) == 0) 
+		{
+		  strcat(cmp[j],",")   ;
+		  strcat(cmp[j], buf2) ;
+		  nbcmp[j]++;
+		  break ; 
+		}
+	    }
+	  if (j==k) 
+	    {
+	      strcpy(sta[k], buf)  ;
+	      strcpy(cmp[k], buf2) ;
+	      nbcmp[k] = 1         ;
+	      k++ ; 
+	    }
+	}
+  
+      fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont\n") ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.6)             ;
+      fprintf(ps,"(Used stations (%d, %d channels) : ) show\n", k, *nsac ) ;
+      fprintf(ps,"/Courier      findfont .07 scalefont setfont")  ;
+      
+      j  = 0;
+      nb = 1;
+      fprintf(ps,"%15.6f %15.6f moveto\n(", -1., -2.7) ;
+      for(i=0; i<k; i++)
+	{
+	  j += 1 + nbcmp[i] ;
+	  fprintf(ps, "  %s(%s)", sta[i], cmp[i]) ;
+	  if (j >= 16) {
+	    fprintf(ps,") show\n") ;
+	    fprintf(ps,"%15.6f %15.6f moveto\n(", -1., -2.7-((double)nb)/8.) ;
+	    j = 0 ;
+	    nb++; }
+	}
+      fprintf(ps,") show\n")   ;
+      
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.7-((double)nb)/8.) ;
+      fprintf(ps, "(WPWIN: %-8.2f %-8.2f %-8.2f %-8.2f ) show\n"
+	      , eq->wp_win4[0], eq->wp_win4[1], eq->wp_win4[2], eq->wp_win4[3]) ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.8-((double)nb)/8.) ;
+      fprintf(ps, "(Dmin : %-8.2f Dmax :%-8.2f) show\n", opt->dmin, opt->dmax) ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.9-((double)nb)/8.) ;
+      fprintf(ps, "(wN   : %-8.2f wE   :%-8.2f wZ   :%-8.2f) show\n", opt->wN, opt->wE, opt->wZ);  
+      
+      /* filter parameters */
+      fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont") ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -3.8) ;
+      fprintf(ps,"(Filter parameters: ) show\n") ;
+      fprintf(ps,"/Courier     findfont .1 scalefont setfont")  ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -3.9)   ;
+      fprintf(ps,"(filt_order: %-d) show\n", eq->filtorder) ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.025) ;
+      fprintf(ps,"(filt_cf1  : %-7.5f) show\n", eq->flow) ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.150) ;
+      fprintf(ps,"(filt_cf2  : %-7.5f) show\n", eq->fhigh) ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.275) ;
+      fprintf(ps,"(filt_pass : %-d) show\n", eq->filtnpass) ;
+      
+      /* pde and reference solution */
+      fprintf(ps,"/Courier-Bold findfont .07 scalefont setfont\n");
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.5) ;
+      fprintf(ps,"(PDE and Centroid: ) show\n")       ;
+      fprintf(ps,"/Courier      findfont .07 scalefont setfont\n");
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.6)    ;
+      nb = nb_blank(eq->pdeline) ;
+      eq->pdeline[60]='\0' ;
+      fprintf(ps,"(%s) show\n", &eq->pdeline[nb])             ;
+      fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.7)         ;
+      fprintf(ps, "(Event id     : %s) show\n", eq->evid)     ;
+      fprintf(ps, "%15.6f %15.6f moveto\n", -1., -4.8)        ;
+      fprintf(ps, "(Time shift   : %-6.1f s)  show\n", eq->ts);
+      fprintf(ps, "%15.6f %15.6f moveto\n", -1., -4.9)        ;
+      fprintf(ps, "(Half duration: %-6.1f s)  show\n", eq->hd);
+      fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.0)        ;
+      
+      fprintf(ps, "(Latitude     : %-8.3f) show\n", eq->evla) ;
+      fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.1)        ;
+      fprintf(ps, "(Longitude    : %-8.3f) show\n", eq->evlo) ;
+      fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.2)        ;
+      fprintf(ps, "(Depth        : %-8.3f) show\n", eq->evdp) ;
+      fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.3)        ;  
+      if (flag == 2) 
+	{
+	  fprintf(ps,"1.8 -0.6 translate\n") ;
+	  fprintf(ps,"0.4  0.4 scale\n") ;
+	  fprintf(ps,"/Times-Roman findfont .2 scalefont setfont\n") ;
+	  fprintf(ps, "%15.6f %15.6f moveto\n", -1.1, -1.4) ;
+	  fprintf(ps,"(GCMT, Mw= %5.2f ) show\n", Mwb)      ;
+	  fprintf(ps, "%15.6f %15.6f moveto\n", -1.1, -1.6) ;
+	  /* fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/(*M0a),mc) ;*/
+	  fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/(*M0a),mc) ;
+	  fprintf(ps,".5 .5 .9 setrgbcolor\n") ;
+	  prad_pat(TMb, ps)        ;
+	  pnod_pat(&s1b, &d1b, ps) ;
+	  pnod_pat(&s2b, &d2b, ps) ;
+	}
+      
+      
+      fprintf(ps,"showpage\n") ;
+      fclose(ps) ;
+    }
 
   /* STDOUT AND LOG */
   charplot(eq->vm[0], *s1a,*d1a, *s2a,*d2a, '-', '#', ' ', '\0','\0','\0', RX, RY, stdout)  ;
@@ -488,10 +494,12 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
     }
   printf("Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",*Mwa,*M0a,*M0_12a) ;
   
-
   fprintf(o_log,"n_used_rec:         %-4d\n", *nsac)    ;
   fprintf(o_log,"Gap:                %-7.1f\n", *gap)   ;
-  fprintf(o_log,"Cond_number:        %-10.0f\n", *Cond) ; 
+  fprintf(o_log,"WCMT: ") ;
+  for(i =0 ; i<NM ; i++)
+    fprintf(o_log,"%15.4e",eq->vm[0][i]);
+  fprintf(o_log,"\nCond_number:        %-10.0f\n", *Cond) ; 
   fprintf(o_log,"W_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",
 	 *s1a, *d1a, *r1a, *s2a, *d2a, *r2a) ;
   fprintf(o_log,"W_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3a[0], eval3a[1], eval3a[2]) ;
@@ -538,12 +546,16 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   free((void*)nbcmp)    ;
   free((void*)buf)      ;
   free((void*)buf2)     ;
-  for(i=0 ; i<*nsac ; i++){
-    free((void*)sta[i]) ;
-    free((void*)cmp[i]) ; }
+  for(i=0 ; i<*nsac ; i++)
+    {
+      free((void*)sta[i]) ;
+      free((void*)cmp[i]) ; 
+    }
   free((void**)cmp)     ;
   free((void**)sta)     ;
 }
+
+
 
 /*******************************/
 /*       prad_pat(TM, ps)      */
@@ -1377,7 +1389,7 @@ fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts,
   n2_GF = n1_GF + (int)((twp_end - twp_beg) / ((double)hd_GF->delta)) ;                       /* Last GF Sample */
   if ( n2_GF >= hd_GF->npts ) /* GF Rejected */
     {
-      fprintf(o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", 
+      fprintf(o_log,"Stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", 
 	      hd_data->kstnm, hd_data->knetwk, hd_data->kcmpnm, 
 	      hd_data->gcarc, hd_data->az, hd_data->user[2], hd_data->user[3]) ;
       fprintf( o_log,"**** Incomplete GF, rejected : %s\n"  , gf_file)         ;  
@@ -1387,7 +1399,7 @@ fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts,
     }
   else if ( n1_GF < 0 )       /* Fill negative samples with zeros */
     {
-      fprintf(o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", 
+      fprintf(o_log,"Stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", 
 	      hd_data->kstnm, hd_data->knetwk, hd_data->kcmpnm, 
 	      hd_data->gcarc, hd_data->az, hd_data->user[2], hd_data->user[3]) ;
       fprintf( o_log,"**** Incomplete GF, filling with zeros : %s\n", gf_file) ;  
@@ -1405,6 +1417,7 @@ fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts,
   hd_GF->npts = n2_GF + 1                  ;
   rdatsac(gf_file, hd_GF, buffer, &ierror) ;
   memcpy (g,buffer+n1_GF,npts * sizeof(double));
+  hd_GF->npts = npts ;
   return 0;
 }
 /* Corrections, Notes, etc.:            */
@@ -1548,7 +1561,6 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	}
       if (flag) /* Error reading GF */
 	continue ;
-      
       
       /* Read data samples */
       hd_data.npts = n2_data + 1 ;
@@ -1758,7 +1770,7 @@ screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
     {
       if( opt->rms_in[j] < opt->th_val )
 	{
-	  fprintf( o_log,"%-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
+	  fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
 		   hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
 		   hd_synt[j].user[2], hd_synt[j].user[3]) ; 
 	  data_name[newn] = data_name[j] ;
@@ -1809,7 +1821,7 @@ screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
       if ( (min < val) && (val < max) && (fabs(opt->avg[j]) < (opt->p2p_med)/2.) )
 	{
 	  if (opt->th_val <= 0.)
-	    fprintf( o_log,"%-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
+	    fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
 		     hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
 		     hd_synt[j].user[2], hd_synt[j].user[3]) ; 
 	  data_name[newn] = data_name[j] ;
@@ -2145,7 +2157,7 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->dts_max   = 0. ;
   opt->dts_step  = 0. ;
   opt->azp       = 0. ;
-
+  opt->ps        = 1  ;
   opt->Nit       = 1 ;
 
   k = 0 ;
@@ -2249,6 +2261,9 @@ get_opt(numarg1, numarg2, argv, opt, eq)
       if (!strncmp(argv[j],"-noref",6)){
 	opt->ref_val = 0. ;
 	k++ ;}
+      if (!strncmp(argv[j],"-nops",5)){
+	opt->ps = 0 ;
+	k++ ;}
       if (!strncmp(argv[j],"-h",2))
 	disphelp(argv,opt) ;
       if (!strncmp(argv[j],"--help",6))
@@ -2268,7 +2283,7 @@ get_param1(argc, argv, M, opt, eq, flag)
      structopt *opt ; 
 {
   int numarg1, numarg2 ;
-  int max = 47 ;
+  int max = 48 ;
 
   numarg1 = 0              ;
   numarg2 = argc-numarg1-1 ;

@@ -328,22 +328,28 @@ get_i_master(file, keys, n, eq)
   i_file = openfile_rt(file,&nl) ;
 
   /* check nb of lines */
-  if (n > nl) {
-    fprintf(stderr,"ERROR : incomplete i_master file : %s\n", file) ;
-    fclose(i_file) ;
-    exit(1) ; }
+  if (n > nl) 
+    {
+      fprintf(stderr,"ERROR : incomplete i_master file : %s\n", file) ;
+      fclose(i_file) ;
+      exit(1) ; 
+    }
 
   /* Initialize DMIN and GFDIR */
   nl = 0;
   for (i=0 ; i<n ; i++)
     {
       fflush(stdout);
-      if (strncmp("GFDIR",keys[i],strlen(keys[i]))==0){
-	strcpy(eq->gf_dir,"./GF/");
-	nl++; }
-      else if (strncmp("DMIN",keys[i],strlen(keys[i]))==0){
-	eq->dmin = 0. ;
-	nl++; }
+      if (strncmp("GFDIR",keys[i],strlen(keys[i]))==0)
+	{
+	  strcpy(eq->gf_dir,"./GF/");
+	  nl++; 
+	}
+      else if (strncmp("DMIN",keys[i],strlen(keys[i]))==0)
+	{
+	  eq->dmin = 0. ;
+	  nl++; 
+	}
     }
 
   /* Read lines */

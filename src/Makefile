@@ -44,6 +44,8 @@ EXE = $(BIN)/rec_dec_filt\
       $(BIN)/make_resp_lookup_table\
       $(BIN)/trim_sac_files\
       $(BIN)/FAST\
+      $(BIN)/wpinversion_sens_ZNE\
+      $(BIN)/wpinversion_dble_ZNE\
       $(BIN)/wpinversion_ZNE\
       $(BIN)/wpinversion_LTZ\
       $(BIN)/synth_v5\
@@ -51,12 +53,30 @@ EXE = $(BIN)/rec_dec_filt\
       $(BIN)/change_sac_headers\
       $(BIN)/saclst
 
+
+
 all : $(EXE)
 
 # enable libmseed dependencies
 with_miniseed:  $(EXE) $(BIN)/trim_sac_files_qrt
 
 # Inversion
+$(BIN)/wpinversion_dble_ZNE:wpinversion_dble_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
+	travel_times.o jacobi.o charplot.o read_i_files.o
+	@ $(CC) $(LDFLAGS) wpinversion_dble_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
+	travel_times.o jacobi.o charplot.o read_i_files.o -o $(BIN)/wpinversion_dble_ZNE -lm
+
+wpinversion_dble_ZNE.o:wpinversion_dble_ZNE.c
+	@ $(CC) $(CFLAGS) -c wpinversion_dble_ZNE.c 
+
+$(BIN)/wpinversion_sens_ZNE:wpinversion_sens_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
+	travel_times.o jacobi.o charplot.o read_i_files.o
+	@ $(CC) $(LDFLAGS) wpinversion_sens_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
+	travel_times.o jacobi.o charplot.o read_i_files.o -o $(BIN)/wpinversion_sens_ZNE -lm
+
+wpinversion_sens_ZNE.o:wpinversion_sens_ZNE.c
+	@ $(CC) $(CFLAGS) -c wpinversion_sens_ZNE.c
+
 $(BIN)/wpinversion_ZNE:wpinversion_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
 	travel_times.o jacobi.o charplot.o read_i_files.o
 	@ $(CC) $(LDFLAGS) wpinversion_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
