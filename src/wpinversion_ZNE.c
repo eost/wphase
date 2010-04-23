@@ -321,14 +321,6 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
       fprintf(ps,"%15.6f %15.6f moveto\n", -1., +1.3) ;
       fprintf(ps,"(%s) show\n", eq->evnm) ;
       
-      /* Time stamp */
-      time(&now) ;
-      fprintf(ps,"/Times-Roman findfont .1 scalefont setfont\n") ;
-      strftime(date_stmp,64,"Processed Date : %a %b %02d %02H:%02M:%02S %Y UT",gmtime(&now));
-      date_stmp[44] = '\0';
-      fprintf(ps,"%15.6f %15.6f moveto\n", -2.45, 1.7) ;
-      fprintf(ps,"(%s) show\n", date_stmp) ;
-      
       /* tensor elem., moment, planes, eigvalues */
       fprintf(ps,"/Times-Roman findfont .1 scalefont setfont\n") ;
       fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.45) ;
@@ -430,7 +422,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
       fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.275) ;
       fprintf(ps,"(filt_pass : %-d) show\n", eq->filtnpass) ;
       
-      /* pde and reference solution */
+      /* pde  */
       fprintf(ps,"/Courier-Bold findfont .07 scalefont setfont\n");
       fprintf(ps,"%15.6f %15.6f moveto\n", -1., -4.5) ;
       fprintf(ps,"(PDE and Centroid: ) show\n")       ;
@@ -453,6 +445,16 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
       fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.2)        ;
       fprintf(ps, "(Depth        : %-8.3f) show\n", eq->evdp) ;
       fprintf(ps, "%15.6f %15.6f moveto\n", -1., -5.3)        ;  
+
+      /* Time stamp */
+      time(&now) ;
+      fprintf(ps,"/Times-Roman findfont .1 scalefont setfont\n") ;
+      strftime(date_stmp,64,"Processed Date : %a %b %02d %02H:%02M:%02S %Y UT",gmtime(&now));
+      date_stmp[44] = '\0';
+      fprintf(ps,"%15.6f %15.6f moveto\n",  1.3, -5.8) ;
+      fprintf(ps,"(%s) show\n", date_stmp) ;
+      
+      /* Reference solution */
       if (flag == 2) 
 	{
 	  fprintf(ps,"1.8 -0.6 translate\n") ;
@@ -566,7 +568,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
 void 
 prad_pat(double **TM, FILE *ps)
 {
-  int    i, j, k, l, N = 50, M ;
+  int    i, j, k, l, N = 20, M ;
   double x, y, ymax, rad ;
   double azi, ain, rpp, *r  ;
 
@@ -1044,6 +1046,18 @@ inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
 	}
       *Cond = eigvals[0] / eigvals[nk-1] ;
     }
+
+  /* Temporary */
+  o_cov    = openfile_wt("Gd") ;
+  for(i=0; i<*nsac; i++)
+    for (k=0;k<hd_synt[i].npts; k++)
+      {
+	for (j=0; j<NM; j++)
+	  fprintf(o_cov,"%16.8e ",G[i][j][k]);
+	fprintf(o_cov,"%16.8e\n",d[i][k]);
+      }
+  fclose(o_cov) ;
+
   if (opt->dts_step <= 0.)
     {
       printf("##############\n%d significant eigenvalues: \n", nk) ;

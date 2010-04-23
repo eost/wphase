@@ -302,7 +302,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	os.system(RECALCSYN_XY+'> LOG/_log_py_recalsyn_xy')
 	os.system(REPREPARE_XY+'> LOG/_log_py_reprepare_xy')
 	if flagref:
-		addrefsol(cmtpde,cmttmp)
+		addrefsol(cmtref,cmttmp)
 		fr = " "
 	else:
 		fr = "-noref"
@@ -426,7 +426,7 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 	
 	eq.wcmtfile(cmttmp,tsopt,tsopt)
 	if flagref:
-		addrefsol(cmtpde,cmttmp)
+		addrefsol(cmtref,cmttmp)
 		fr = " "
 	else:
 		fr = "-noref"
@@ -502,7 +502,7 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 	copy_GF('GF','ts_GF')
  	eq.wcmtfile(cmttmp,tsopt,tsopt)
 	if flagref:
-		addrefsol(cmtpde,cmttmp)
+		addrefsol(cmtref,cmttmp)
 		fr = " "
 	else:
 		fr = "-noref"
@@ -578,7 +578,7 @@ if __name__ == "__main__":
 	out    = grep2([r'^SEED',r'^CMTFILE',r'^EVNAME',r'^filt_cf1',r'^filt_cf2',\
 				 r'^WP_WIN'], i_master)
  	dat    = out[0].replace(':','').strip('\n').split()[1]
- 	cmtpde = out[1].replace(':','').strip('\n').split()[1]
+ 	cmtref = out[1].replace(':','').strip('\n').split()[1]
 	evname = out[2].split(':')[1].strip().replace(' ','_').replace(',','')
 	wpwin  = map(float,out[5].replace(':','').strip('\n').split()[1:])
 	ftable = []
@@ -597,14 +597,20 @@ if __name__ == "__main__":
 		dmax   = 90.
 		
  	eq   = EarthQuake()
- 	eq.rcmtfile(cmtpde)
+ 	eq.rcmtfile(cmtref)
 	eq.title = evname.strip().replace(' ','_').replace(',','')
-
+	cmtf = open(cmtref,'r')
+	L=cmtf.readlines()
+	cmtf.close()
+	if len(L) < 13:
+		print '*** WARNING : no reference solution in %s'%(cmtref)
+		flagref = 0
+	
  	if flagts == 1:
  		if fastflag == 1:
- 			[eq.ts,eq.hd]=fast_grid_search_ts(dat,cmtpde,ftable,eq,eq.ts,eq.hd,wpwin,flagref,dmin,dmax)
+ 			[eq.ts,eq.hd]=fast_grid_search_ts(dat,cmtref,ftable,eq,eq.ts,eq.hd,wpwin,flagref,dmin,dmax)
  		else:
- 			[eq.ts,eq.hd]=grid_search_ts(dat,cmtpde,ftable,eq,eq.ts,eq.hd,wpwin,flagref,dmin,dmax)
+ 			[eq.ts,eq.hd]=grid_search_ts(dat,cmtref,ftable,eq,eq.ts,eq.hd,wpwin,flagref,dmin,dmax)
 	if flagxy == 1:
-		grid_search_xy(dat,cmtpde,ftable,eq,eq.ts,eq.hd,wpwin,flagref,dmin,dmax)
+		grid_search_xy(dat,cmtref,ftable,eq,eq.ts,eq.hd,wpwin,flagref,dmin,dmax)
 	
