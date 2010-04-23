@@ -44,4 +44,4 @@ $PREPARE
 $WPINVER -osyndir SYNTH 
 
 ${RM} -f page_6t*.ps page_6t*.pdf
-${TRACES} ${CMTFILE} SYNTH
+${TRACES} i_master ${CMTFILE} SYNTH
