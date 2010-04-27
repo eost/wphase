@@ -3,7 +3,7 @@
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 
 ###################################
-if (-e i_master) then
+if (-e xy_i_master) then
         ${GREP} -v "^#" xy_i_master >! i_tmp
 else
         ${ECHO} "Error: file  xy_i_master not available"

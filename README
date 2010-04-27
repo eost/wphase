@@ -1,6 +1,6 @@
 
-                W phase inversion
-		=================
+                 W phase inversion
+	  	 =================
 
        Z.Duputel, L.Rivera and H.Kanamori
 
@@ -22,7 +22,7 @@
 
 Please add the following environnement variables to the '.tcshrc' (or
 '.cshrc'/'.bashrc' depending on your shell) file in your home directory: 
->setenv WPHASE_HOME 'path to W phase inversion directory' 
+>setenv WPHASE_HOME 'path to W-phase inversion directory' 
 >setenv GF_PATH 'path to Green's Functions data base' 
 >setenv RDSEED 'path to the rdseed executable'
 >setenv GMT_BIN 'path to GMT binaries' (optional)
@@ -94,34 +94,10 @@ Cleaning the run directory :
 Python scripts are used for CENTROID GRID-SEARCHES and QUASI REAL-TIME
 MONITORING. You can found them in $WP_HOME/bin:
 
-
 GRID SEARCH: 
 >'wp_grid_search.py' : using North and East components
 >'wp_grid_search_LTZ.py' : using Longitudinal and Transverse components
 Detailed help is available using the option '-h'
-
-QUASI REAL-TIME MONITORING:
->'trigger_neic_emsc.py' : based on a triggering using emsc and neic
-			  rss feeds. Input files are miniseed files
-			  (extraction using extract_qrt.csh).
-			  It is necessary to configure properly the 
-			  RUNQRT, DATADIR and DATALESS global
-			  variables which correspond to run, miniseed
-			  and dataless directories respectively.
-This script can be executed every minute using the cron daemon. This
-solution require to define the environment variable "WP_HOME" at the
-begining at the crontab used to execute trigger_neic_emsc.py
-example of crontab if $SHELL == /bin/sh:
-
-	WP_HOME     = /home/zac/dev/WPhase/pack4
-	WPHASE_HOME = /home/zac/dev/WPhase/pack4
-	GF_PATH = /home/luis/GFS
-	RDSEED  = /opt/rdseed/rdseed
-	GMT_BIN = /opt/GMT/bin
-	DISPLAY = :0.0
-	# m h  dom mon dow   command
-	  * *   *   *   *    /usr/bin/python $WPHASE_HOME/bin/trigger_neic_emsc.py &> $WPHASE_HOME/run_qrt/trig_out
-  
 
 #########################
 ## Plot routines 

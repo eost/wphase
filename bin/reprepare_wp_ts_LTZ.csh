@@ -9,7 +9,7 @@ set LOG     = LOG
 
 ################################################
 
-if (-e i_master) then
+if (-e ts_i_master) then
         ${GREP} -v "^#" ts_i_master >! i_tmp
 else
         ${ECHO} "Error: file  ts_i_master not available"

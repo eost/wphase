@@ -11,7 +11,7 @@ endif
 
 
 ###################################
-if (-e i_master) then
+if (-e ${pre}i_master) then
         ${GREP} -v "^#" ${pre}i_master >! i_tmp
 else
         ${ECHO} "Error: file  ${pre}i_master not available"
