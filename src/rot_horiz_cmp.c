@@ -179,7 +179,15 @@ main(int argc, char *argv[])
   fclose(istaf);
   fclose(ostaf);
 
-  
+  free((void*)x_in1) ;
+  free((void*)x_in2) ;
+  free((void*)i_fil) ;
+  free((void*)h_fil) ;
+  free((void*)  sta) ;
+  free((void*)  net) ;
+  free((void*)  cmp) ;
+  free((void*)prev_sta);
+
   return 0;
 }
 
