@@ -123,7 +123,7 @@ def copy_GF(idir,odir,include=r'.*\.SAC$',exclude=r'.*sac.*'):
 			else:
 				shutil.copy(ipath+f,opath)
 
-def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
+def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
 	if fileout == 'stdout':
 		fid = sys.stdout
 		flag = 0
@@ -143,6 +143,9 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	lat2 = eq.lat + 1.2
 	lon1 = eq.lon - 1.2
 	lon2 = eq.lon + 1.2 
+
+	ts = eq.ts
+	hd = eq.hd
 	
 	lat = lat1
 	coor = []
@@ -321,7 +324,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,ts,hd,wpwin=[15.],flagref=0,dmin=0.,d
 	eq.lon = lonopt[0]
 
 
-def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
+def grid_search_ts(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
 	if fileout == 'stdout':
 		fid = sys.stdout
 		flag = 0
@@ -329,13 +332,16 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 		fid = open(fileout,'w')
 		flag = 1
 	fid.write('CENTROID TIME DELAY GRID SEARCH\n')
-
+	
 	# Initialize variables #################
 	o_file  = 'grid_search_ts_out'
 	tmpfile = '_tmp_ts_table'
 	Nit = 3
 	Sts = [4.,4.,2.,1.]
 
+	tsini = eq.ts
+	hdini = eq.hd
+	
 	if eq.mag < 5.5:
 	 	ts1 = 1.
 		ts2 = tsini*3.	
@@ -443,7 +449,7 @@ def grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmi
 
 	return [tsopt,tsopt]
 
-def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
+def fast_grid_search_ts(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90.,fileout='stdout'):
 	if fileout == 'stdout':
 		fid  = sys.stdout
 		flag = 0
@@ -457,6 +463,10 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,tsini,hdini,wpwin=[15.],flagref=
 
 	Nit = 3
 	sts = 4.
+
+	tsini = eq.ts
+	hdini = eq.hd
+	
 	if eq.mag < 5.5:
 	 	ts1 = 1.
 		ts2 = tsini*3.	
@@ -608,9 +618,9 @@ if __name__ == "__main__":
 	
  	if flagts == 1:
  		if fastflag == 1:
- 			[eq.ts,eq.hd]=fast_grid_search_ts(dat,cmtref,ftable,eq,eq.ts,eq.hd,wpwin,flagref,dmin,dmax)
+ 			[eq.ts,eq.hd]=fast_grid_search_ts(dat,cmtref,ftable,eq,wpwin,flagref,dmin,dmax)
  		else:
- 			[eq.ts,eq.hd]=grid_search_ts(dat,cmtref,ftable,eq,eq.ts,eq.hd,wpwin,flagref,dmin,dmax)
+ 			[eq.ts,eq.hd]=grid_search_ts(dat,cmtref,ftable,eq,wpwin,flagref,dmin,dmax)
 	if flagxy == 1:
-		grid_search_xy(dat,cmtref,ftable,eq,eq.ts,eq.hd,wpwin,flagref,dmin,dmax)
+		grid_search_xy(dat,cmtref,ftable,eq,wpwin,flagref,dmin,dmax)
 	
