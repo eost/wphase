@@ -11,9 +11,7 @@
                           a[k][l]=h+s*(g-h*tau) ;
 
 void 
-jacobi(a,n,np,d,v,nrot)
-     double **a, *d, **v ;
-     int    n, np, *nrot ;
+jacobi(double **a, int n, int np, double *d, double **v, int *nrot)
 {
   int    NMAX = 500, i, ip, iq, j;
   double c,g,h,s,sm,t,tau,theta,tresh, *b, *z ;
@@ -112,9 +110,7 @@ jacobi(a,n,np,d,v,nrot)
 
 
 void 
-eigsrt(d, v, n)
-     int n          ;
-     double *d, **v ; 
+eigsrt(double *d, double **v, int n)
 {
   int    i, j, k ;
   double p       ;
