@@ -5,15 +5,23 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 
 set my_argv = ($ARGV)
 if ($#my_argv < 1) then
-    set CHAN  = LHZ
+    set CHAN     = LHZ
     set o_wpfile = o_wpinversion
     set predfile = fort.15
-    set isref = 0
-else
-    set CHAN = $my_argv[1]
+    set isref    = 0
+    set ist      = 8
+else if ($#my_argv == 4) then
+    set CHAN     = $my_argv[1]
     set o_wpfile = $my_argv[2]
     set predfile = $my_argv[3]
     set isref    = $my_argv[4]
+    set ist      = 8
+else 
+    set CHAN     = $my_argv[1]
+    set o_wpfile = $my_argv[2]
+    set predfile = $my_argv[3]
+    set isref    = $my_argv[4]
+    set ist      = $my_argv[5]
 endif
 
 $GMTSET PAPER_MEDIA letter+
@@ -60,7 +68,7 @@ if $status then
     exit
 endif
 
-${CAT} ${o_wpfile}_${CHAN} | ${CUT} -d/ -f2 | ${CUT} -d. -f1 >! _tmp_stat_names    #Fragile
+${CAT} ${o_wpfile}_${CHAN} | ${CUT} -d/ -f2 | ${CUT} -d. -f${ist} >! _tmp_stat_names    #Fragile
 ${RM} -f _tmp_stat_posit
 set np = `${CAT} ${o_wpfile}_${CHAN} | ${AWK} '{print $5 - $4}'`
 set c = 0
