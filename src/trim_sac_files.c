@@ -27,17 +27,17 @@ void distaz(double    cmt_lat,  double    cmt_lon,  float*    stlats,  float*   
 /* Internal routines */
 void get_params(int argc, char **argv, int *un, char **i_sacs, char **o_sacs, 
 		str_quake_params *eq) ;
-void delta_t2(int *y1, int *mo1, int *j1, int *h1, int *mi1, int *s1, int *ms1,
-	      int *y0, int *j0, int *h0, int *m0, int *s0, int *ms0, double *tdiff) ;
-
-
+void date2epoch(int year, int jday, int hour, int min, int sec, int msec, double *epoch) ;
+void delta_t(int y1, int j1, int h1, int m1, int s1, int ms1,
+	     int y0, int j0, int h0, int m0, int s0, int ms0, double *tdiff) ;
+void ymd2jul(int yyyy,int mm,int dd, int *jul) ;
 	  
 int 
 main(int argc, char *argv[])
 {
   int    nc, nh=NDEPTHS, nd=NDISTAS ; 
   int    tmp, ierror = 1, tterr = 0 ; 
-  int    sampstart, flag            ;
+  int    ot_jday, sampstart, flag   ;
   long   int nerr                   ;
   float  dist, az, baz, xdeg        ;
   double xdegd, P_tt, tdiff, otime  ;
@@ -92,8 +92,9 @@ main(int argc, char *argv[])
       trav_time(&xdegd, tv, dv, &nd, &P_tt, &tterr) ;
 
       /* Set event origin time in sac header variable 'o' (relative to the reference time) */
-      delta_t2(&eq.ot_ye, &eq.ot_mo, &eq.ot_dm, &eq.ot_ho, &eq.ot_mi, &eq.ot_se, &eq.ot_ms,
-	       &hdr.nzyear, &hdr.nzjday, &hdr.nzhour, &hdr.nzmin, &hdr.nzsec, &hdr.nzmsec, &tdiff) ;
+      ymd2jul(eq.ot_ye, eq.ot_mo, eq.ot_dm, &ot_jday) ;
+      delta_t(eq.ot_ye, ot_jday, eq.ot_ho, eq.ot_mi, eq.ot_se, eq.ot_ms,
+	      hdr.nzyear, hdr.nzjday, hdr.nzhour, hdr.nzmin, hdr.nzsec, hdr.nzmsec, &tdiff) ;
       otime = tdiff ;
       hdr.t[0]  = (float)(P_tt + tdiff) ; /* P arrival         */
 
@@ -219,70 +220,48 @@ get_params(int argc, char **argv, int *un, char **i_sacs, char **o_sacs,
   free((void*) i_tmp )   ;
 }
 
-
-void 
-date2epoch1(int *year, int *mont, int *jday, int *hour, int *min, int *sec, int *msec, double *epoch)
+void
+ymd2jul(int yyyy,int mm,int dd, int *jul)
 {
-  struct tm date ;
-  time_t    tmp  ;
-  extern long timezone   ;
-  date.tm_sec    = *sec  ;  
-  date.tm_min    = *min  ;
-  date.tm_hour   = *hour ;
-  date.tm_mday   = *jday ;
-  date.tm_mon    = *mont-1      ;
-  date.tm_year   = *year - 1900 ;
-  date.tm_isdst  =  0 ;
-  tzset() ;
-  tmp            = mktime(&date) ;
-  *epoch         = tmp + (double)(*msec)/1000. - timezone ;
-/*   
-	  printf("in date2epoch: %4d %1d %3d %2d %2d %2d %2d %2d %1d %1ld %s = %lf\n",
-	  date.tm_year, date.tm_wday, date.tm_yday, date.tm_hour, date.tm_min, 
-	  date.tm_sec,  date.tm_mday, date.tm_mon,  date.tm_isdst, date.tm_gmtoff, 
-	  date.tm_zone, *epoch); 
-*/ 
+  int k ;
+  int ndays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+  if ( (yyyy%4)   == 0 ) ndays[1] ++ ;
+  if ( (yyyy%100) == 0 ) ndays[1] -- ;
+  if ( (yyyy%400) == 0 ) ndays[1] ++ ;
+  (*jul) = dd ;
+  for (k=0; k<mm-1; k++)
+    (*jul) += ndays[k] ;
 }
 
 
-
-void 
-date2epoch2(int *year, int *jday, int *hour, int *min, int *sec, int *msec, double *epoch)
+void
+date2epoch(int year, int jday, int hour, int min, int sec, int msec, double *epoch)
 {
   struct tm date;
-  time_t    tmp;
+  time_t     tmp;
   extern long timezone;
-  date.tm_sec    = *sec  ;  
-  date.tm_min    = *min  ;
-  date.tm_hour   = *hour ;
-  date.tm_mday   = *jday ;
-  date.tm_mon    =  0    ;
-  date.tm_year   = *year - 1900 ;
-  date.tm_wday   =  0    ;
-  date.tm_yday   = *jday - 1 ;
-  date.tm_isdst  =  0    ;
-  //date.tm_gmtoff =  0;
+  date.tm_sec   = sec  ;
+  date.tm_min   = min  ;
+  date.tm_hour  = hour ;
+  date.tm_mday  = jday ;
+  date.tm_mon   = 0    ;
+  date.tm_year  = year - 1900 ;
+  date.tm_wday  = 0    ;
+  date.tm_yday  = jday - 1 ;
+  date.tm_isdst = 0    ;
   tzset();
-  tmp            = mktime(&date) ;
-  *epoch         = tmp + (double)(*msec)/1000. - timezone ;
-/*   
-	  printf("in date2epoch: %4d %1d %3d %2d %2d %2d %2d %2d %1d %1ld %s = %lf\n",
-	  date.tm_year, date.tm_wday, date.tm_yday, date.tm_hour, date.tm_min, 
-	  date.tm_sec,  date.tm_mday, date.tm_mon,  date.tm_isdst, date.tm_gmtoff, 
-	  date.tm_zone, *epoch); 
-*/ 
+  tmp           = mktime(&date) ;
+  *epoch        = (double)tmp + (double)(msec)/1000. - timezone ;
 }
 
-
-
-void 
-delta_t2(int *y1, int *mo1, int *j1, int *h1, int *mi1, int *s1, int *ms1,
-	 int *y0, int *j0, int *h0, int *m0, int *s0, int *ms0, double *tdiff)
+void
+delta_t(int y1, int j1, int h1, int m1, int s1, int ms1,
+         int y0, int j0, int h0, int m0, int s0, int ms0, double *tdiff)
 {
   double t1, t0 ;
-  int    one    ;
-  one = 1       ;
-  date2epoch1(y1,mo1,j1,h1,mi1,s1,ms1,&t1) ;
-  date2epoch2(y0,&one,h0,m0,s0,ms0,&t0)    ;
-  *tdiff = t1 - (t0 + (*j0-1)*86400)       ;
+  date2epoch(y1,1,h1,m1,s1,ms1,&t1)   ;
+  date2epoch(y0,1,h0,m0,s0,ms0,&t0)   ;
+  *tdiff = t1 - t0 + (j1 - j0)*86400  ;
 }
+
+

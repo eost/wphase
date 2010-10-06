@@ -46,7 +46,7 @@ $REC_DEC_FILT coeffs_rec_lut i_master scr_dat_fil_list dec_bp_dat_fil_list >> ${
 # Synthetics preparatio:convolution and filter #
 ${ECHO} "Synthetics convolution and filter...               ( >! ${LOG}/_log_synths_conv_filt    )"
 
-${FIND} GF -name "*sac*" -exec ${RM} \{\} \+
+${FIND} ${gf_dir} -name "*sac*" -exec ${RM} \{\} \+
 ${RM} -rf ${LOG}/_log_synths_conv_filt syn_fil_list
 foreach CHAN ($CHANS)
     ${AWK} '{printf "%s.%s\n", $1, $2}' $gf_dir/STAT_LIST | ${SED} -e "s/.*/&.${CHAN}.SAC/" >> syn_fil_list

@@ -262,7 +262,7 @@ decode_wp_win(buffer, wp_win4)
   np = sscanf(buffer, "%lf %lf %lf %lf", &f1, &f2, &f3, &f4);
   wp_win4[0] =   0.;
   wp_win4[1] =   0.;
-  wp_win4[3] =   0.;
+  wp_win4[2] =   0.;
   wp_win4[3] = 180.;
   if(np < 1  || np > 4)
 	{

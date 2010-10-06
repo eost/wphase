@@ -499,9 +499,9 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dm
  	#print WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,o_file)
 	if flag:
 		fid.close()
-		os.system(WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion >> %s'% (ts1,sts,ts2,o_file,fileout))
+		os.system(WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit %d -ogsf %s -ifil o_wpinversion >> %s'% (ts1,sts,ts2,Nit,o_file,fileout))
 	else:
-		os.system(WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,o_file))
+		os.system(WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit %d -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,Nit,o_file))
 	
 
 	# Recompute optimum solution
