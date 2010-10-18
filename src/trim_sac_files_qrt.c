@@ -32,7 +32,7 @@ int  rmseed(str_quake_params *eq, struct tm *tm0, int i_t0, int i_t1, double *o_
 /* Internal routines */
 void get_params(int argc, char **argv, int *un, char **i_locs, char **o_sacdir, 
 		char **o_sacs, str_quake_params *eq) ;
-void date2epoch(int year, int jday, int hour, int min, int sec, int msec, double *epoch) ;
+void date2epoch(int year, int mm, int dd, int hour, int min, int sec, int msec, double *epoch) ;
 void delta_t(int y1, int j1, int h1, int m1, int s1, int ms1,
 	     int y0, int j0, int h0, int m0, int s0, int ms0, double *tdiff) ;
 void ymd2jul(int yyyy,int mm,int dd, int *jul) ;
@@ -104,7 +104,7 @@ main(int argc, char *argv[])
       /* Set wp time window */
       trav_time(&xdegd, tv, dv, &nd, &P_tt, &tterr)   ; /* P travel time */
       ymd2jul(eq.ot_ye, eq.ot_mo, eq.ot_dm, &ot_jday) ;
-      date2epoch(eq.ot_ye, ot_jday, eq.ot_ho, eq.ot_mi, eq.ot_se, eq.ot_ms, &otime) ;
+      date2epoch(eq.ot_ye, eq.ot_mo, eq.ot_dm, eq.ot_ho, eq.ot_mi, eq.ot_se, eq.ot_ms, &otime) ;
       t0  = (time_t) (otime + P_tt - eq.preevent - (double)SAFETY_DELAY) ;
       tm0 = gmtime(&t0) ;
       wp_end(xdegd, eq.wp_win4, &tdiff);
@@ -119,8 +119,8 @@ main(int argc, char *argv[])
 
       /* Set event origin time in sac header variable 'o' (relative to the reference time)  */
       delta_t(eq.ot_ye, ot_jday, eq.ot_ho, eq.ot_mi, eq.ot_se, eq.ot_ms,
-	      hdr.nzyear, hdr.nzjday, hdr.nzhour, hdr.nzmin, hdr.nzsec, hdr.nzmsec, &otime) ;
-      hdr.o     = (float) otime         ; 
+	      hdr.nzyear, hdr.nzjday, hdr.nzhour, hdr.nzmin, hdr.nzsec, hdr.nzmsec, &tdiff) ;
+      otime = tdiff ;
       hdr.t[0]  = (float)(P_tt + tdiff) ; 
 
       /* Write rough sac file */
@@ -141,6 +141,7 @@ main(int argc, char *argv[])
 	{ 
 	  /* Set new sac header variables */ 
 	  hdr.delta = (float) SAMPLEPERIOD  ; 
+	  hdr.o     = (float) otime         ; 
 	  //hdr.npts  = hdr.npts + 1 - sampstart;              /* Error **** nb of samples     */
 	  //hdr.b     = hdr.b + ((float)sampstart)*hdr.delta ; /* Error **** shift of the first sample */
 	  hdr.npts  = hdr.npts - sampstart ;                 /* nb of samples (corrected) */
@@ -310,9 +311,22 @@ ymd2jul(int yyyy,int mm,int dd, int *jul)
     (*jul) += ndays[k] ;
 }
 
+void 
+jul2ymd(int yyyy,int jul,int *mm,int *dd)
+{
+  int k=0 ;
+  int ndays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+  if ( (yyyy%4)   == 0 ) ndays[1] ++ ;
+  if ( (yyyy%100) == 0 ) ndays[1] -- ;
+  if ( (yyyy%400) == 0 ) ndays[1] ++ ;
+  while(jul>ndays[k])
+    jul -= ndays[k++];
+  (*mm) = k+1 ;
+  (*dd) = jul ;
+}
 
 void
-date2epoch(int year, int jday, int hour, int min, int sec, int msec, double *epoch)
+date2epoch(int year, int mm, int dd, int hour, int min, int sec, int msec, double *epoch)
 {
   struct tm date;
   time_t     tmp;
@@ -320,11 +334,9 @@ date2epoch(int year, int jday, int hour, int min, int sec, int msec, double *epo
   date.tm_sec   = sec  ;
   date.tm_min   = min  ;
   date.tm_hour  = hour ;
-  date.tm_mday  = jday ;
-  date.tm_mon   = 0    ;
+  date.tm_mday  = dd   ;
+  date.tm_mon   = mm-1 ;
   date.tm_year  = year - 1900 ;
-  date.tm_wday  = 0    ;
-  date.tm_yday  = jday - 1 ;
   date.tm_isdst = 0    ;
   tzset();
   tmp           = mktime(&date) ;
@@ -336,9 +348,9 @@ delta_t(int y1, int j1, int h1, int m1, int s1, int ms1,
          int y0, int j0, int h0, int m0, int s0, int ms0, double *tdiff)
 {
   double t1, t0 ;
-  date2epoch(y1,1,h1,m1,s1,ms1,&t1)   ;
-  date2epoch(y0,1,h0,m0,s0,ms0,&t0)   ;
-  *tdiff = t1 - t0 + (j1 - j0)*86400  ;
+  date2epoch(y1,1,1,h1,m1,s1,ms1,&t1) ;
+  date2epoch(y0,1,1,h0,m0,s0,ms0,&t0) ;
+  *tdiff = t1 - t0 + (j1 - j0)*86400    ;
 }
 
 

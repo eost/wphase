@@ -27,7 +27,7 @@ void distaz(double    cmt_lat,  double    cmt_lon,  float*    stlats,  float*   
 /* Internal routines */
 void get_params(int argc, char **argv, int *un, char **i_sacs, char **o_sacs, 
 		str_quake_params *eq) ;
-void date2epoch(int year, int jday, int hour, int min, int sec, int msec, double *epoch) ;
+void date2epoch(int year, int mm, int dd, int hour, int min, int sec, int msec, double *epoch);
 void delta_t(int y1, int j1, int h1, int m1, int s1, int ms1,
 	     int y0, int j0, int h0, int m0, int s0, int ms0, double *tdiff) ;
 void ymd2jul(int yyyy,int mm,int dd, int *jul) ;
@@ -235,7 +235,7 @@ ymd2jul(int yyyy,int mm,int dd, int *jul)
 
 
 void
-date2epoch(int year, int jday, int hour, int min, int sec, int msec, double *epoch)
+date2epoch(int year, int mm, int dd, int hour, int min, int sec, int msec, double *epoch)
 {
   struct tm date;
   time_t     tmp;
@@ -243,11 +243,9 @@ date2epoch(int year, int jday, int hour, int min, int sec, int msec, double *epo
   date.tm_sec   = sec  ;
   date.tm_min   = min  ;
   date.tm_hour  = hour ;
-  date.tm_mday  = jday ;
-  date.tm_mon   = 0    ;
+  date.tm_mday  = dd   ;
+  date.tm_mon   = mm-1 ;
   date.tm_year  = year - 1900 ;
-  date.tm_wday  = 0    ;
-  date.tm_yday  = jday - 1 ;
   date.tm_isdst = 0    ;
   tzset();
   tmp           = mktime(&date) ;
@@ -259,9 +257,9 @@ delta_t(int y1, int j1, int h1, int m1, int s1, int ms1,
          int y0, int j0, int h0, int m0, int s0, int ms0, double *tdiff)
 {
   double t1, t0 ;
-  date2epoch(y1,1,h1,m1,s1,ms1,&t1)   ;
-  date2epoch(y0,1,h0,m0,s0,ms0,&t0)   ;
-  *tdiff = t1 - t0 + (j1 - j0)*86400  ;
+  date2epoch(y1,1,1,h1,m1,s1,ms1,&t1) ;
+  date2epoch(y0,1,1,h0,m0,s0,ms0,&t0) ;
+  *tdiff = t1 - t0 + (j1 - j0)*86400   ;
 }
 
 
