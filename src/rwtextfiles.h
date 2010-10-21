@@ -1,4 +1,12 @@
-/* Header of rwtextfiles.c subroutines */
+/****************************************************************
+*	W phase package - read/write text file subroutine header
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
 
 /*********************************************************/
 /* Return nb of blank in line before the first character */

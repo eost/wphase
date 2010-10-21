@@ -1,3 +1,12 @@
+/****************************************************************
+*	W phase package - Memory allocation subroutines
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include "proto_alloc.h"

@@ -1,3 +1,14 @@
+/****************************************************************
+*	W phase package - Butterworth filtering
+*                                           
+*       History
+*             2008  Original Coding     Luis Rivera and Hiroo Kanamori
+*             2010  Further Updates     Zacharie Duputel
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
+
 /********************************************************************************/
 /* ROUTINES IN C FOR FILTERING DATA USING A DIGITAL BANDPASS BUTTERWORTH FILTER */
 /********************************************************************************/

@@ -1,3 +1,13 @@
+/****************************************************************
+*	W phase package - Trim sac files
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

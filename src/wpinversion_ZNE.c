@@ -1,3 +1,13 @@
+/****************************************************************
+*	W phase package - Inversion for Z, N, E components
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -51,8 +61,6 @@ typedef struct
 
 
 /* *** INTERNAL FUNCTIONS *** */
-
-
 /* Parameter setting functions */
 void get_opt(int numarg1, int numarg2, char **argv, structopt *opt, str_quake_params *eq) ;
 void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq, int *flag);
@@ -1300,6 +1308,7 @@ void
 set_wgt(int ns, sachdr *hd_data,structopt *opt) 
 {
   opt->wgt[ns] = 0. ;
+  strncpy(hd_data->kcmpnm,"LH",2); /* change channel name to read GF */
   if (!strncmp(hd_data->kcmpnm, "LHZ",3))
     opt->wgt[ns] = opt->wZ;
   else if (!strncmp(hd_data->kcmpnm, "LHN",3))

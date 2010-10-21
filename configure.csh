@@ -33,7 +33,6 @@ set MAKE_RESP_TABLE      = \$BIN/make_resp_lookup_table
 set REC_DEC_FILT         = \$BIN/rec_dec_filt
 set SYN_CONV_FILT        = \$BIN/syn_conv_filt
 set ROT_HORIZ_CMP        = \$BIN/rot_horiz_cmp
-set CHANGE_SAC_HEADERS   = \$BIN/change_sac_headers
 
 set FAST_SYNTH_Z         = \$BIN/fast_synth_only_Z
 set FAST_SYNTH           = \$BIN/fast_synth
@@ -44,6 +43,7 @@ set READCMT              = \$BIN/readcmt
 set SYNTHS               = \$BIN/synth_v5
 set CONV_VBB             = \$BIN/conv_vbb
 
+set MSEEDLST             = \$BIN/mseedlst
 set SACLST               = \$BIN/saclst
 
 #GMT

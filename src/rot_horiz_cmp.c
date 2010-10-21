@@ -1,3 +1,13 @@
+/****************************************************************
+*	W phase package - Hozizontal components rotation
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,3 +1,13 @@
+/****************************************************************
+*	W phase package - Recursive resitution and filtering
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
+
 #define _GNU_SOURCE
 #ifdef HAVE_CONFIG_H
 #include <config.h>

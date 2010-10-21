@@ -1,3 +1,13 @@
+/****************************************************************
+*	W phase package - Read imput files subroutines
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

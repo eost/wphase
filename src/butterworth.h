@@ -1,4 +1,12 @@
-/* Header of butterworth_sin.c subroutines */
+/****************************************************************
+*	W phase package - Butterworth filtering headers
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
 
 #include "complex.h"      /* complex.c      */
 

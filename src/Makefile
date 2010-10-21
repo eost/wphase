@@ -1,7 +1,7 @@
 ## Compilers
-CC          =  cc           # C compiler
-FC	    =  gfortran     # fortran compiler
-			    #
+CC          =  gcc      # C compiler
+FC	    =  gfortran # fortran compiler
+
 
 # Some parameters
 datalen     = 5000  # max. nb of samples
@@ -48,7 +48,6 @@ EXE = $(BIN)/rec_dec_filt\
       $(BIN)/wpinversion_LTZ\
       $(BIN)/synth_v5\
       $(BIN)/rot_horiz_cmp\
-      $(BIN)/change_sac_headers\
       $(BIN)/saclst
 
 
@@ -56,7 +55,7 @@ EXE = $(BIN)/rec_dec_filt\
 all : $(EXE)
 
 # enable libmseed dependencies
-with_miniseed:  $(EXE) $(BIN)/trim_sac_files_qrt
+with_miniseed:  $(EXE) $(BIN)/trim_sac_files_qrt $(BIN)/mseedlst
 
 # Inversion
 $(BIN)/wpinversion_ZNE:wpinversion_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \
@@ -97,15 +96,6 @@ $(BIN)/rot_horiz_cmp: rot_horiz_cmp.o proto_alloc.o rwsacs.o \
 
 rot_horiz_cmp.o:rot_horiz_cmp.c
 	@ $(CC) $(CFLAGS) -c rot_horiz_cmp.c
-
-
-$(BIN)/change_sac_headers: change_sac_headers.o proto_alloc.o rwsacs.o \
-	rwtextfiles.o read_i_files.o distaz.o
-	@ $(CC) $(LDFLAGS) change_sac_headers.o proto_alloc.o rwsacs.o \
-	rwtextfiles.o read_i_files.o distaz.o -o $(BIN)/change_sac_headers -lm
-
-change_sac_headers.o:change_sac_headers.c
-	@ $(CC) $(CFLAGS) -c change_sac_headers.c
 
 
 # Recursive Filtering
@@ -170,12 +160,21 @@ trim_sac_files.o:trim_sac_files.c
 
 #(MINISEED)
 $(BIN)/trim_sac_files_qrt: trim_sac_files_qrt.o distaz.o sort_tree.o rwsacs.o rmseed.o \
-	proto_alloc.o rwtextfiles.o travel_times.o read_i_files.o 
-	@ $(CC) $(LDFLAGS) trim_sac_files_qrt.o distaz.o sort_tree.o rwsacs.o rmseed.o \
+	proto_alloc.o rwtextfiles.o travel_times.o read_i_files.o decimate.o
+	@ $(CC) $(LDFLAGS) trim_sac_files_qrt.o distaz.o sort_tree.o rwsacs.o rmseed.o decimate.o \
 	proto_alloc.o rwtextfiles.o travel_times.o read_i_files.o -o $(BIN)/trim_sac_files_qrt $(LDFLAGSSUP) $(LDLIBS) -lm 
+
+${BIN}/mseedlst: mseedlst.o rmseed.o rwtextfiles.o proto_alloc.o
+	@ $(CC) ${LDFLAGS} -o ${BIN}/mseedlst mseedlst.o rmseed.o rwtextfiles.o proto_alloc.o $(LDFLAGSSUP) $(LDLIBS)
 
 trim_sac_files_qrt.o:trim_sac_files_qrt.c
 	@ $(CC) $(CFLAGS) $(CINCLUDES) -c trim_sac_files_qrt.c
+
+mseedlst.o:mseedlst.c
+	@ $(CC) $(CFLAGS) $(CINCLUDES) -c mseedlst.c
+
+decimate.o:decimate.c
+	@ $(CC) $(CFLAGS) -c decimate.c
 
 rmseed.o:rmseed.c
 	@ $(CC) $(CFLAGS) $(CINCLUDES) -c rmseed.c
@@ -216,4 +215,4 @@ clean:
 	cd FAST_SYNTH; make clean
 
 cleanexe:
-	\rm -f $(EXE) $(BIN)/trim_sac_files_qrt $(BIN)/fast_synth $(BIN)/fast_synth_only_Z $(BIN)/fast_synth_rot
+	\rm -f $(EXE) $(BIN)/trim_sac_files_qrt $(BIN)/fast_synth $(BIN)/fast_synth_only_Z $(BIN)/fast_synth_rot $(BIN)/mseedlst

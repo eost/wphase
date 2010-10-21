@@ -1,4 +1,12 @@
-/* Header of travel_times.c subroutines */
+/****************************************************************
+*	W phase package - travel_times header
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
 
 #ifndef SAFETY_DELAY
 #define SAFETY_DELAY __SAFETY_DELAY__

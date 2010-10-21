@@ -18,14 +18,11 @@ else
     exit
 endif
 
-
-
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract_qrt.csh
 set CALC    = ${BIN}/calc_fast_synths_ZNE.csh
 set PREPARE = ${BIN}/prepare_wp_ZNE.csh
 set WPINVER = ${BIN}/wpinversion_ZNE
-
 
 ${RM} -rf SYNTH
 ${MKDIR} SYNTH
@@ -62,7 +59,6 @@ ${CP} -f o_wpinversion o_wpinv
 set ths =  "5.0 3.0 0.9"
 
 foreach th ($ths)
-
     $WPINVER  -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
 	      -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
 	      -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -gfdir ${gf_dir} \

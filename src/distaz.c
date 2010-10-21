@@ -1,3 +1,14 @@
+/****************************************************************
+*	W phase package - Distance, azimuth, backazimuth calculation
+*                                           
+*       History
+*             2008  Original Coding by Luis Rivera and Hiroo Kanamori
+*             2010  Further Updates by Zacharie Duputel
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>

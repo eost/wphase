@@ -1,4 +1,12 @@
-
+/****************************************************************
+*	W phase package - syn_conv_sub headers
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
 
 void make_stf(int lh, char *type, double *h) ;
 

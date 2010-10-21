@@ -1,4 +1,12 @@
-/* Header of rwsacs.c subroutines*/
+/****************************************************************
+*	W phase package - sac files manipulation header
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
 
 #ifndef ITIME
 #define ITIME 1

@@ -1,12 +1,12 @@
-/**********************************************/
-/*  "Tree" sorting subroutines of sac files   */
-/* in order of increasing epicentral distance */
-/****                                      ****/
-/* Header : tree.h                            */
-/* Source Code : tree.c                       */
-/****                                      ****/
-/* Z. Duputel 05/03/2009                      */
-/**********************************************/
+/****************************************************************
+*	W phase package - "Tree" sorting subroutines
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>

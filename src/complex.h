@@ -1,3 +1,13 @@
+/****************************************************************
+*	W phase package - complex number headers
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
+
 typedef struct {
   float re;
   float im;

@@ -1,4 +1,12 @@
-/* Header of proto_alloc.c subroutines */
+/****************************************************************
+*	W phase package - memory allocation headers
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
 
 #ifndef FSIZE
 #define FSIZE  (int)__FSIZE__

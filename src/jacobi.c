@@ -1,5 +1,18 @@
-/* (C) Copr. 1986-92 Numerical Recipes Software Y"1p3-1. */
-/*     adapted for double precision by Z.Duputel         */
+/****************************************************************
+*	W phase package - jacobi 
+*      (C) Copr. 1986-92 Numerical Recipes Software Y"1p3-1. 
+*                         
+*       History
+*             2010   adapted for double precision by Z.Duputel   
+*       License
+*             Distributed under the same License as the Numerical
+*             Recipes source and binaries, used here under permission 
+*             by Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
+
+
+
 
 #include <stdio.h>
 #include <stdlib.h>

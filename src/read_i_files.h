@@ -1,4 +1,12 @@
-/* Header of read_i_files.c subroutines */
+/****************************************************************
+*	W phase package - read imput files header
+*                                           
+*       History
+*             2010  Original Coding
+*
+*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*
+*****************************************************************/
 
 #ifndef POW
 #define POW 1.e28
