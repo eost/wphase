@@ -48,6 +48,7 @@ EXE = $(BIN)/rec_dec_filt\
       $(BIN)/wpinversion_LTZ\
       $(BIN)/synth_v5\
       $(BIN)/rot_horiz_cmp\
+      $(BIN)/decim_sac\
       $(BIN)/saclst
 
 
@@ -157,6 +158,13 @@ $(BIN)/trim_sac_files: trim_sac_files.o distaz.o sort_tree.o rwsacs.o \
 
 trim_sac_files.o:trim_sac_files.c
 	@ $(CC) $(CFLAGS) -c trim_sac_files.c
+
+
+$(BIN)/decim_sac:decim_sac.o decimate.o proto_alloc.o rwsacs.o
+	@ $(CC) decim_sac.o decimate.o proto_alloc.o rwsacs.o -o $(BIN)/decim_sac
+
+decim_sac.o:decim_sac.c
+	@ $(CC) $(CFLAGS) -c decim_sac.c
 
 #(MINISEED)
 $(BIN)/trim_sac_files_qrt: trim_sac_files_qrt.o distaz.o sort_tree.o rwsacs.o rmseed.o \
