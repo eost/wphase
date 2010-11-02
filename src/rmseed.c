@@ -232,7 +232,7 @@ int
 read_mseed_file(char *msfil, str_quake_params *eq, int year, int yday, hptime_t t0_in, \
 		hptime_t t1_in, sachdr *o_hdr, double *o_x)
 {
-  int  flag = 1       ;
+  int  flag = 1, begflag=0  ;
   int  retcode        ;
   int  totalrecs  = 0 ;
   int  totalsamps = 0 ;
@@ -254,6 +254,14 @@ read_mseed_file(char *msfil, str_quake_params *eq, int year, int yday, hptime_t 
 	  t0 = msr->starttime+(double)msr->numsamples*(double)HPTMODULUS/msr->samprate;
 	  if (t0_in <= t0 && t1_in >= msr->starttime) 
 	    {
+ 	      if (!begflag && t0_in < msr->starttime)
+ 		{
+ 		  fprintf(stderr," Warning: (rmseed) incomplete file %s rejected\n",msfil);
+ 		  break ;
+ 		}
+ 	      else
+ 		begflag = 1 ;
+	      
 	      if (fill_sac(o_hdr, o_x, msr)) /* fill o_hdr and o_x */
 		{
 		  fprintf(stderr," Warning: (rmseed) file %s rejected\n",msfil);
@@ -311,7 +319,7 @@ int
 read_mseed(str_quake_params *eq, int year, int yday, hptime_t t0_in,
 	     hptime_t t1_in, sachdr *o_hdr, double *o_x)
 {
-  int  flag = 1       ;
+  int  flag = 1, begflag=0 ;
   int  retcode        ;
   int  totalrecs  = 0 ;
   int  totalsamps = 0 ;
@@ -335,6 +343,13 @@ read_mseed(str_quake_params *eq, int year, int yday, hptime_t t0_in,
 	  t0 = msr->starttime+(double)msr->numsamples*(double)HPTMODULUS/msr->samprate;
 	  if (t0_in <= t0 && t1_in >= msr->starttime) 
 	    {
+ 	      if (!begflag && t0_in < msr->starttime)
+ 		{
+ 		  fprintf(stderr," Warning: (rmseed) incomplete file %s rejected\n",msfil);
+ 		  break ;
+ 		}
+ 	      else
+ 		begflag = 1 ;
 	      if (fill_sac(o_hdr, o_x, msr)) /* fill o_hdr and o_x */
 		{
 		  fprintf(stderr," Warning: (rmseed) file %s rejected\n",msfil);

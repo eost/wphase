@@ -58,7 +58,7 @@ void complete_with_blank(char *field, int N);
 int 
 main(int argc, char *argv[])
 {
-  int    i,nids,nc,nh=NDEPTHS,nd=NDISTAS ; 
+  int    i,nids,nc,nl,nh=NDEPTHS,nd=NDISTAS ; 
   int    tmp, tterr = 0 ; 
   int    ot_jday, sampstart, flag   ;
   long   int nerr                   ;
@@ -81,7 +81,6 @@ main(int argc, char *argv[])
   
   /* Input params */
   get_params(argc, argv, &un, &i_locs, &i_mseeds, &o_sacdir, &o_sacs, &eq) ;
-
   /* Allocate memory */
   x_in   = double_alloc(__LEN_SIG__*100); 
   dv     = double_alloc(nd);
@@ -97,25 +96,25 @@ main(int argc, char *argv[])
   /* Open loc list */
   fd = openfile_rt(i_locs,&nids) ;
   ids  = char_alloc2(nids,IDSIZE)  ;
-  stla = float_alloc(nc) ;
-  stlo = float_alloc(nc) ;
-  stel = float_alloc(nc) ;
+  stla = float_alloc(nids) ;
+  stlo = float_alloc(nids) ;
+  stel = float_alloc(nids) ;
   for(i=0;i<nids;i++)
     {
       tmp=fscanf (fd,"%s %s %s %s %f %f %f",hdr.knetwk,hdr.kstnm,hdr.kcmpnm,
-		                                hdr.khole,stla+i,stlo+i,stel+i);
+ 		                             hdr.khole,stla+i,stlo+i,stel+i);
       check_scan(7,tmp,i_locs,fd) ; 
       makeid(&hdr,ids[i]);
     }
   fclose(fd);
-  
-  /* ofil   = char_alloc2(nc, FSIZE) ; */
-  fd = openfile_rt(i_mseeds,&nc) ;
-  nc = 0   ;
-  flag = 0 ;
+  fd = openfile_rt(i_mseeds,&nl) ;
+  nc = 0 ; flag = 0 ;
   while( (tmp=fscanf (fd,"%s",msfil)) != EOF )
     { 
-      check_scan(1,tmp,i_mseeds,fd) ;       
+      check_scan(1,tmp,i_mseeds,fd) ;   
+      fflush(stderr);
+      printf("%s\n",msfil);
+      fflush(stdout);
       /* Channel location */
       if(get_channel_name(msfil,hdr.knetwk,hdr.kstnm,hdr.khole,hdr.kcmpnm)) /* get mseed channel name */
 	continue; 
@@ -123,16 +122,13 @@ main(int argc, char *argv[])
       i = findid(id,ids,nids);  
       if (i<0)
 	{
-	  fprintf(stderr,"Warning: No location for %s\n",id);
+	  fprintf(stderr,"Warning: No location found for %s\n",id);
 	  continue;
 	}
-      hdr.stla = stla[i] ;
+      hdr.stla = stla[i] ; 
       hdr.stlo = stlo[i] ;
       hdr.stel = stel[i] ;
-      dist = 0. ;
-      az   = 0. ;
-      baz  = 0. ;
-      xdeg = 0. ;
+      dist = 0. ; az   = 0. ; baz  = 0. ; xdeg = 0. ;
       distaz(eq.pde_evla,eq.pde_evlo,&hdr.stla,&hdr.stlo,1,&dist,&az,&baz,&xdeg,&nerr) ;
       xdegd = (double) xdeg ;
       if (xdegd < eq.dmin - SAFETY_DIST || xdegd >eq.dmax + SAFETY_DIST) /* Rough distance screening */
@@ -244,10 +240,10 @@ main(int argc, char *argv[])
   fclose(fd);
   if (flag > 1)
     {
-      fprintf(stderr, "Warning: %d files have been rejected because of non uniform sampling period\n",flag);
-      fprintf(stderr, "    ...: if to much files are rejected, please screen or decimate data files manually\n");
+      fprintf(stderr, "Warning: %d files have been rejected because of their sampling period\n",flag);
+      fprintf(stderr, " Accepted sample frequencies: 100sps, 80sps, 40sps, 25sps, 20sps");
     }
-
+  printf("trim: %d channels over %d have been accepted\n",nc,nl);
   o_sacf = openfile_wt(o_sacs);
   savetree(root, o_sacf, &eq.dmin, &eq.dmax);
   fclose(o_sacf);
@@ -267,6 +263,9 @@ main(int argc, char *argv[])
   for(i=0;i<nids;i++)
     free((void*)ids[i]);
   free((void**)ids);
+  free((void*)FIR2.coeffs);
+  free((void*)FIR4.coeffs);
+  free((void*)FIR5.coeffs);
   freetree(root);
   freetree(mod);
   return 0;
@@ -352,7 +351,7 @@ get_params(int argc, char **argv, int *un, char **i_locs, char **i_mseeds, char 
   /* Check syntax    */
   if ( argc < 6 ) {
     fprintf (stderr, "*** ERROR (minimum of 4 params needed (%d given)) ***\n",argc-1)        ;
-    fprintf (stderr, "Syntax : %s i_master(in) i_loc_lst(in) o_sac_dir o_sac_lst(out) [-u]\n", argv[0]) ;
+    fprintf (stderr, "Syntax : %s i_master(in) i_loc_lst(in) i_mseed_lst(in) o_sac_dir o_sac_lst(out) [-u]\n", argv[0]) ;
     exit(1) ;     }
 
   *un = 0 ; 
