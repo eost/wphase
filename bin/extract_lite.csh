@@ -22,4 +22,4 @@ ${MKDIR} ${LOG}
 ${ECHO} "Creating the responses lookup table ( >! ${LOG}/_log_resps_lookup_table )"
 
 ${LS} -1 ${DATA}/SAC_PZs*   > ${DATA}/pz_fil_list
-$MAKE_RESP_TABLE ${DATA}/pz_fil_list i_master coeffs_rec_lut !> ${LOG}/_log_resps_lookup_table
+$MAKE_RESP_TABLE ${DATA}/pz_fil_list i_master coeffs_rec_lut >! ${LOG}/_log_resps_lookup_table

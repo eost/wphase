@@ -138,4 +138,4 @@ $TRIM_SAC_FILES_QRT i_master $loclst $stalst ${DATA} scr_dat_fil_list -u
 ${ECHO} "Creating the responses lookup table ( >! ${LOG}/_log_resps_lookup_table )"
 
 ${LS} -1 ${DATA}/SAC_PZs*   > ${DATA}/pz_fil_list
-$MAKE_RESP_TABLE ${DATA}/pz_fil_list i_master coeffs_rec_lut !> ${LOG}/_log_resps_lookup_table
+$MAKE_RESP_TABLE ${DATA}/pz_fil_list i_master coeffs_rec_lut >! ${LOG}/_log_resps_lookup_table
