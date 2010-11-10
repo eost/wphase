@@ -25,7 +25,7 @@ ${RM} -rf $gf_dir
 ${MKDIR} $gf_dir
 
 # setting up the list of stations for which to calculate synthetics.
-${AWK} '{printf "%-4s %-2s %9.3f %9.3f\n",$2,$3,$5,$6}' scr_dat_fil_list >! $gf_dir/STAT_LIST
+${AWK} '{printf "%-4s %-2s %9.4f %9.4f\n",$2,$3,$5,$6}' scr_dat_fil_list >! $gf_dir/STAT_LIST
 
 
 # Elementary moment tensors
