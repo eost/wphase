@@ -229,6 +229,14 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 			nrms = float(out[0].strip('\n').split()[2])
 			fid.write('   cell %3d : lat=%8.3fdeg lon=%8.3fdeg, rms = %12.7f mm\n'% (ncel+1,eq_gs.lat,eq_gs.lon,rms))
 			for i in xrange(Nopt[it]):
+				find_flag = 0
+				for j in xrange(Nopt[it]):
+					if int(0.5+cds[0]*100.)==int(0.5+latopt[j]*100.) \
+					       and int(0.5+cds[1]*100.)==int(0.5+lonopt[j]*100.):						
+						find_flag = 1
+						break
+				if find_flag:
+					break				
 				if rms < rmsopt[i]:
 					for j in xrange(Nopt[it]-1,i-1,-1):
 						rmsopt[j] = rmsopt[j-1]
