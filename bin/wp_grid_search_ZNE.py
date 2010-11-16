@@ -238,7 +238,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 				if find_flag:
 					break				
 				if rms < rmsopt[i]:
-					for j in xrange(Nopt[it]-1,i-1,-1):
+					for j in xrange(Nopt[it]-1,i,-1):
 						rmsopt[j] = rmsopt[j-1]
 						latopt[j] = latopt[j-1]
 						lonopt[j] = lonopt[j-1]
