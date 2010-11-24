@@ -116,7 +116,9 @@ charplot(double *M, double s1, double d1, double s2, double d2,
 	  fprintf(stream,"\n");
 	}
     }
-  
+  for(jx=0;jx<2*ry+1;jx++)
+    free((void*)figure[jx]);
+  free((void**)figure);
   return(1);
 }
 

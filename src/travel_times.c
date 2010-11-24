@@ -99,6 +99,7 @@ int    *ierror ;
       tv[i] =  t1 + (t2 - t1) * (*h-h1)/(h2-h1) ;
     }
   free((void*)depths);
+  free((void*)file);
   free((void*)tmp);
 }
  

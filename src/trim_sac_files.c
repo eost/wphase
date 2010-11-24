@@ -176,11 +176,12 @@ main(int argc, char *argv[])
   fclose(o_sacf);
 
   /* Memory Freeing */
-  free((void *)i_sacs) ;
-  free((void *)o_sacs) ;
-  free((void *)x_in)   ;
-  free((void *) dv)    ;
-  free((void *) tv)    ;
+  free((void*)fil)    ;
+  free((void*)i_sacs) ;
+  free((void*)o_sacs) ;
+  free((void*)x_in)   ;
+  free((void*) dv)    ;
+  free((void*) tv)    ;
   freetree(root);
   freetree(mod);
   return 0;

@@ -460,7 +460,7 @@ void
 plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf , double fref, 
 	       double *gain_factor, double *fc, double *h, double *s2, int *ierror)
 {
-  int     i, nz, np, mp, mv, ip, *ib, idvt, icon, iquit, iprnt;
+  int     i, nz, np, mp, mv, ip, ib[3], idvt, icon, iquit, iprnt;
   double  *f, *y, sg;
   float   *yl,*x,*b;
   complex *zr, *pl;
@@ -472,7 +472,6 @@ plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf , do
   mv    = 1 ;   /* no. of indep. variables */
   ip    = 1 ;   /* no. of parameters which are held constant (0)*/
   
-  ib    = int_alloc(3) ;
   ib[0] = 1;    /* indices of param which are held constant 
   		   uncomment if you want gain_factor to be constant  
 		   (and set ip=1) */

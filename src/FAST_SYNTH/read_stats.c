@@ -28,6 +28,6 @@ read_stats(char* file, char*** stats, char*** nets, float** stlats, float** stlo
       check_scan(4, ns, file, fp) ;
     }
   fclose(fp);
-
+  free((void*)line);
   return(nstat);
 }

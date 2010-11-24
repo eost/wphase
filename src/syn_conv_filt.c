@@ -126,6 +126,7 @@ main(int argc, char *argv[])
   free((void *)sacfile);
   for(i=0;i<nbsta;i++)
     free((void *)sfiles[i]);
+  free((void**)sfiles);
   free((void *)itype);
   free((void *)b1);
   free((void *)b2);

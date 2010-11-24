@@ -262,13 +262,13 @@ main(int argc, char *argv[])
   for(i=0 ; i<3 ; i++)
     free((void*)TM[i]) ;
   free((void**)TM)     ;
-  return 0;
   
   free((void*)opt.rms_in) ;
   free((void*)opt.p2p)    ;
   free((void*)opt.avg)    ;
   free((void*)opt.wgt)    ;	 
   free((void*)hd_synt)    ;
+  return 0;
 }
 
 
@@ -1432,11 +1432,11 @@ fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts,
 	G[i-n1_GF] = 0. ;
       g = &G[-n1_GF] ;
       npts += n1_GF  ;
-      hd_GF->b += n1_GF*hd_GF->delta ;
+      hd_GF->b += hd_GF->delta*(float)n1_GF ;
       n1_GF = 0 ;
     }
   /* Read GF samples */
-  hd_GF->b += hd_GF->delta * (float)n1_GF  ;
+  hd_GF->b += hd_GF->delta*(float)n1_GF  ;
   hd_GF->npts = n2_GF + 1                  ;
   rdatsac(gf_file, hd_GF, buffer, &ierror) ;
   memcpy (g,buffer+n1_GF,npts * sizeof(double));
@@ -1633,9 +1633,15 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
       strcpy( (*sacfiles)[ns], datafile) ;
       ns++ ;
     }
-  *nsac  = ns   ;
   fclose(i_sac) ;
   /* Memory Freeing */
+  for(i=ns;i<*nsac;i++)
+    {
+      free((void*)(*sacfiles)[i]) ;
+      free((void*)(*data)[i])     ;
+      free((void*)(*G)[i])        ;
+    }
+  *nsac  = ns ;
   free((void*)tmparray) ;
   free((void*)dv)       ;
   free((void*)tv)       ;

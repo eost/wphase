@@ -206,6 +206,7 @@ main(int argc, char *argv[])
   free((void *)id);
   for(i=0; i<n; i++)
     free((void *)ids[i]);
+  free((void**)ids);
   free((void *)c1);
   free((void *)c2);
   free((void *)c3);
@@ -344,4 +345,8 @@ set_sos(double fl, double fh, double dt, int *order, double **b1, double **b2, d
       (*a2)[i+1]=ab2[i] ;
     }
   (*order)++;
+  free((void*)bb1);
+  free((void*)bb2);
+  free((void*)ab1);
+  free((void*)ab2);
 }
