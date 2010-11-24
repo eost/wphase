@@ -5,7 +5,7 @@ FC	    =  gfortran # fortran compiler
 
 # Some parameters
 datalen     = 5000  # max. nb of samples
-fnamelen    = 1128   # max. nb of chars in file names
+fnamelen    = 128   # max. nb of chars in file names
 lineslen    = 256   # max. nb of chars per line in text files
 idlen       = 16    # len of station id
 safetydist  = 2.   
