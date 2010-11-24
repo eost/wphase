@@ -133,15 +133,20 @@ get_params(char *file, str_quake_params *eq)
 /*                                            */
 /* Output parameters : zr : zeros (nz values) */
 /*                                            */
-void 
+int
 readzeros(int *nz, complex *zr, FILE *in)
 {
   int i, nzn0, nz0, tmp ;
+  double rea,ima;
   i=0 ; 
-  while( (tmp=fscanf (in, "%lf%lf", &zr[i].real, &zr[i].imag)) != EOF ) 
+  while( (tmp=fscanf (in, "%lf%lf", &rea, &ima)) != EOF ) 
     {
       if( tmp == 0 )
-	break ;
+	break ; 
+      if (i+1>*nz)
+	return -1;
+      zr[i].real = rea ;
+      zr[i].imag = ima ;
       i++ ;
     }
   /* nzn0 is the number of zeros specified (often null)*/
@@ -154,8 +159,9 @@ readzeros(int *nz, complex *zr, FILE *in)
   for( i=0; i<nz0 ; i++ ) // on pourait ne travailler que sur 
     {                     // des pointeurs, mais il faudrais
       zr[i].real=0 ;      // déclarer un deuxième pointeur
-      zr[i].imag=0 ;      // sur une struc complex
+      zr[i].imag=0 ;      // sur une struct complex
     }
+  return nzn0;
 }
 
 
@@ -174,11 +180,9 @@ readpoles(int *np, complex *pl, FILE *in, int *ierror)
   i=0 ;
   while(i < *np)
     {
-      if(fscanf (in, "%lf%lf", &pl[i].real, &pl[i].imag) == 0 )
+      if(fscanf (in, "%lf%lf", &pl[i].real, &pl[i].imag) != 2 )
 	{
 	  fprintf (stderr, "ERROR reading poles of pzfiles\n") ;
-	  fclose (in) ;
-	  /*exit (1)  ; */
 	  *ierror = 99;
 	  return;
 	}
@@ -202,8 +206,9 @@ readpoles(int *np, complex *pl, FILE *in, int *ierror)
 void 
 readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, double *sg, int *ierror) 
 {
-  int  ns, zflag=0, pflag=0, cflag=0;
-  char *line, *head ;
+  int  i,j,ns,zflag=0,pflag=0,cflag=0;
+  char *line,*head   ;
+  double Eps = 1.e-05,minZ,tmpZ;
   FILE *in ;
   
   line = char_alloc(32) ;
@@ -225,11 +230,35 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 	  if( !zflag )
 	    {
 	      ns = sscanf (line, "%s%d", head, nz) ;
-	      *nz   = *nz-1; /* dispacement -> velocity (nzeros -> nzeros-1) */
-	      printf("%d poles\n",(*nz)) ;
-	      *zr   = complex_alloc(*nz) ;
+	      if (ns != 2)
+		{
+		  *ierror=99 ;
+		  return     ;
+		}
+	      *zr = complex_alloc(*nz)   ;
+	      ns  = readzeros(nz,*zr,in) ;
+	      minZ = abs_c(**zr) ; j = 0 ;
+	      for(i=0;i<*nz;i++)
+		{
+		  tmpZ = abs_c((*zr)[i]) ;
+		  if (tmpZ < minZ)
+		    {
+		      minZ=tmpZ;
+		      j=i;
+		    }
+		}
+	      if (ns < 0 || ns > *nz || minZ > Eps )
+		{
+		  *ierror=99 ;
+		  return     ;
+		}
+	      for(i=0;i<j;i++)
+		(*zr)[i]   = (*zr)[i] ;
+	      for(i=j+1;i<*nz;i++)
+		(*zr)[i-1] = (*zr)[i] ;
+	      *nz = *nz-1 ; /* dispacement -> velocity (nzeros -> nzeros-1) */
 	      zflag = 1;
-	      readzeros(nz,*zr,in) ;
+	      
 	    }
 	  else
 	    fprintf (stderr, "WARNING (make_resp_lookup_table): ZEROS redundancy in pzfile : %s\n",pzfilename) ;
@@ -244,8 +273,8 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 	      readpoles(np,*pl,in,ierror) ;
 	      if (*ierror==99)
 		{
-		  fclose (in);
-		  return;
+		  fclose (in) ;
+		  return      ;
 		}
 	    }
 	  else
