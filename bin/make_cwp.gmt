@@ -9,19 +9,15 @@ if ($#my_argv < 1) then
     set o_wpfile = o_wpinversion
     set predfile = fort.15
     set isref    = 0
-    set ist      = 8
 else if ($#my_argv == 4) then
     set CHAN     = $my_argv[1]
     set o_wpfile = $my_argv[2]
     set predfile = $my_argv[3]
     set isref    = $my_argv[4]
-    set ist      = 8
-else 
-    set CHAN     = $my_argv[1]
-    set o_wpfile = $my_argv[2]
-    set predfile = $my_argv[3]
-    set isref    = $my_argv[4]
-    set ist      = $my_argv[5]
+else
+    echo "*** ERROR ($0) ***"
+    echo "Syntax: $0 [CHAN] [o_wpfile] [fortfile] [plotreftraces?(1=yes,2=no)]"
+    exit(1)
 endif
 
 $GMTSET PAPER_MEDIA letter+
@@ -68,7 +64,8 @@ if $status then
     exit
 endif
 
-${CAT} ${o_wpfile}_${CHAN} | ${CUT} -d/ -f2 | ${CUT} -d. -f${ist} >! _tmp_stat_names    #Fragile
+set sacfiles = `${AWK} '{print $1}' ${o_wpfile}_${CHAN}`
+${SACLST} kstnm f $sacfiles | ${AWK} '{print $2}' >! _tmp_stat_names
 ${RM} -f _tmp_stat_posit
 set np = `${CAT} ${o_wpfile}_${CHAN} | ${AWK} '{print $5 - $4}'`
 set c = 0

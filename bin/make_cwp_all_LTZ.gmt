@@ -22,15 +22,15 @@ else if  ($#my_argv == 3) then
     set isref    = $my_argv[3]	
 else 
     echo "*** ERROR ($0) ***"
-    echo "Syntax: $0 [0,1] [o_wpfile fort.15file [0,1]]"
+    echo "Syntax: $0 [0,1] [o_wpfile fort.15file [plotreftraces?(0=no,1=yes)]"
     exit    
 endif
 
 
 
-${BIN}/make_cwp.gmt LHZ $o_wpfile $predfile $isref 1
-${BIN}/make_cwp.gmt LHL $o_wpfile $predfile $isref 1
-${BIN}/make_cwp.gmt LHT $o_wpfile $predfile $isref 1
+${BIN}/make_cwp.gmt LHZ $o_wpfile $predfile $isref
+${BIN}/make_cwp.gmt LHL $o_wpfile $predfile $isref
+${BIN}/make_cwp.gmt LHT $o_wpfile $predfile $isref
 
 
 ${RM} -f _tmp_XYW _tmp_XYR _tmp_XY1 _tmp_stats _tmp_stat_posit _tmp_stat_names _tmp_minmax o_wpinversion_LHL o_wpinversion_LHZ o_wpinversion_LHT
