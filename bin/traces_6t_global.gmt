@@ -119,7 +119,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set kstnm  = `$SACLST kstnm  f $fic1 | ${AWK} '{print $2}'`
 		set knetwk = `$SACLST knetwk f $fic1 | ${AWK} '{print $2}'`
 		set kcmpnm = `$SACLST kcmpnm f $fic1 | ${AWK} '{print $2}'`
-		set khole  = `$SACLST khole f $fic1 | ${AWK} '{print $2}'`
+		set khole  = `$SACLST khole  f $fic1 | ${AWK} '{print $2}'`
 		set stla   = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo   = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
 		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.complete_synth.bp.sac"
@@ -179,8 +179,8 @@ foreach page (`${SEQ} 1 $npages`)
 		${CAT} _tmp_XY2 | $PSXY -R$reg_trace -JX8/4 -W$red   $XX -Ya${YY}c $K2 -B0/0SWne >> $PS
 		
 		#### Wp window
-		set wnb   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $6}'`
-		set wne   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $7}'`
+		set wnb   = `${GREP} $fic1 o_wpinversion | ${AWK} '{print $6}'`
+		set wne   = `${GREP} $fic1 o_wpinversion | ${AWK} '{print $7}'`
 		set wtb   = `${ECHO} $b1 $o1 $wnb $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
 		set wte   = `${ECHO} $b1 $o1 $wne $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
 		set size  = "0.2"
@@ -269,8 +269,8 @@ foreach page (`${SEQ} 1 $npages`)
 		${CAT} _tmp_XY2 | $PSXY -R$reg_trace -JX8/4 -W$red   $XX -Ya${YY}c $K2 -B0/0SWne >> $PS
 		
 		#### Wp window
-		set wnb   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $6}'`
-		set wne   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $7}'`
+		set wnb   = `${GREP} $fic1 o_wpinversion | ${AWK} '{print $6}'`
+		set wne   = `${GREP} $fic1 o_wpinversion | ${AWK} '{print $7}'`
 		set wtb   = `${ECHO} $b1 $o1 $wnb $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
 		set wte   = `${ECHO} $b1 $o1 $wne $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
 		set size  = "0.2"

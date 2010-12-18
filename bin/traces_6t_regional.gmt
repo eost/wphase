@@ -181,8 +181,8 @@ foreach page (`${SEQ} 1 $npages`)
 		${CAT} _tmp_XY2 | $PSXY -R$reg_trace -JX8/4 -W$red   $XX -Ya${YY}c $K2 -B0/0SWne >> $PS
 		
 		#### Wp window
-		set wnb   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $6}'`
-		set wne   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $7}'`
+		set wnb   = `${GREP} $fic1 o_wpinversion | ${AWK} '{print $6}'`
+		set wne   = `${GREP} $fic1 o_wpinversion | ${AWK} '{print $7}'`
 		set wtb   = `${ECHO} $b1 $o1 $wnb $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
 		set wte   = `${ECHO} $b1 $o1 $wne $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
 		set size  = "0.2"
@@ -272,8 +272,8 @@ foreach page (`${SEQ} 1 $npages`)
 		${CAT} _tmp_XY2 | $PSXY -R$reg_trace -JX8/4 -W$red   $XX -Ya${YY}c $K2 -B0/0SWne >> $PS
 		
 		#### Wp window
-		set wnb   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $6}'`
-		set wne   = `${GREP} ".$kstnm." o_wpinversion | ${GREP} ".$kcmpnm."  | ${AWK} '{print $7}'`
+		set wnb   = `${GREP} $fic1 o_wpinversion | ${AWK} '{print $6}'`
+		set wne   = `${GREP} $fic1 o_wpinversion | ${AWK} '{print $7}'`
 		set wtb   = `${ECHO} $b1 $o1 $wnb $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
 		set wte   = `${ECHO} $b1 $o1 $wne $dt1 | ${AWK} '{print $1-$2+$3*$4}'`
 		set size  = "0.2"
