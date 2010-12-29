@@ -1729,7 +1729,7 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
 	  /* Get RMS error */
 	  Err = 1000.*(*global_rms)[0] ;
 	  ts  = eq->ts+opt->dts_val    ;
-	  fprintf( tmp,"%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n",k,ts,
+	  fprintf( tmp,"%02d %10.4f %10.4f %10.4f %10.4f %12.8f %12.8f\n",k,ts,
 		   eq->evla,eq->evlo,eq->evdp,Err,(*global_rms)[0]/(*global_rms)[1]);
 	  printf("        ts = %5.1f rms = %12.7f mm\n",ts, Err) ;
 	  if (Err < *rmsopt)
@@ -1774,8 +1774,8 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
   fclose(tmp);
   /* Write output file */
   o_gs = openfile_wt(opt->gsfile) ;
-  fprintf( o_gs,"%5.1f %12.8f\n",eq->ts+*tsopt,*rmsopt);
-  fprintf( o_gs,"%5.1f %12.8f\n",eq->ts,*rmsini);
+  fprintf( o_gs,"%10.4f %12.8f\n",eq->ts+*tsopt,*rmsopt);
+  fprintf( o_gs,"%10.4f %12.8f\n",eq->ts,*rmsini);
   tmp  = openfile_rt("_tmp_ts_table", &k) ;
   while ((k = getc(tmp)) != EOF)
     putc(k,o_gs) ;

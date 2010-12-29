@@ -1,5 +1,5 @@
 /****************************************************************
-*	W phase package - Inversion for L, T, Z components
+*	W phase package - Inversion for Z, N, E components
 *                                           
 *       History
 *             2010  Original Coding
@@ -61,8 +61,6 @@ typedef struct
 
 
 /* *** INTERNAL FUNCTIONS *** */
-
-
 /* Parameter setting functions */
 void get_opt(int numarg1, int numarg2, char **argv, structopt *opt, str_quake_params *eq) ;
 void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq, int *flag);
@@ -264,13 +262,13 @@ main(int argc, char *argv[])
   for(i=0 ; i<3 ; i++)
     free((void*)TM[i]) ;
   free((void**)TM)     ;
-  return 0;
   
   free((void*)opt.rms_in) ;
   free((void*)opt.p2p)    ;
   free((void*)opt.avg)    ;
   free((void*)opt.wgt)    ;	 
   free((void*)hd_synt)    ;
+  return 0;
 }
 
 
@@ -1310,6 +1308,7 @@ void
 set_wgt(int ns, sachdr *hd_data,structopt *opt) 
 {
   opt->wgt[ns] = 0. ;
+  strncpy(hd_data->kcmpnm,"LH",2); /* change channel name to read GF */
   if (!strncmp(hd_data->kcmpnm, "LHZ",3))
     opt->wgt[ns] = opt->wZ;
   else if (!strncmp(hd_data->kcmpnm, "LHL",3))
@@ -1433,11 +1432,11 @@ fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts,
 	G[i-n1_GF] = 0. ;
       g = &G[-n1_GF] ;
       npts += n1_GF  ;
-      hd_GF->b += n1_GF*hd_GF->delta ;
+      hd_GF->b += hd_GF->delta*(float)n1_GF ;
       n1_GF = 0 ;
     }
   /* Read GF samples */
-  hd_GF->b += hd_GF->delta * (float)n1_GF  ;
+  hd_GF->b += hd_GF->delta*(float)n1_GF  ;
   hd_GF->npts = n2_GF + 1                  ;
   rdatsac(gf_file, hd_GF, buffer, &ierror) ;
   memcpy (g,buffer+n1_GF,npts * sizeof(double));
@@ -1634,9 +1633,15 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
       strcpy( (*sacfiles)[ns], datafile) ;
       ns++ ;
     }
-  *nsac  = ns   ;
   fclose(i_sac) ;
   /* Memory Freeing */
+  for(i=ns;i<*nsac;i++)
+    {
+      free((void*)(*sacfiles)[i]) ;
+      free((void*)(*data)[i])     ;
+      free((void*)(*G)[i])        ;
+    }
+  *nsac  = ns ;
   free((void*)tmparray) ;
   free((void*)dv)       ;
   free((void*)tv)       ;
@@ -1724,7 +1729,7 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
 	  /* Get RMS error */
 	  Err = 1000.*(*global_rms)[0] ;
 	  ts  = eq->ts+opt->dts_val    ;
-	  fprintf( tmp,"%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n",k,ts,
+	  fprintf( tmp,"%02d %10.4f %10.4f %10.4f %10.4f %12.8f %12.8f\n",k,ts,
 		   eq->evla,eq->evlo,eq->evdp,Err,(*global_rms)[0]/(*global_rms)[1]);
 	  printf("        ts = %5.1f rms = %12.7f mm\n",ts, Err) ;
 	  if (Err < *rmsopt)
@@ -1769,8 +1774,8 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
   fclose(tmp);
   /* Write output file */
   o_gs = openfile_wt(opt->gsfile) ;
-  fprintf( o_gs,"%5.1f %12.8f\n",eq->ts+*tsopt,*rmsopt);
-  fprintf( o_gs,"%5.1f %12.8f\n",eq->ts,*rmsini);
+  fprintf( o_gs,"%10.4f %12.8f\n",eq->ts+*tsopt,*rmsopt);
+  fprintf( o_gs,"%10.4f %12.8f\n",eq->ts,*rmsini);
   tmp  = openfile_rt("_tmp_ts_table", &k) ;
   while ((k = getc(tmp)) != EOF)
     putc(k,o_gs) ;

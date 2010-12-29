@@ -133,8 +133,8 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 	fid.write('CENTROID POSITION GRID SEARCH\n')
 
 	# Initialize variables #################
-	o_file = 'grid_search_xy_out'
-	format    = '%03d %03d %8.2f %8.2f %8.2f %8.2f %8.2f %12.7f %12.7f\n'
+	o_file  = 'grid_search_xy_out'
+	format  = '%03d %03d %10.4f %10.4f %10.4f %10.4f %10.4f %12.8f %12.8f\n'
 	tmpfile = '_tmp_xy_table'
 
 	Nit  = 2
@@ -301,8 +301,8 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 	tmp_table.close()
 	tmp_table = open(tmpfile, 'r')
 	out_table = open(o_file, 'w')
-	out_table.write('%8.3f %8.3f %12.7f\n'%(latopt[0], lonopt[0], rmsopt[0]))
-	out_table.write('%8.3f %8.3f %12.7f\n'%(   eq.lat,    eq.lon, rmsini))	
+	out_table.write('%10.4f %10.4f %12.7f\n'%(latopt[0], lonopt[0], rmsopt[0]))
+	out_table.write('%10.4f %10.4f %12.7f\n'%(   eq.lat,    eq.lon, rmsini))	
        	out_table.write(tmp_table.read())
        	out_table.close()
        	tmp_table.close()
@@ -391,7 +391,7 @@ def grid_search_ts(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 	tsopt2  = ts1
 	rmsopt2 = 1.1e10
 	tmp_table = open(tmpfile, 'w')
-	format    = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
+	format    = '%02d %10.4f %10.4f %10.4f %10.4f %12.8f %12.8f\n'
 	for j in xrange(Nit):
 		sts = Sts[j]
 		if j>0:
@@ -431,8 +431,8 @@ def grid_search_ts(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 
 	tmp_table = open(tmpfile,'r')
 	out_table = open(o_file,'w')
-	out_table.write('%5.1f%12.7f\n'%(tsopt, rmsopt))	
-	out_table.write('%5.1f%12.7f\n'%( tsini, rmsini))
+	out_table.write('%10.4f %12.7f\n'%(tsopt, rmsopt))	
+	out_table.write('%10.4f %12.7f\n'%( tsini, rmsini))
 	out_table.write(tmp_table.read())
 	out_table.close()
 	tmp_table.close()
@@ -502,14 +502,14 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dm
 	if os.access(o_file,os.F_OK):
 		rm(o_file)
 	# Grid search
-	fid.write('  ts1 = %5.1f sec, step = %5.1f sec, ts2 = %5.1f sec \n'%(ts1,sts,ts2))  	
-	format  = '%02d %8.2f %8.2f %8.2f %8.2f %12.8f %12.8f\n'
+	fid.write('  ts1 = %10.4f sec, step = %10.4f sec, ts2 = %10.4f sec \n'%(ts1,sts,ts2))  	
+	format  = '%02d %10.4f %10.4f %10.4f %10.4f %12.8f %12.8f\n'
  	#print WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit 3 -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,o_file)
 	if flag:
 		fid.close()
-		os.system(WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit %d -ogsf %s -ifil o_wpinversion >> %s'% (ts1,sts,ts2,Nit,o_file,fileout))
+		os.system(WPINV_TS+' -noref -ts %5.1f %5.1f %5.1f -Nit %d -ogsf %s -ifil o_wpinversion >> %s'% (ts1,sts,ts2,Nit,o_file,fileout))
 	else:
-		os.system(WPINV_TS+' -noref -ts %4.1f %4.1f %4.1f -Nit %d -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,Nit,o_file))
+		os.system(WPINV_TS+' -noref -ts %5.1f %5.1f %5.1f -Nit %d -ogsf %s -ifil o_wpinversion'% (ts1,sts,ts2,Nit,o_file))
 	
 
 	# Recompute optimum solution
