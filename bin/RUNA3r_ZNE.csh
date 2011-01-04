@@ -1,6 +1,6 @@
 #!/bin/csh -f
 #
-# W phase package - RUNA3 for Z, N, E components
+# W phase package - RUNA3r for Z, N, E components
 #
 # Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 #
@@ -52,15 +52,13 @@ ${RM} -f i_tmp
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
 	 -pdata fort.15.noth -wn ${wN} -we ${wE} -wz ${wZ} -med
 
-$ECHO $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
-	 -pdata fort.15.noth -wn ${wN} -we ${wE} -wz ${wZ} -med
-
 ${CP} p_wpinversion p_wpinversion.noth
 ${CP} o_wpinversion o_wpinversion.noth
 ${CP} WCMTSOLUTION WCMTSOLUTION.noth
 
 ${CP} o_wpinversion o_wpinv
 set ths = "5.0 3.0 0.9"
+set nr  = 2.0
 
 foreach th ($ths)
     $WPINVER -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
@@ -71,9 +69,18 @@ foreach th ($ths)
     ${CP} -f o_wpinv.th_$th o_wpinversion
 end
 
-${CP} WCMTSOLUTION.th_${th} WCMTSOLUTION
-${CP} p_wpinversion.th_${th} p_wpinversion
-${CP} LOG/wpinversion.th_${th}.log LOG/wpinversion.log
+$WPINVER -nr $nr -ifil o_wpinversion -ofil o_wpinv.r_${nr} \
+    -log LOG/wpinversion.r_${nr}.log -ps p_wpinversion.r_${nr} \
+    -osyndir SYNTH -ocmtf  WCMTSOLUTION.r_${nr} -gfdir ${gf_dir} \
+    -wn ${wN} -we ${wE} -wz ${wZ}  -old
+
+if ($status == 1) exit(1)
+    ${CP} -f o_wpinv.r_${nr} o_wpinversion
+
+${CP} WCMTSOLUTION.r_${nr} WCMTSOLUTION
+${CP} p_wpinversion.r_${nr} p_wpinversion
+${CP} LOG/wpinversion.r_${nr}.log LOG/wpinversion.log
+
 
 ${ECHO} -e "\nOutput files: o_wpinversion WCMTSOLUTION p_wpinversion"
 ${ECHO} "              fort.15 fort.15_LHZ fort.15_LHL fort.15_LHT"

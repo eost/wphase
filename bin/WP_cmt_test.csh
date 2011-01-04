@@ -1,4 +1,9 @@
 #!/bin/csh -f
+#
+# W phase package - data quality control
+#
+# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+#
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 ##################################
@@ -41,7 +46,7 @@ ${RM} -f i_tmp
 $EXTRACT -a
 $CALC
 $PREPARE
-$WPINVER -osyndir SYNTH 
+$WPINVER -osyndir SYNTH -nops
 
 ${RM} -f page_6t*.ps page_6t*.pdf
 ${TRACES} i_master ${CMTFILE} SYNTH

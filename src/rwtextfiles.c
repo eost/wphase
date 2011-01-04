@@ -58,10 +58,10 @@ count_lines(FILE *f)
   char *line;
   int  nl;
 
-  line = char_alloc(200);
+  line = char_alloc(LSIZE);
 
   nl = 0 ;
-  while( fgets(line,200,f) != NULL )
+  while( fgets(line,LSIZE,f) != NULL )
     ++nl;
   
   rewind(f);

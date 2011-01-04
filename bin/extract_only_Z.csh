@@ -1,4 +1,9 @@
 #!/bin/csh -f
+#
+# W phase package - extract LHZ data from SEED volume
+#
+# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+#
 
 ########################################
 

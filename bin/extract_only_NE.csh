@@ -1,5 +1,9 @@
 #!/bin/csh -f
-
+#
+# W phase package - extract LHN,LHE data from SEED volume
+#
+# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+#
 ########################################
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH

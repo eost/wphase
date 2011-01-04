@@ -1,4 +1,9 @@
 #!/bin/csh -f
+#
+# W phase package - Extract data from miniseed volumes
+#
+# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+#
 
 ##############################################
 # Extract for quasi-real time implementation

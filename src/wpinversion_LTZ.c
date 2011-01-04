@@ -1,8 +1,6 @@
 /****************************************************************
-*	W phase package - Inversion for Z, N, E components
-*                                           
-*       History
-*             2010  Original Coding
+*
+*	W phase package - Inversion for L, T, Z components
 *
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
@@ -45,16 +43,17 @@
 
 typedef struct
 {
-  int    Nit, ps ;
+  int    Nit, ps, ref_flag ;
   double th_val, cth_val, df_val, med_val  ;
   double op_pa, p2p_med, p2p_low, p2p_high ;
   double dts_min,dts_step,dts_max, dts_val ; 
-  double  ntr_val, ref_val, dmin, dmax,azp ;
-  double *rms_in, *p2p,*avg, *wgt,wZ,wL,wT ;
+  double  ntr_val, dmin, dmax, azp, *wgt   ;
+  double *rms_in, *p2p,*avg, wZ, wL, wT    ;
+  double rms_r_th, *rms_r ; 
   char   i_master[FSIZE], i_saclst[FSIZE]  ;
   char   o_saclst[FSIZE], log[FSIZE]       ; 
   char   o_cmtf[FSIZE], p_data[FSIZE]      ;
-  char   osacdir[FSIZE], psfile[FSIZE]     ; 
+  char   osacdir[FSIZE], psfile[FSIZE]     ;  
   char   wpbmfile[FSIZE], refbmfile[FSIZE] ;
   char   gsfile[FSIZE], o_covf[FSIZE]      ; 
 } structopt ;
@@ -63,39 +62,42 @@ typedef struct
 /* *** INTERNAL FUNCTIONS *** */
 /* Parameter setting functions */
 void get_opt(int numarg1, int numarg2, char **argv, structopt *opt, str_quake_params *eq) ;
-void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq, int *flag);
-void get_param2(char *file, structopt *opt, str_quake_params *eq, int *flag) ;
+void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq);
+void get_param2(char *file, structopt *opt, str_quake_params *eq) ;
 
 /* Screening routines */
-void screen_med(int *nsac, char **data_name, double **data, 
+void screen_med(int *nsac, char **sacfiles, double **data, 
 		double ***G, sachdr *hd_synt, structopt *opt, FILE *o_log) ;
-void screen_rms(int *nsac, char **data_name, double **data, 
+void screen_rms(int *nsac, char **sacfiles, double **data, 
 		double ***G, sachdr *hd_synt, structopt *opt, FILE *o_log) ;
+void screen_ratio(int *nsac,char **sacfiles,double **data,
+		  double ***G,sachdr *hd_synt, structopt *opt, FILE *o_log);
 
 /* Stats routines */
-void median(int *nsac, structopt *opt) ;
-void sort(double *tab, int *ns) ;
+void median(int nsac, structopt *opt) ;
+void sort(double *tab, int ns) ;
 void calc_stat(int npts, double *data, double *p2p, double *ave) ;
 void calc_rms_sub(int npts, double *data, double **dcalc, double *rms, 
 		   int flag) ;
-void calc_rms(int *ns, sachdr *hd_synt, double **data, double ***dcalc, 
-	       double **rms, double *global_rms, structopt *opt, int flag) ;
+void calc_rms(int ns, sachdr *hd_synt, double **data, double ***dcalc, 
+	       double **rms, double *global_rms, structopt *opt) ;
+void calc_data_norm(double **data, sachdr *hd_synt, int nsac, double *data_norm);
 void azpond(sachdr *hd_synt, int ns, double *wgt) ;
 
 /* Inversion routines and linear algebra */
 void free_G(double ***G) ;
 int  fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts, double Ptt, 
 	    double twp_beg, double twp_end, double *buffer, double *G, structopt *opt, FILE *o_log) ;
-void comp_GtG( int *M, int *nsac, sachdr *hd_synt, double ***G, double **GtG, structopt *opt) ;
+void comp_GtG(int M, int nsac, sachdr *hd_synt, double ***G, double **GtG, structopt *opt) ;
 void jacobi(double **a,int n, int np, double *d, double **v, int *nrot) ;
 void eigsrt(double *d, double **v, int n) ;
-void inversion(int *M, int *nsac, sachdr *hd_synt, double ***G, double **d, 
+void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d, 
 		 double *vma, double *Cond, structopt *opt, FILE *o_log) ;
-void set_matrices (char *i_saclst, double *evdp, double *wp_win4, int *nsac, 
-		     int *nsini, char ***sacfiles, sachdr **hd_synt, double ***data, 
-		     double ****G, structopt *opt, str_quake_params *eq, FILE *o_log) ;
-void calc_data(int *nsac, sachdr *hd_synt, double ***G, double **vm, double **data,
-		 double ***d, structopt *opt, int flag) ;
+void set_matrices (char *i_saclst, double evdp, double *wp_win4, int *nsac, 
+		   int *nsini, char ***sacfiles, sachdr **hd_synt, double ***data, 
+		   double ****G, structopt *opt, str_quake_params *eq, FILE *o_log) ;
+void calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm, double **data,
+		 double ***d, structopt *opt) ;
 void residual_moment(double **vm, double *ma, double *mb, double *mc) ;
 void mt2sm(double *vm,double *sm) ;
 double **set_mt(double *vm) ;
@@ -109,20 +111,20 @@ void fast_ts_gridsearch(int nsac, int M, char **sacfiles, sachdr *hd_synt, doubl
 			double *rmsopt, FILE *o_log);
 
 /* Writing/Printing functions */
-void w_log_header(char **argv, structopt *opt, str_quake_params *eq, double *wp_win4, 
-		  FILE *o_log) ;
-void write_cmtf(char *filename, str_quake_params *eq, double *vm, int flag) ;
-void w_o_saclst(char *o_saclst, int *ns, char **sacfiles, sachdr *hd_synt,
-		double **rms, structopt *opt, int flag) ;
-void get_gap(sachdr *hd_synt, int *ns, double *gap) ;
+void w_log_header(char **argv, structopt *opt, str_quake_params *eq,FILE *o_log) ;
+void write_cmtf(char *filename, str_quake_params *eq, double *vm) ;
+void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, 
+		double *data_norm, structopt *opt) ;
+void get_gap(sachdr *hd_synt, int ns, double *gap) ;
 int charplot(double *M, double s1, double d1, double s2, double d2, 
 	     char D, char P, char W, char B, char sep, char pnod, 
 	     int rx, int ry, FILE *stream) ;
-void output_products(structopt *opt, str_quake_params *eq, double *s1, double *d1, 
-		     double *r1, double *s2, double *d2, double *r2, double **TM, 
-		     double *eval3, double *M0, double *M0_12, double *Mw, 
-		     double *global_rms, double *gap, double *Cond, int *nsac, 
-		     sachdr *hd_synt, FILE *o_log, int flag) ;
+void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1a, 
+		     double r1a, double s2a, double d2a, double r2a, double **TMa, 
+		     double *eval3a, double M0a, double M0_12a, double Mwa, 
+		     double *global_rms, double gap, double Cond, int nsac, 
+		     sachdr *hd_synt, FILE *o_log) ;
+
 void prad_pat(double **TM, FILE *ps)               ;
 void pnod_pat(double *s1, double *d1, FILE *ps)    ;
 
@@ -130,11 +132,10 @@ void pnod_pat(double *s1, double *d1, FILE *ps)    ;
 int 
 main(int argc, char *argv[])
 {
-  int i, j, nsac, M, flag, nsini   ;
-
+  int i, j, nsac, M, nsini   ;
   double s1, d1, r1, s2, d2, r2, gap, Cond            ;
   double tsopt,rmsopt,rmsini,M0, Mw, diplow, M0_12    ;
-  double *eval3, *global_rms, **TM  ;
+  double *eval3, *global_rms, **TM, *data_norm  ;
   double **data,  **rms, ***G = NULL, ***dcalc ;
   
 
@@ -153,103 +154,110 @@ main(int argc, char *argv[])
   /* Initialize some pointers */
   data       = NULL ; G       = NULL ; opt.wgt = NULL ;
   opt.rms_in = NULL ; opt.p2p = NULL ; opt.avg = NULL ;
-  sacfiles   = NULL ; 
+  sacfiles   = NULL ; opt.rms_r = NULL ;
 
   /* Get input parameters */
-  get_param1(argc, argv, &M, &opt, &eq, &flag) ;
-  get_param2(opt.i_master, &opt, &eq, &flag)    ;
+  get_param1(argc,argv,&M,&opt,&eq) ;
+  get_param2(opt.i_master,&opt,&eq) ;
   fflush(stdout) ;
   
   /* Write log header     */
   o_log = openfile_wt(opt.log)                     ;
-  w_log_header(argv, &opt, &eq, eq.wp_win4, o_log) ;
+  w_log_header(argv,&opt,&eq,o_log) ;
   
   /* Set G and data       */
-  set_matrices (opt.i_saclst, &eq.pde_evdp, eq.wp_win4, &nsac, &nsini,
-		&sacfiles, &hd_synt, &data, &G, &opt, &eq, o_log) ; 
+  set_matrices (opt.i_saclst,eq.pde_evdp,eq.wp_win4,&nsac,
+		&nsini,&sacfiles,&hd_synt,&data,&G,&opt,&eq,o_log) ; 
   
   /* Screening            */
   if (opt.med_val > 0.) 
     {
-      median(&nsac, &opt)   ;
-      screen_med(&nsac, sacfiles, data, G, hd_synt, &opt, o_log) ; 
+      median(nsac,&opt)   ;
+      screen_med(&nsac,sacfiles,data,G,hd_synt,&opt,o_log) ; 
     }
-
   if (opt.th_val > 0.)
-    screen_rms(&nsac, sacfiles, data, G, hd_synt, &opt, o_log) ;
-  
+    screen_rms(&nsac,sacfiles,data,G,hd_synt,&opt,o_log) ;
+  if (opt.rms_r_th > 0.)
+    screen_ratio(&nsac,sacfiles,data,G,hd_synt,&opt,o_log) ;
+
   if (nsac < 1) 
     {
-      fprintf(stderr,"Error : Too few accepted channels\n")     ;
+      fprintf(stderr,"Error : Too few accepted channels\n") ;
       fprintf(stderr,"....... Clean manually the input file\n") ;
-      fprintf( o_log,"Aborded: too few accepted channels\n")     ;
+      fprintf( o_log,"Aborded: too few accepted channels\n") ;
       fclose(o_log) ;
       exit(1)       ;
     }
   
-  printf("%4d accepted_channels (%d rejected)\n",nsac,nsini - nsac)          ;
-  fprintf(o_log,"accepted_channels: %4d (%d rejected)\n",nsac,nsini - nsac)  ;
+  printf("%4d accepted_channels (%d rejected)\n",nsac,nsini-nsac) ;
+  fprintf(o_log,"accepted_channels: %4d (%d rejected)\n",nsac,nsini-nsac) ;
   fflush(o_log) ;
-  
+
+  /* RMS per channel*/
+  data_norm = double_alloc(nsac);
+  calc_data_norm(data,hd_synt,nsac,data_norm);
+
   /* Inversion */
-  inversion(&M, &nsac, hd_synt, G, data, eq.vm[0], &Cond, &opt, o_log) ;
+  inversion(M,nsac,hd_synt,G,data,eq.vm[0],&Cond,&opt,o_log) ;
   
   /* Predicted data */
   dcalc = double_alloc3p(nsac) ;
-  calc_data(&nsac, hd_synt, G, eq.vm, data, dcalc, &opt, flag);
-  
-  /* Get RMS and Gap */
-  global_rms = double_calloc(2*flag) ;
-  rms = double_calloc2(nsac, 2*flag) ;
-  calc_rms(&nsac, hd_synt, data, dcalc, rms, global_rms, &opt, flag)  ;
-  get_gap(hd_synt, &nsac, &gap) ;
-  w_o_saclst(opt.o_saclst, &nsac, sacfiles, hd_synt, rms, &opt, flag) ; 
+  calc_data(nsac,hd_synt,G,eq.vm,data,dcalc,&opt);
+
+  /* Get RMS misfit and Gap */
+  global_rms = double_calloc(2*(opt.ref_flag+1)) ;
+  rms = double_calloc2(nsac, 2*(opt.ref_flag+1)) ;
+  calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt) ;
+  get_gap(hd_synt,nsac,&gap) ;
+  w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt) ;
 
   /* Time-shift grid search */
   if (opt.dts_step > 0.)
     {
-      fast_ts_gridsearch(nsac,M,sacfiles,hd_synt,data,G,&dcalc,&rms,&global_rms,&opt,&eq,&rmsini,&tsopt,&rmsopt,o_log);
+      fast_ts_gridsearch(nsac,M,sacfiles,hd_synt,data,G,&dcalc,&rms,
+			 &global_rms,&opt,&eq,&rmsini,&tsopt,&rmsopt,o_log);
       /* Optimum solution */
       opt.dts_val = tsopt ;
-      realloc_gridsearch(nsac, &rms, &global_rms, &eq.vm[0], &dcalc, flag) ;
-      set_matrices (opt.i_saclst, &eq.pde_evdp, eq.wp_win4, &nsac, &nsini,
-		    &sacfiles, &hd_synt, &data, &G, &opt, &eq, o_log) ;    
-      inversion(&M, &nsac, hd_synt, G, data, eq.vm[0], &Cond, &opt, o_log) ;   
-      calc_data(&nsac, hd_synt, G, eq.vm, data, dcalc, &opt, flag)    ;
-      calc_rms(&nsac, hd_synt, data, dcalc, rms, global_rms, &opt, flag)    ;
+      realloc_gridsearch(nsac,&rms,&global_rms,&eq.vm[0],&dcalc,opt.ref_flag+1) ;
+      set_matrices(opt.i_saclst,eq.pde_evdp,eq.wp_win4,&nsac,&nsini,
+		   &sacfiles,&hd_synt,&data,&G,&opt,&eq,o_log) ;    
+      inversion(M,nsac,hd_synt,G,data,eq.vm[0],&Cond,&opt,o_log) ;   
+      calc_data(nsac,hd_synt,G,eq.vm,data,dcalc,&opt) ;
+      calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt) ;
       eq.ts += opt.dts_val ;
     }
   
-  /* Set stike/dip/rake */
-  get_planes(eq.vm[0], &TM, &eval3, &s1,&d1,&r1, &s2,&d2,&r2) ;
-  write_cmtf(opt.o_cmtf, &eq, eq.vm[0], flag) ;  
+  /* Set stike/dip/rake                            */
+  get_planes(eq.vm[0],&TM,&eval3,&s1,&d1,&r1,&s2,&d2,&r2) ;
+  write_cmtf(opt.o_cmtf,&eq,eq.vm[0]) ;  
   
   /* Set Moment and Magnitude (Harvard Definition) */
-  M0     = ((fabs(eval3[0]) + fabs(eval3[2])) * (double)POW) / 2. ; 
-  Mw     = (log10(M0) - 16.1) / 1.5 ;
+  M0     = ((fabs(eval3[0])+fabs(eval3[2])) * (double)POW)/2. ; 
+  Mw     = (log10(M0)-16.1)/1.5 ;
   diplow = d2 ;
   if (d1 < d2) diplow = d1 ;
-  M0_12  = M0 * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ;
+  M0_12  = M0*sin(2.*diplow*(double)DEG2RAD)/sin(24.*(double)DEG2RAD) ;
 
   /* Output */
-  output_products(&opt, &eq, &s1,&d1,&r1, &s2,&d2,&r2, TM, eval3, &M0, &M0_12, &Mw, 
-		  global_rms, &gap, &Cond, &nsac, hd_synt, o_log, flag) ;
+  output_products(&opt,&eq,s1,d1,r1,s2,d2,r2,TM,eval3,M0,M0_12,Mw,global_rms,
+		  gap,Cond,nsac,hd_synt,o_log) ;
   fclose(o_log);
 
   /* Memory Freeing */
   free((void*)eq.wp_win4) ;
-  free((void*)eq.vm[0])        ;
+  free((void*)eq.vm[0])   ;
   free((void*)eq.vm[1])   ;
   free((void**)eq.vm)     ;
   free((void*)eval3)      ;
   free((void*)global_rms) ;
+  free((void*)data_norm)  ;
   for(i=0 ; i<nsac ; i++)
     {
-      free((void*)data[i])     ;
-      free((void*)rms[i] )     ;
+      free((void*)data[i]) ;
+      free((void*)rms[i]) ;
       free((void*)sacfiles[i]) ;
       free_G(&G[i]);
-      for(j=0 ; j<flag ; j++)
+      for(j=0 ; j<(opt.ref_flag+1); j++)
 	free((void*)dcalc[i][j]) ;
       free((void**)dcalc[i]);
     }
@@ -264,25 +272,20 @@ main(int argc, char *argv[])
   free((void**)TM)     ;
   
   free((void*)opt.rms_in) ;
+  free((void*)opt.rms_r)  ;
   free((void*)opt.p2p)    ;
   free((void*)opt.avg)    ;
-  free((void*)opt.wgt)    ;	 
+  free((void*)opt.wgt)    ;
   free((void*)hd_synt)    ;
   return 0;
 }
 
-
 void 
-output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a, Mwa, 
-		     global_rms, gap, Cond, nsac, hd_synt, o_log, flag) 
-     int flag, *nsac ;
-     double *s1a, *s2a, *d1a, *d2a, *r1a, *r2a ;
-     double *M0a, *M0_12a, *Mwa, **TMa         ;
-     double  *eval3a, *global_rms, *gap, *Cond ;
-     structopt *opt       ;
-     sachdr    *hd_synt   ;
-     str_quake_params *eq ;  
-     FILE       *o_log    ;
+output_products(structopt *opt, str_quake_params *eq, double s1a, double d1a, 
+		double r1a, double s2a, double d2a, double r2a, double **TMa, 
+		double *eval3a, double M0a, double M0_12a, double Mwa, 
+		double *global_rms, double gap, double Cond, int nsac, 
+		sachdr *hd_synt, FILE *o_log) 
 {
   int    i,j,k, nb,nb2, size, *nbcmp  ;
   double M0b, Mwb, M0_12b, ma, mb, mc ;
@@ -294,15 +297,15 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   char   date_stmp[64] ;
   time_t now           ; 
   
-  nbcmp = int_alloc(*nsac)        ;
+  nbcmp = int_alloc(nsac)        ;
   buf   = char_alloc(9)           ;
   buf2  = char_alloc(32)          ;
-  sta   = char_calloc2(*nsac, 9)  ;
-  cmp   = char_calloc2(*nsac,30)  ;  
+  sta   = char_calloc2(nsac, 9)  ;
+  cmp   = char_calloc2(nsac,30)  ;  
   
 
   /* Reference solution */
-  if (flag == 2)
+  if (opt->ref_flag)
     {
       get_planes(eq->vm[1], &TMb, &eval3b, &s1b,&d1b,&r1b, &s2b,&d2b,&r2b) ;
       M0b = ((fabs(eval3b[0]) + fabs(eval3b[2])) * (double)POW) / 2. ; 
@@ -320,8 +323,8 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
       
       /* Focal mechanism display - WPhase Solution */
       prad_pat(TMa, ps)              ;
-      pnod_pat(s1a, d1a, ps)           ;
-      pnod_pat(s2a, d2a, ps)           ;
+      pnod_pat(&s1a, &d1a, ps)           ;
+      pnod_pat(&s2a, &d2a, ps)           ;
       fprintf(ps,"-0.3 000 translate\n") ;
       
       /* title */
@@ -337,23 +340,22 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
 	fprintf(ps," %11.5f",eq->vm[0][i]) ;
       fprintf(ps,") show\n") ;
       fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.6) ;
-      fprintf(ps,"(Scalar moment: %9.2e dyn cm    (Mo_12 = %9.2e dyn cm)) show\n"
-	      , (*M0a), (*M0_12a)) ;
+      fprintf(ps,"(Scalar moment: %9.2e dyn cm    (Mo_12 = %9.2e dyn cm)) show\n",M0a,M0_12a) ;
       fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.75) ;
       
       fprintf(ps,"(Best nodal planes: %7.1f/%5.1f/%7.1f   %7.1f/%5.1f/%7.1f) show\n",
-	      *s1a,*d1a,*r1a,*s2a,*d2a,*r2a) ;
+	      s1a,d1a,r1a,s2a,d2a,r2a) ;
       fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.9) ;
       fprintf(ps,"(Eigenvalues:%13.5f %13.5f %13.5f (Mw = %4.2f)) show\n",
-	      eval3a[0],eval3a[1],eval3a[2], *Mwa) ;
+	      eval3a[0],eval3a[1],eval3a[2],Mwa) ;
       
       /* fit quality */
       fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.1) ;
       fprintf(ps,"(Fit Quality:) show\n") ;
       fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.25) ;
       fprintf(ps,"(WCMT - RMS: %9.5f mm (%6.3f),  Gap: %5.1f\\312,  C#%9.0f) show\n",
-	      1000.*global_rms[0], global_rms[0]/global_rms[1], *gap, *Cond);
-      if (flag == 2) 
+	      1000.*global_rms[0], global_rms[0]/global_rms[1],gap,Cond);
+      if (opt->ref_flag) 
 	{
 	  fprintf(ps,"%15.6f %15.6f moveto\n", -0.85, -2.4) ;
 	  fprintf(ps,"(GCMT - RMS = %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  
@@ -361,7 +363,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
 
       /* used stations */
       k = 0 ;
-      for(i=0; i<*nsac; i++) /* Set list of channels per stations */
+      for(i=0;i<nsac;i++) /* Set list of channels per stations */
 	{
 	  nb  = nbchar(hd_synt[i].kstnm)  ;
 	  nb2 = nbchar(hd_synt[i].kcmpnm) ;      
@@ -390,7 +392,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   
       fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont\n") ;
       fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.6)             ;
-      fprintf(ps,"(Used stations (%d, %d channels) : ) show\n", k, *nsac ) ;
+      fprintf(ps,"(Used stations (%d, %d channels) : ) show\n",k,nsac) ;
       fprintf(ps,"/Courier      findfont .07 scalefont setfont")  ;
       
       j  = 0;
@@ -463,7 +465,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
       fprintf(ps,"(%s) show\n", date_stmp) ;
       
       /* Reference solution */
-      if (flag == 2) 
+      if (opt->ref_flag) 
 	{
 	  fprintf(ps,"1.8 -0.6 translate\n") ;
 	  fprintf(ps,"0.4  0.4 scale\n") ;
@@ -471,8 +473,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
 	  fprintf(ps, "%15.6f %15.6f moveto\n", -1.1, -1.4) ;
 	  fprintf(ps,"(GCMT, Mw= %5.2f ) show\n", Mwb)      ;
 	  fprintf(ps, "%15.6f %15.6f moveto\n", -1.1, -1.6) ;
-	  /* fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/(*M0a),mc) ;*/
-	  fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/(*M0a),mc) ;
+	  fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/M0a,mc) ;
 	  fprintf(ps,".5 .5 .9 setrgbcolor\n") ;
 	  prad_pat(TMb, ps)        ;
 	  pnod_pat(&s1b, &d1b, ps) ;
@@ -485,16 +486,16 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
     }
 
   /* STDOUT AND LOG */
-  charplot(eq->vm[0], *s1a,*d1a, *s2a,*d2a, '-', '#', ' ', '\0','\0','\0', RX, RY, stdout)  ;
+  charplot(eq->vm[0],s1a,d1a,s2a,d2a, '-', '#', ' ', '\0','\0','\0', RX, RY, stdout)  ;
   printf("CMT: ") ;
   for(i =0 ; i<NM ; i++)
     printf("%15.4e",eq->vm[0][i]);
   printf("\nBest nodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",
-	 *s1a, *d1a, *r1a, *s2a, *d2a, *r2a);
+	 s1a,d1a,r1a,s2a,d2a,r2a);
   printf("Eigenvalues: %-12.5f %-12.5f %-12.5f\n", eval3a[0], eval3a[1], eval3a[2]) ;
   printf("WCMT: RMS = %-9.5f mm (%-6.3f) Gap: %-6.1f deg, C#: %-10.0f\n",
-	 1000.*global_rms[0], global_rms[0]/global_rms[1], *gap, *Cond);
-  if (flag == 2) 
+	 1000.*global_rms[0], global_rms[0]/global_rms[1],gap,Cond);
+  if (opt->ref_flag) 
     { 
       printf("GCMT: RMS = %-9.5f mm (%-6.3f)\n", 1000.*global_rms[2], global_rms[2]/global_rms[3])  ;      
       diplow = d2b ;
@@ -502,29 +503,29 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
 	diplow = d1b ;
       M0_12b = M0b * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ; 
     }
-  printf("Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",*Mwa,*M0a,*M0_12a) ;
+  printf("Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",Mwa,M0a,M0_12a) ;
   
-  fprintf(o_log,"n_used_rec:         %-4d\n", *nsac)    ;
-  fprintf(o_log,"Gap:                %-7.1f\n", *gap)   ;
+  fprintf(o_log,"n_used_rec:         %-4d\n",nsac)    ;
+  fprintf(o_log,"Gap:                %-7.1f\n",gap)   ;
   fprintf(o_log,"WCMT: ") ;
   for(i =0 ; i<NM ; i++)
     fprintf(o_log,"%15.4e",eq->vm[0][i]);
-  fprintf(o_log,"\nCond_number:        %-10.0f\n", *Cond) ; 
+  fprintf(o_log,"\nCond_number:        %-10.0f\n",Cond) ; 
   fprintf(o_log,"W_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",
-	 *s1a, *d1a, *r1a, *s2a, *d2a, *r2a) ;
+	 s1a,d1a,r1a,s2a,d2a,r2a) ;
   fprintf(o_log,"W_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3a[0], eval3a[1], eval3a[2]) ;
   fprintf(o_log,"W_cmt_err:          %-12.8f %-12.8f\n", 1000.*global_rms[0], global_rms[0]/global_rms[1])    ;
-  fprintf(o_log,"Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",*Mwa,*M0a,*M0_12a) ;
+  fprintf(o_log,"Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",Mwa,M0a,M0_12a) ;
 
-  if (flag == 2) 
+  if (opt->ref_flag) 
     {
       printf("Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b) ;
-      printf("ratio = %5.2f ;  epsilon = %6.3f\n",M0b/(*M0a),mc) ;
+      printf("ratio = %5.2f ;  epsilon = %6.3f\n",M0b/M0a,mc) ;
       fprintf(o_log,"R_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",s1b,d1b,r1b, s2b,d2b,r2b) ;
       fprintf(o_log,"R_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3b[0], eval3b[1], eval3b[2])           ;
       fprintf(o_log,"R_cmt_err:          %-12.8f %-12.8f\n", 1000.*global_rms[2], global_rms[2]/global_rms[3])  ;
       fprintf(o_log,"Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b)                           ;
-      fprintf(o_log,"ratio = %12.8f ;  epsilon = %12.8f\n",M0b/(*M0a),mc) ;
+      fprintf(o_log,"ratio = %12.8f ;  epsilon = %12.8f\n",M0b/M0a,mc) ;
     }
 
   /* BITMAP IMAGE */
@@ -533,11 +534,11 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
 	  size = 401 ;
 	  o_bitmap = openfile_wt(opt->wpbmfile)  ;
 	  fprintf(o_bitmap, "P2\n#WPinversion focal mechanism\n%d %d\n9\n", size, size)                             ;
-	  charplot(eq->vm[0], *s1a, *d1a, *s2a, *d2a,'9', '3', '9', '0',' ', '0', (size-1)/2,(size-1)/2, o_bitmap)  ;
+	  charplot(eq->vm[0],s1a,d1a,s2a,d2a,'9', '3', '9', '0',' ', '0', (size-1)/2,(size-1)/2, o_bitmap)  ;
 	  fclose(o_bitmap) ;
 	}
 
-  if (strlen(opt->refbmfile) != 0 && flag == 2) 
+  if (strlen(opt->refbmfile) != 0 && opt->ref_flag) 
 	{
 	  o_bitmap = openfile_wt(opt->refbmfile) ;
 	  fprintf(o_bitmap, "P2\n#WPinversion focal mechanism\n%d %d\n9\n", size, size)                         ;
@@ -546,7 +547,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
 	}
 
   /* Memory Freeing */
-  if (flag == 2)
+  if (opt->ref_flag)
     {
       for(i=0 ; i<3 ; i++) 
 	free((void*)TMb[i]) ;
@@ -556,7 +557,7 @@ output_products(opt, eq, s1a, d1a, r1a, s2a, d2a, r2a, TMa, eval3a, M0a, M0_12a,
   free((void*)nbcmp)    ;
   free((void*)buf)      ;
   free((void*)buf2)     ;
-  for(i=0 ; i<*nsac ; i++)
+  for(i=0 ; i<nsac ; i++)
     {
       free((void*)sta[i]) ;
       free((void*)cmp[i]) ; 
@@ -624,13 +625,11 @@ prad_pat(double **TM, FILE *ps)
 /*        d: dip (pointer)             */
 /*        ps: ps FILE stream           */
 void 
-pnod_pat(s, d, ps)
-     double *s, *d ;
-     FILE   *ps    ;
+pnod_pat(double *s, double *d, FILE *ps)
 {
   fprintf(ps,"newpath\n" )                ;
-  fprintf(ps, "/phi %6.1f def \n", (*s))     ;
-  fprintf(ps,"/delta %6.1f def\n", (*d))     ;
+  fprintf(ps, "/phi %6.1f def \n", (*s))  ;
+  fprintf(ps,"/delta %6.1f def\n", (*d))  ;
   fprintf(ps,"phi sin phi cos moveto\n")  ;
   fprintf(ps,"0 1 180\n")                 ;
   fprintf(ps,"{/alpha exch def\n")        ;
@@ -657,16 +656,13 @@ pnod_pat(s, d, ps)
 /*        ns     : nb of stations      */
 /* Output: gap                         */
 void 
-get_gap(hd_synt, ns, gap)
-     int    *ns      ; 
-     double *gap     ;
-     sachdr *hd_synt ;
+get_gap(sachdr *hd_synt, int ns, double *gap)
 {
   double *tmp, az, dist ;
   int i ;
   
-  tmp = double_alloc(*ns) ;
-  for( i=0 ; i<*ns ; i++)
+  tmp = double_alloc(ns) ;
+  for( i=0 ; i<ns ; i++)
     {
       az = hd_synt[i].az ;
       if(az < 0.) 
@@ -675,10 +671,10 @@ get_gap(hd_synt, ns, gap)
 	tmp[i] = az ;
     }
   
-  sort(tmp, ns) ;
+  sort(tmp,ns) ;
   
-  *gap = tmp[0] + 360. - tmp[*ns-1] ;
-  for( i=0 ; i<(*ns)-1 ; i++)
+  *gap = tmp[0] + 360. - tmp[ns-1] ;
+  for( i=0 ; i<ns-1 ; i++)
     {
       dist = tmp[i+1]-tmp[i] ;
       if(dist > *gap) *gap = dist ;
@@ -688,44 +684,25 @@ get_gap(hd_synt, ns, gap)
 
 
 void 
-w_o_saclst(o_saclst, ns, sacfiles, hd_synt, rms, opt, flag) 
-     int    *ns, flag ;
-     double **rms ;
-     char *o_saclst, **sacfiles ;
-     sachdr *hd_synt ; 
-     structopt *opt  ;
+w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, double *data_norm, 
+	   structopt *opt) 
 {
   int  i, n0;
   FILE *o_sac ;
 
-  o_sac = openfile_wt(o_saclst);
+  o_sac = openfile_wt(opt->o_saclst);
   n0 = 0;
-  for(i=0; i<*ns; i++)
+  for(i=0; i<ns; i++)
     {
-      fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f %10.3f\n",
+      fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f %15.8f %10.3f\n",
 	      sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
-	      (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
-	      rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i], opt->wgt[i]);
+	      (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], rms[i][0]/rms[i][1],
+	      data_norm[i]/rms[i][1], opt->p2p[i], opt->avg[i], opt->wgt[i]);
       n0 += hd_synt[i].npts ;
     }
   fclose(o_sac);
-  
-  if (flag == 2)
-    {
-      o_sac = openfile_wt("_ref_o_wpinversion");
-      n0 = 0;
-      for(i=0; i<*ns; i++)
-	{
-	  fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %15.8f %15.8f %15.8f %15.8f %15.8f %15.8f\n",
-		  sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
-		  (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], 
-		  rms[i][0]/rms[i][1], opt->p2p[i], opt->avg[i],rms[i][2],rms[i][2]/rms[i][3]);
-	  n0 += hd_synt[i].npts ;
-	}
-      fclose(o_sac);
-    }
-
 }
+
 
 
 /***********************************************/
@@ -737,9 +714,7 @@ w_o_saclst(o_saclst, ns, sacfiles, hd_synt, rms, opt, flag)
 /* Output: mi2ma : max-min value (pointer)     */
 /*        ave    : average amplitude (pointer) */
 void 
-calc_stat(npts, data, mi2ma, ave) 
-     int    npts ; 
-     double *data, *mi2ma, *ave ;
+calc_stat(int npts, double *data, double *mi2ma, double *ave) 
 {
   int    i    ;
   double mini ; 
@@ -759,32 +734,27 @@ calc_stat(npts, data, mi2ma, ave)
 
 
 /*************************************************************/
-/* calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, flag) */
+/* calc_rms(ns, hd_synt, data, dcalc, rms, global_rms)       */
 /*************************************************************/
 /* calculate rms amplitudes, rms deviations                  */
-/* Input: ns : nb of channels (pointer)                      */
+/* Input: ns : nb of channels                                */
 /*        hd_synt : array of sac headers                     */
 /*        data    : array of data                            */
-/*        flag    : if flag=1 no reference solution          */
-/*        flag    : if flag=2 WPhase + reference solution    */
 /* Output: dcalc  : array of predicted data                  */
 /*         rms    : array of rms amplitudes and deviations   */
 /*         global_rms : overall rms amp. and rms deviations  */
+
 void 
-calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag) 
-     int    *ns, flag          ;
-     double **data, ***dcalc   ;
-     double *global_rms, **rms ;
-     sachdr *hd_synt           ;
-     structopt *opt            ;
+calc_rms(int ns, sachdr *hd_synt, double **data, double ***dcalc, 
+	 double **rms, double *global_rms, structopt *opt) 
 {
   int    i, j, n0, f2;
 
-  f2  = 2*flag;
+  f2  = 2*(opt->ref_flag+1);
   n0 = 0 ;
-  for(i=0 ; i<*ns ; i++)
+  for(i=0 ; i<ns ; i++)
     {
-      calc_rms_sub(hd_synt[i].npts, data[i], dcalc[i], rms[i], flag) ;
+      calc_rms_sub(hd_synt[i].npts, data[i], dcalc[i], rms[i], opt->ref_flag) ;
       n0 += hd_synt[i].npts ;
       for(j=0 ; j<f2 ; j++) 
 	{
@@ -796,23 +766,12 @@ calc_rms(ns, hd_synt, data, dcalc, rms, global_rms, opt, flag)
     global_rms[j] = sqrt(global_rms[j]/n0) ;
 }
 
-
 void 
-calc_rms_sub(npts, data, dcalc, rms, flag) 
-     int    npts, flag   ;
-     double *rms, *data, **dcalc ;
+calc_rms_sub(int npts, double *data, double **dcalc, double *rms, int flag)
 {
   int i;
 
-  if (flag == 1)
-    {
-      rms[0] = 0. ;
-      rms[1] = 0. ;
-      for(i=0 ; i<npts ; i++){
-	rms[0] += (data[i]-(*dcalc)[i]) * (data[i]-(*dcalc)[i]) ;
-	rms[1] +=  (*dcalc)[i]*(*dcalc)[i];}
-    }
-  else if (flag == 2)
+  if (flag)
     {
       rms[0] = 0. ;
       rms[1] = 0. ;
@@ -824,32 +783,49 @@ calc_rms_sub(npts, data, dcalc, rms, flag)
 	rms[2] += (data[i]-dcalc[1][i])*(data[i]-dcalc[1][i]) ;
 	rms[3] += dcalc[1][i]*dcalc[1][i] ;}      
     }
-  else{
-    fprintf(stderr, "ERROR comp. rms (wrong flag value)\n");
-    exit(1);}
+  else
+    {
+      rms[0] = 0. ;
+      rms[1] = 0. ;
+      for(i=0 ; i<npts ; i++){
+	rms[0] += (data[i]-(*dcalc)[i]) * (data[i]-(*dcalc)[i]) ;
+	rms[1] +=  (*dcalc)[i]*(*dcalc)[i];}
+    }
 }
 
+void
+calc_vec_norm(double *v, int npts, double *norm)
+{
+  int i;
+  *norm = 0;
+  for(i=0;i<npts;i++)
+    *norm += v[i]*v[i] ;
+  *norm = sqrt(*norm/(double) npts) ;  
+}
+
+void 
+calc_data_norm(double **data, sachdr *hd_synth, int nsac, double *data_norm)
+{
+  int s;
+  for(s=0;s<nsac;s++)
+    calc_vec_norm(data[s],hd_synth[s].npts,data_norm+s);
+}
 
 /*************************************************************/
-/*     calc_data(ns, hd_synt, G, vm, data, d, opt, flag)     */
+/*     calc_data(ns, hd_synt, G, vm, data, d, opt)           */
 /*************************************************************/
 /* Compute predicted data                                    */
-/* Input: ns : nb of channels (pointer)                      */
+/* Input: nsac : nb of channels                              */
 /*        hd_synt : array of sac headers                     */
 /*        hd_synt : array of sac headers                     */
 /*        G       : array of Green's functions               */
 /*        vm      : pointer on moment tensor elements        */
-/*        flag    : if flag=1 no reference solution          */
-/*        flag    : if flag=2 WPhase + reference solution    */
 /* Output: data   : array data samples                       */
 /*         d      : array of predicted data samples          */
 /*         opt    : structopt containing output filenames    */
 void 
-calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
-     int    *nsac, flag      ;
-     double **vm, ***G , **data, ***d ;
-     sachdr *hd_synt         ;
-     structopt *opt  ;
+calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm, double **data,
+	  double ***d, structopt *opt) 
 {
   int  i, j, k, s, N        ;
   char *fZ, *fL, *fT, *file ;
@@ -874,7 +850,7 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
   o_L = openfile_wt(fL) ;
   o_T = openfile_wt(fT) ;
 
-  for( s=0 ; s< *nsac ; s++)
+  for( s=0 ; s< nsac ; s++)
     {
       if (hd_synt[s].kcmpnm[2] == 'Z')
 	ocmp = o_Z ;
@@ -892,12 +868,12 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
 	  exit(1)       ; 
 	}
       N = hd_synt[s].npts ;
-      d[s] = double_calloc2(flag, N) ;
+      d[s] = double_calloc2(opt->ref_flag+1, N) ;
       for(i=0 ; i<N ; i++)
 	{
 	  fprintf(o_dat,"%15.6e ",data[s][i]) ;
 	  fprintf( ocmp,"%15.6e ",data[s][i]); 
-	  for(j=0; j<flag; j++)  
+	  for(j=0; j<opt->ref_flag+1; j++)  
 	    {
 	      for(k=0; k<NM; k++)
 		d[s][j][i] += G[s][k][i] * vm[j][k] ;
@@ -923,12 +899,9 @@ calc_data(nsac, hd_synt, G, vm, data, d, opt, flag)
   free((void*)fT)   ;
 }
 
+
 void 
-write_cmtf(filename, eq, vm,flag)
-     double *vm     ;     
-     char *filename ;
-     str_quake_params *eq ;
-     int flag ;
+write_cmtf(char *filename, str_quake_params *eq, double *vm)
 {
   int   i ;
   char  Mcmp[6][4] = {"Mrr","Mtt","Mpp","Mrt","Mrp","Mtp"} ;
@@ -951,24 +924,20 @@ write_cmtf(filename, eq, vm,flag)
 
 
 void 
-comp_GtG( M, nsac, hd_synt, G, GtG, opt)
-     int    *M, *nsac   ; 
-     double ***G, **GtG ;
-     sachdr *hd_synt    ; 
-     structopt *opt     ;
+comp_GtG(int M, int nsac, sachdr *hd_synt, double ***G, double **GtG, structopt *opt)
 {
   int i, j, k, s, N;
 
   if (GtG[0][0] != 0.)
     {
       fprintf(stderr,"WARNING GtG: memory must be set to zero (using calloc)\n");
-      for( i=0 ; i<*M ; i++)
-	for( j=0 ; j<*M ; j++)
+      for( i=0 ; i<M ; i++)
+	for( j=0 ; j<M ; j++)
 	  GtG[i][j] = 0. ;
     }
-  if (*M == NM-1)      /* Constrain null trace */
+  if (M == NM-1)      /* Constrain null trace */
     {
-      for( s=0 ; s<*nsac ; s++)
+      for( s=0 ; s<nsac ; s++)
 	{
 	  N = hd_synt[s].npts ;
 	  for( i=0 ; i<2 ; i++ )
@@ -976,62 +945,57 @@ comp_GtG( M, nsac, hd_synt, G, GtG, opt)
 	      for( j=0 ; j<2 ; j++ )
 		for( k=0 ; k<N ; k++ )
 		  GtG[i][j] += (G[s][i][k]-G[s][2][k])*opt->wgt[s]*(G[s][j][k]-G[s][2][k]) ;
-	      for( j=2 ; j<*M ; j++ )
+	      for( j=2 ; j<M ; j++ )
 		for( k=0 ; k<N ; k++ )
 		  GtG[i][j] += (G[s][i][k]-G[s][2][k])*opt->wgt[s]*G[s][j+1][k] ;
 	    }
-	  for( i=2 ; i<*M ; i++ )
+	  for( i=2 ; i<M ; i++ )
 	    {
 	      for( j=0 ; j<2 ; j++ )
 		for( k=0 ; k<N ; k++ )
 		  GtG[i][j] += G[s][i+1][k]*opt->wgt[s]*(G[s][j][k]-G[s][2][k]) ;
-	      for( j=2 ; j<*M ; j++ )
+	      for( j=2 ; j<M ; j++ )
 		for( k=0 ; k<N ; k++ )
 		  GtG[i][j] += G[s][i+1][k]*opt->wgt[s]*G[s][j+1][k] ;
 	    }
 	}
     }
-  else if (*M == NM) /* No constraints      */
-    for( s=0 ; s<*nsac ; s++)
-      for( i=0 ; i<*M ; i++ )
-	for( j=0 ; j<*M ; j++ )
+  else if (M == NM) /* No constraints      */
+    for( s=0 ; s<nsac ; s++)
+      for( i=0 ; i<M ; i++ )
+	for( j=0 ; j<M ; j++ )
 	  for( k=0 ; k<hd_synt[s].npts ; k++ )
 	    GtG[i][j] += G[s][i][k]*opt->wgt[s]*G[s][j][k] ; 
 }
 
 
-
 void 
-inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
-     int *M, *nsac                 ; 
-     double ***G, **d, *vma, *Cond ;
-     sachdr *hd_synt ; 
-     structopt *opt  ;
-     FILE *o_log     ;
+inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d, 
+	  double *vma, double *Cond, structopt *opt, FILE *o_log) 
 {
   int    i, j ,k, l, s, nk, nrot, N  ;
   double **GtG, *eigvals, **eigvects, **cov ;
   FILE   *o_cov ;
 
   /* Allocating memory */
-  GtG      = double_calloc2 ( *M, *M )   ;
-  eigvals  = double_alloc( *M )          ;
-  eigvects = double_alloc2( *M, *M )     ;
-  cov      = double_calloc2( *M, *M )    ;
+  GtG      = double_calloc2 (M,M) ;
+  eigvals  = double_alloc(M) ;
+  eigvects = double_alloc2( M,M) ;
+  cov      = double_calloc2(M,M) ;
 
   /* Azimuth ponderation */
   if (opt->azp > 0.)
-    azpond(hd_synt,*nsac,opt->wgt) ;
+    azpond(hd_synt,nsac,opt->wgt) ;
 
   /* Constrains null trace (if M=5) and computes GtG */
   comp_GtG(M,nsac, hd_synt, G, GtG,opt) ;
 
   /* Computes eigenvalues and eigenvectors */
-  jacobi(GtG, *M, *M, eigvals, eigvects, &nrot);
-  eigsrt( eigvals, eigvects, *M) ;
+  jacobi(GtG, M, M, eigvals, eigvects, &nrot);
+  eigsrt( eigvals, eigvects, M) ;
   
   /* Conditioning */
-  nk = *M;
+  nk = M;
   if (opt->cth_val <= 0.) /* Remove the eigenvalues smaller than max(eigval)/10000 if any */
     {
       *Cond = eigvals[0] / eigvals[nk-1] ;
@@ -1057,7 +1021,7 @@ inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
 
   /* Temporary */
   o_cov    = openfile_wt("Gd") ;
-  for(i=0; i<*nsac; i++)
+  for(i=0; i<nsac; i++)
     for (k=0;k<hd_synt[i].npts; k++)
       {
 	for (j=0; j<NM; j++)
@@ -1077,11 +1041,11 @@ inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
   for (i=0 ; i<nk; i++) 
     fprintf(o_log,"%e\t",eigvals[i]) ;   
   fprintf(o_log,"\n") ;
-  if(*M-nk>0)
+  if(M-nk>0)
     {
-      printf(       "%d removed: \n", *M-nk) ;
-      fprintf(o_log,"%d removed: \n", *M-nk) ;
-      for (i=nk ; i<*M; i++) {
+      printf(       "%d removed: \n", M-nk) ;
+      fprintf(o_log,"%d removed: \n", M-nk) ;
+      for (i=nk ; i<M; i++) {
 	printf("  %13.5e",eigvals[i])    ;
 	fprintf(o_log,"%e\t",eigvals[i]) ;   }
       printf("\n")        ;
@@ -1091,29 +1055,29 @@ inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
 
   /* Posterior covariance matrix */
   o_cov    = openfile_wt(opt->o_covf) ;
-  for(i=0 ; i<*M ; i++)
+  for(i=0 ; i<M ; i++)
     {
-      for(k=0 ; k<*M ; k++)
+      for(k=0 ; k<M ; k++)
 	for(j=0 ; j<nk ; j++)
 	  cov[i][k] += eigvects[i][j]*eigvects[k][j]/eigvals[j] ;
-      for(k=0 ; k<*M ; k++)
+      for(k=0 ; k<M ; k++)
 	fprintf( o_cov,"%16.2f ", cov[i][k]) ;
       fprintf( o_cov,"\n") ;
     }
   fclose(o_cov) ;
 
   /* Least-squares inversion */
-  if (*M == NM-1)      /* Null trace     */
+  if (M==NM-1)      /* Null trace     */
     {
-      for( s=0 ; s<*nsac ; s++)
+      for( s=0 ; s<nsac ; s++)
 	{
 	  N = hd_synt[s].npts ;
-	  for(i=0 ; i<*M ; i++)
+	  for(i=0 ; i<M ; i++)
 	    {
 	      for(k=0 ; k<2 ; k++)
 		for(l=0 ; l<N ; l++)
 		  vma[i] += cov[i][k]*(G[s][k][l]-G[s][2][l])*opt->wgt[s]*d[s][l] ;
-	      for(k=2 ; k<*M ; k++)
+	      for(k=2 ; k<M ; k++)
 		for(l=0 ; l<N ; l++)
 		  vma[i] += cov[i][k]*G[s][k+1][l]*opt->wgt[s]*d[s][l] ;
 	    }
@@ -1123,19 +1087,19 @@ inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
       vma[3] = vma[2] ;
       vma[2] = -vma[0] -vma[1] ;
     }
-  else if (*M == NM) /* No constraints */
-    for( s=0 ; s<*nsac ; s++)
-      for(i=0 ; i<*M ; i++)
-	for(k=0 ; k<*M ; k++)
+  else if (M == NM) /* No constraints */
+    for( s=0 ; s<nsac ; s++)
+      for(i=0 ; i<M ; i++)
+	for(k=0 ; k<M ; k++)
 	  for(l=0 ; l<hd_synt[s].npts ; l++)
 	    vma[i] += cov[i][k]*G[s][k][l]*opt->wgt[s]*d[s][l] ;
   else {
-      fprintf(stderr,"ERROR : bad nb of parameters (M=%d)\n",*M);
+      fprintf(stderr,"ERROR : bad nb of parameters (M=%d)\n",M);
       exit(1);  }
 
   /* Memory Freeing */
   free((void*)eigvals) ;
-  for (i=0 ; i<*M ; i++) 
+  for (i=0 ; i<M ; i++) 
     { 
       free((void*)GtG[i])      ; 
       free((void*)eigvects[i]) ; 
@@ -1156,8 +1120,7 @@ inversion(M, nsac, hd_synt, G, d, vma, Cond, opt, o_log)
 /*         mb : scalar moment of vm[1] (Dahlen & Tromp)  */
 /*         mc : rms deviation of normalized mom. tensor  */
 void 
-residual_moment(vm, ma, mb, mc)
-     double **vm, *ma, *mb, *mc ;
+residual_moment(double **vm,double *ma,double *mb,double *mc)
 {
   int    i;
   double *vmc;
@@ -1207,8 +1170,8 @@ set_mt(double *vm)
 }
   
 void 
-get_planes(vm, TM, eval3, s1,d1,r1, s2,d2,r2)
-     double *vm, ***TM, **eval3, *s1, *d1, *r1, *s2, *d2, *r2;
+get_planes(double *vm, double ***TM, double **eval3, double *s1,
+	   double *d1, double *r1, double *s2, double *d2, double *r2)
 {
   int    nrot, i ;
   double si, co  ;
@@ -1330,7 +1293,7 @@ azpond (sachdr *hd_synt, int ns, double *wgt)
 
   for (i=0; i<ns; i++)
     aztab[i] = hd_synt[i].az ;
-  sort(aztab, &ns);
+  sort(aztab, ns);
   for (i=0; i<ns-1; i++)
     {
       aztab[i] = aztab[i+1]-aztab[i] ;
@@ -1448,15 +1411,9 @@ fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts,
 
 
 void 
-set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
-	      data, G, opt, eq,o_log) 
-     int    *nsac, *nsini;
-     double *evdp, *wp_win4, ***data, ****G ;
-     char   *i_saclst, ***sacfiles          ;  
-     FILE    *o_log   ;
-     sachdr **hd_synt ;
-     structopt *opt   ;
-     str_quake_params *eq;
+set_matrices (char *i_saclst, double evdp, double *wp_win4, int *nsac, 
+	      int *nsini, char ***sacfiles, sachdr **hd_synt, double ***data, 
+	      double ****G, structopt *opt, str_quake_params *eq, FILE *o_log) 
 {
   int    i, j, flag, flag2,ierror, npts  ;
   int    n1_data, n2_data  ;
@@ -1475,7 +1432,6 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   /* Opening data file list */
   i_sac = openfile_rt(i_saclst,nsini) ;
   *nsac = *nsini ;
-
   /* Allocating memory */
   dum      = char_alloc(32)    ;
   buf      = char_alloc(LSIZE) ;
@@ -1489,13 +1445,14 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   flag2 = 0 ;
   if ( *data == NULL    && *G == NULL       &&  opt->wgt == NULL &&   \
        opt->rms_in == NULL && opt->p2p == NULL && opt->avg == NULL && \
-       *sacfiles == NULL ) 
+       *sacfiles == NULL && opt->rms_r == NULL) 
     {
-      *data     = double_alloc2p( *nsac )  ;
-      *G        = double_alloc3p( *nsac )  ;
+      *data     = double_alloc2p(*nsac)    ;
+      *G        = double_alloc3p(*nsac)    ;
       opt->wgt  = double_alloc( *nsac )    ;
       *sacfiles = char_alloc2(*nsac,FSIZE) ;
       opt->rms_in = double_alloc(*nsac)    ;
+      opt->rms_r  = double_alloc(*nsac)    ;
       opt->p2p    = double_alloc(*nsac)    ;
       opt->avg    = double_alloc(*nsac)    ;
       hdr_tab(hd_synt, *nsac)              ; 
@@ -1504,7 +1461,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   
   /* Set travel times */
   ierror = 1 ; /* error flag */
-  trav_time_init(&nh, &nd, evdp, dv, tv, &ierror) ;  
+  trav_time_init(&nh, &nd, &evdp, dv, tv, &ierror) ;  
 
   /* Loop on stations */
   ns = 0 ;
@@ -1521,12 +1478,12 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	}
       else 
 	{
-	  flag = fscanf (i_sac, "%s %f %f %s %s %s %s %s %lf %lf %lf %s",
+	  flag = fscanf (i_sac, "%s %f %f %s %s %s %s %s %lf %lf %lf %lf %s",
 			 datafile,&(*hd_synt)[ns].az,&(*hd_synt)[ns].gcarc,dum,dum,dum,dum,dum,
-			 &opt->rms_in[ns],&opt->p2p[ns],&opt->avg[ns],dum) ;
+			 &opt->rms_in[ns],&opt->rms_r[ns],&opt->p2p[ns],&opt->avg[ns],dum) ;
 	  strcpy(buf,i_saclst);
 	  strcat(buf," (nb of columns may be incorrect)");
-	  check_scan(12, flag, buf, i_sac) ;
+	  check_scan(13, flag, buf, i_sac) ;
 	} 
       
       /* Read data header and weights */
@@ -1537,9 +1494,9 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	  fprintf(stderr,"**** null weight, rejected : %s\n", datafile) ;
 	  continue ;
 	}
-      if ((float)(*evdp) != hd_data.evdp)	
+      if ((float)evdp != hd_data.evdp)	
 	{
-	  fprintf(stderr,"WARNING : depth %f in sac header is different of %f from pde in CMTFILE\n",(float)*evdp, hd_data.evdp);
+	  fprintf(stderr,"WARNING : depth %f in sac header is different of %f from pde in CMTFILE\n",(float)evdp, hd_data.evdp);
 	  fprintf(stderr," ...you should carefully re-check gcarc and evdp header variables in file %s\n",datafile); 
 	}
        
@@ -1577,13 +1534,15 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 	  flag = fill_G(gf_file, datafile, &hd_GF, &hd_data, npts, Ptt, twp_beg, twp_end, 
 			tmparray, (*G)[ns][j], opt, o_log) ;
 	  if (flag)
-	    {
-	      free_G((*G)+ns) ;
-	      break ;
-	    }
+	    break;
 	}
       if (flag) /* Error reading GF */
-	continue ;
+	{
+	  for(j=0; j<NM; j++)
+	    free((void*)(*G)[ns][j]);
+	  free((void**)(*G)[ns]);
+	  continue ;
+	}
       
       /* Read data samples */
       hd_data.npts = n2_data + 1 ;
@@ -1636,11 +1595,7 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
   fclose(i_sac) ;
   /* Memory Freeing */
   for(i=ns;i<*nsac;i++)
-    {
-      free((void*)(*sacfiles)[i]) ;
-      free((void*)(*data)[i])     ;
-      free((void*)(*G)[i])        ;
-    }
+    free((void*)(*sacfiles)[i]) ;
   *nsac  = ns ;
   free((void*)tmparray) ;
   free((void*)dv)       ;
@@ -1656,9 +1611,8 @@ set_matrices (i_saclst, evdp, wp_win4, nsac, nsini, sacfiles, hd_synt,
 
 
 void 
-realloc_gridsearch(nsac, rms, global_rms, vm, dcalc, flag)
-     int nsac, flag ;
-     double ***rms, **global_rms, **vm, ****dcalc ;
+realloc_gridsearch(int nsac, double ***rms, double **global_rms, double **vm, 
+		   double ****dcalc, int flag)
 {
   int i, j ; 
 
@@ -1676,17 +1630,11 @@ realloc_gridsearch(nsac, rms, global_rms, vm, dcalc, flag)
   *global_rms = double_calloc(2*flag) ;
 }
 
-void
-fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, opt, eq, 
-		   rmsini, tsopt, rmsopt, o_log)
-     int    nsac, M    ;
-     char   **sacfiles ;
-     sachdr *hd_synt   ;
-     double **data, ***G, ****dcalc, ***rms         ;
-     double **global_rms, *rmsini, *tsopt, *rmsopt ;
-     structopt        *opt ;
-     str_quake_params *eq  ; 
-     FILE *o_log ;
+
+void fast_ts_gridsearch(int nsac, int M, char **sacfiles, sachdr *hd_synt, double **data, 
+			double ***G, double ****dcalc, double ***rms, double **global_rms, 
+			structopt *opt, str_quake_params *eq, double *rmsini, double *tsopt, 
+			double *rmsopt, FILE *o_log)
 {
   int    it, k, Nexp, flag, nsini;
   double Err, Cond, dt, ts ,dtmin, dtmax,tsopt2,rmsopt2; 
@@ -1720,11 +1668,11 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
 	  /* Free memory */
 	  realloc_gridsearch(nsac, rms, global_rms, &eq->vm[0], dcalc, flag) ;
 	  /* Compute inversion for opt->dts_val */
-	  set_matrices (opt->i_saclst, &eq->pde_evdp, eq->wp_win4, &nsac, &nsini,
+	  set_matrices (opt->i_saclst, eq->pde_evdp, eq->wp_win4, &nsac, &nsini,
 			&sacfiles, &hd_synt, &data, &G, opt, eq, o_log) ;    
-	  inversion(&M, &nsac, hd_synt, G, data, eq->vm[0], &Cond, opt, o_log) ;
-	  calc_data(&nsac, hd_synt, G, eq->vm, data, (*dcalc), opt, flag)    ;   
-	  calc_rms(&nsac, hd_synt, data, (*dcalc), (*rms), (*global_rms), opt, flag)    ;
+	  inversion(M, nsac, hd_synt, G, data, eq->vm[0], &Cond, opt, o_log) ;
+	  calc_data(nsac, hd_synt, G, eq->vm, data, (*dcalc), opt) ;   
+	  calc_rms(nsac, hd_synt, data, (*dcalc), (*rms), (*global_rms), opt) ;
 
 	  /* Get RMS error */
 	  Err = 1000.*(*global_rms)[0] ;
@@ -1783,26 +1731,22 @@ fast_ts_gridsearch(nsac, M, sacfiles, hd_synt, data, G, dcalc, rms, global_rms, 
   fclose(o_gs) ;
 }
 
+
 void 
-screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
-     int    *nsac        ;
-     double **data, ***G ;
-     char   **data_name  ;
-     sachdr *hd_synt     ; 
-     structopt *opt      ;
-     FILE *o_log         ;
+screen_rms(int *nsac, char **sacfiles, double **data, 
+	   double ***G, sachdr *hd_synt, structopt *opt, FILE *o_log) 
 {
-  int j, newn;
+  int j, newn ;
 
   newn = 0 ;
   for (j=0; j<*nsac; j++)
     {
-      if( opt->rms_in[j] < opt->th_val )
+      if(opt->rms_in[j]<opt->th_val)
 	{
 	  fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
 		   hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
 		   hd_synt[j].user[2], hd_synt[j].user[3]) ; 
-	  data_name[newn] = data_name[j] ;
+	  sacfiles[newn] = sacfiles[j] ;
 	  data[newn]      = data[j]     ;
 	  G[newn]         = G[j]        ;
 	  hd_synt[newn]   = hd_synt[j]  ;
@@ -1814,8 +1758,43 @@ screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
       else
 	{
 	  fprintf(stderr, "**** Rejected trace (rms exceed the threshold): %s\n", 
-		  data_name[j]) ;
-	  free((void*)data_name[j]) ;
+		  sacfiles[j]) ;
+	  free((void*)sacfiles[j]) ;
+	  free((void*)data[j])      ;
+	  free_G(G+j)               ;
+	}
+    }
+  *nsac = newn ;
+}
+
+void 
+screen_ratio(int *nsac,char **sacfiles,double **data,double ***G,sachdr *hd_synt, 
+	     structopt *opt, FILE *o_log)
+{
+  int j, newn ;
+
+  newn = 0 ;
+  for (j=0; j<*nsac; j++)
+    {
+      if (opt->rms_r[j]<opt->rms_r_th && opt->rms_r[j]>1./opt->rms_r_th)
+	{
+	  fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
+		   hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
+		   hd_synt[j].user[2], hd_synt[j].user[3]) ; 
+	  sacfiles[newn] = sacfiles[j] ;
+	  data[newn]      = data[j]     ;
+	  G[newn]         = G[j]        ;
+	  hd_synt[newn]   = hd_synt[j]  ;
+	  opt->p2p[newn]  = opt->p2p[j] ;
+	  opt->avg[newn]  = opt->avg[j] ;
+	  opt->wgt[newn]  = opt->wgt[j] ;
+	  newn++ ;	  
+	}
+      else
+	{
+	  fprintf(stderr, "**** Rejected trace (rms ratio exceed the threshold): %s\n", 
+		  sacfiles[j]) ;
+	  free((void*)sacfiles[j]) ;
 	  free((void*)data[j])      ;
 	  free_G(G+j)               ;
 	}
@@ -1825,13 +1804,8 @@ screen_rms(nsac, data_name, data, G, hd_synt, opt, o_log)
 
 
 void 
-screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
-     int    *nsac        ;
-     double **data, ***G ;
-     char   **data_name  ;  
-     sachdr *hd_synt     ; 
-     structopt *opt      ;
-     FILE *o_log         ;
+screen_med(int *nsac, char **sacfiles, double **data, 
+	   double ***G, sachdr *hd_synt, structopt *opt, FILE *o_log) 
 {
   int    j, newn ;
   double min, max, val ;
@@ -1853,7 +1827,7 @@ screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
 	    fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
 		     hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
 		     hd_synt[j].user[2], hd_synt[j].user[3]) ; 
-	  data_name[newn] = data_name[j] ;
+	  sacfiles[newn] = sacfiles[j] ;
 	  data[newn]     = data[j]     ;
 	  G[newn]        = G[j]        ;
 	  hd_synt[newn]  = hd_synt[j]  ;
@@ -1865,8 +1839,8 @@ screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
       else 
 	{
 	  fprintf(stderr,"**** Rejected trace (p2p or avg out of bounds): %s\n",
-		  data_name[j])    ; 
-	  free((void*)data_name[j]);
+		  sacfiles[j])    ; 
+	  free((void*)sacfiles[j]);
 	  free((void*)data[j])     ;
 	  free_G(G+j)              ;
 	}
@@ -1876,53 +1850,41 @@ screen_med(nsac, data_name, data, G, hd_synt, opt, o_log)
 
 
 void 
-median(nsac, opt)
-     int       *nsac ; 
-     structopt *opt  ;
+median(int nsac, structopt *opt)
 {
   int    i    ;
   double *tmp ;
   
-  tmp = double_alloc( *nsac ) ;
-  for (i=0;i<*nsac;i++)
+  tmp = double_alloc(nsac) ;
+  for (i=0;i<nsac;i++)
     tmp[i] = opt->p2p[i]    ;
-
-  sort(tmp, nsac);
-
-  opt->p2p_med  = tmp[(int)    ((*nsac)/2.)-1] ;
-  opt->p2p_low  = tmp[(int)    ((*nsac)/4.)-1] ;
-  opt->p2p_high = tmp[(int) ((*nsac)*3./4.)-1] ;
-
+  sort(tmp,nsac);
+  opt->p2p_med  = tmp[(int)(nsac/2.)-1] ;
+  opt->p2p_low  = tmp[(int)(nsac/4.)-1] ;
+  opt->p2p_high = tmp[(int)(nsac*3./4.)-1] ;
   free((void *)tmp);
 }
   
 
 void 
-sort(tab, ns)
-     int    *ns  ;
-     double *tab ; 
+sort(double *tab, int ns)
 {
   int    i, j ;
   double swp  ;
 
-  for (i=0;i<*ns;i++)
-      for(j=i+1;j<*ns;j++)
-	{
-	  if (tab[i] > tab[j]) {
+  for (i=0;i<ns;i++)
+      for(j=i+1;j<ns;j++)
+	if (tab[i] > tab[j]) 
+	  {
 	    swp    = tab[i] ;
 	    tab[i] = tab[j] ;
-	    tab[j] = swp ;     }
-	}
+	    tab[j] = swp ;     
+	  }
 }
 
 
 void 
-w_log_header(argv, opt, eq, wp_win4, o_log) 
-     double *wp_win4 ;
-     char   **argv   ; 
-     FILE   *o_log   ;
-     str_quake_params  *eq      ;
-     structopt *opt  ;   
+w_log_header(char **argv, structopt *opt, str_quake_params *eq,FILE *o_log) 
 {
   int    i ;
   time_t t ;
@@ -1943,16 +1905,13 @@ w_log_header(argv, opt, eq, wp_win4, o_log)
   fprintf(o_log,"\n")       ;
   fprintf(o_log,"WP_WIN: ") ;
   for (i=0; i<4; i++)
-    fprintf(o_log,"%7.1f ",wp_win4[i]) ;
+    fprintf(o_log,"%7.1f ",eq->wp_win4[i]) ;
   fprintf(o_log,"\n") ;  
   fflush(o_log)       ;
 }
 
-void get_param2(file, opt, eq,  flag)
-     int    *flag   ;
-     char   *file   ;
-     structopt *opt ;
-     str_quake_params *eq ;
+void
+get_param2(char *file, structopt *opt, str_quake_params *eq) 
 {
   int  i=0, nimas ;
   char **keys     ;
@@ -1977,10 +1936,8 @@ void get_param2(file, opt, eq,  flag)
   strcpy(keys[i++],"filt_cf2")  ;
   strcpy(keys[i++],"filt_pass") ;
 
-  get_i_master(file, keys, nimas, eq) ;  
-  *flag = get_cmtf(eq, *flag) ;
-  if (*flag ==1)
-    opt->ref_val = 0. ;    
+  get_i_master(file, keys, nimas, eq) ;
+  opt->ref_flag = get_cmtf(eq,opt->ref_flag+1) - 1 ;
   
   for(i=0 ; i<nimas ; i++)
     free((void*)keys[i]) ;
@@ -2023,6 +1980,7 @@ disphelp(char **argv,structopt *opt)
   fprintf(stderr,"  -ofil stalistfile       output sac file list (%s)\n",opt->o_saclst) ;
   fprintf(stderr,"  -log  logfile           output log file (%s)\n",opt->log) ;
   fprintf(stderr,"  -ps ps_filename         ps filename (%s)\n",opt->psfile) ;
+  fprintf(stderr,"  -nops                   no output ps file\n") ;
   fprintf(stderr,"  -wpbm wp_pgm            wphase solution pgm file (no pgmfile)\n") ;
   fprintf(stderr,"  -refbm ref_pgm          reference solution pgm file (no pgmfile)\n") ; 
   
@@ -2055,8 +2013,7 @@ disphelp(char **argv,structopt *opt)
 }
 
 void 
-error_syntax(argv, comp)
-     char **argv, *comp ;
+error_syntax(char **argv, char *comp)
 {
   if (!strlen(comp))
     fprintf(stderr,"*** ERROR ***\n");
@@ -2067,9 +2024,7 @@ error_syntax(argv, comp)
 }
 
 void 
-get_char_arg(argv, j, i, numarg2, str)
-     int   i, j, numarg2 ;
-     char  **argv, *str  ;
+get_char_arg(char **argv, int j, int i, int numarg2, char *str)
 {
   char *comp ;
   comp = char_alloc(32);
@@ -2080,15 +2035,13 @@ get_char_arg(argv, j, i, numarg2, str)
   free((void*)comp)     ;
 }
 
-void 
-get_num_arg(argv,j,i,numarg2,type,value)
-     int    i, j, numarg2 ;
-     char   **argv, *type;
-     double *value ;
-{
-  char *comp ;
-  comp = char_alloc(32);
 
+void 
+get_num_arg(char **argv, int j,int i,int numarg2,char *type,
+	    void *value)
+{
+  char comp[64] ;
+  
   sprintf(comp,": Missing argument (%s) ",argv[j]);
   if (i==numarg2) error_syntax(argv,comp) ;
   sprintf(comp,": Incompatible argument (%s) ",argv[j]);
@@ -2100,18 +2053,13 @@ get_num_arg(argv,j,i,numarg2,type,value)
   else
     if (!isdigit(argv[j+1][0]) && argv[j+1][0] != '.')  error_syntax(argv,comp) ;
   sscanf(argv[j+1],type,value) ;
-  free((void*)comp)             ;
 }
 
 void 
-get_num_arg3(argv, j, i, numarg2, value1, value2, value3)
-     int    i, j, numarg2 ;
-     char   **argv ;
-     double *value1, *value2, *value3;
+get_num_arg3(char **argv, int j, int i, int numarg2, double *value1, 
+	     double *value2, double *value3)
 {
-  char *comp ;
-
-  comp = char_alloc(32);
+  char comp[32] ;
 
   sprintf(comp,": Missing argument (%s) ",argv[j]);
   if (i==numarg2 || i+1==numarg2 || i+2==numarg2)
@@ -2144,16 +2092,11 @@ get_num_arg3(argv, j, i, numarg2, value1, value2, value3)
   else
     if (!isdigit(argv[j+3][0]))  error_syntax(argv,comp) ;
   sscanf(argv[j+3],"%lf",value3) ;
-  free((void*)comp)              ;
 }
 
 
 void 
-get_opt(numarg1, numarg2, argv, opt, eq)
-     int   numarg1, numarg2 ; 
-     char  **argv   ;
-     str_quake_params *eq      ;
-     structopt *opt ; 
+get_opt(int numarg1, int numarg2, char **argv, structopt *opt, str_quake_params *eq)
 {
   int i, j, k;
 
@@ -2172,11 +2115,12 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   strcpy(opt->gsfile,"grid_search_ts_out") ;
   eq->cmtfile[0] = '\0' ;
   opt->th_val    = 0. ;
+  opt->rms_r_th  = 0. ;
   opt->cth_val   = 0. ;
   opt->df_val    = 0. ;
   opt->med_val   = 0. ;
   opt->op_pa     = 0. ;
-  opt->ref_val   = 1. ;
+  opt->ref_flag  = 1  ;
   opt->ntr_val   = 1. ;
   opt->wZ        = 1. ;
   opt->wL        = 1. ;
@@ -2235,16 +2179,21 @@ get_opt(numarg1, numarg2, argv, opt, eq)
 	get_char_arg(argv, j, i, numarg2, opt->refbmfile) ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-th",3)){
-	get_num_arg(argv, j, i, numarg2,"%lf",&opt->th_val) ;
+	get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->th_val) ;
+	k+=2 ;}
+      if (!strncmp(argv[j],"-nr",3)){
+	get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->rms_r_th) ;
+	if (opt->rms_r_th < 1.)
+	  opt->rms_r_th = 1./opt->rms_r_th ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-cth",4)){
-	get_num_arg(argv, j, i, numarg2,"%lf",&opt->cth_val) ;
+	get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->cth_val) ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-df",3)){
-	get_num_arg(argv, j, i, numarg2,"%lf",&opt->df_val) ;
+	get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->df_val) ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-dts",4)){
-	get_num_arg(argv, j, i, numarg2,"%lf",&opt->dts_val);
+	get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->dts_val);
 	k+=2 ;}
       if (!strncmp(argv[j],"-ts",3))
 	{
@@ -2260,20 +2209,20 @@ get_opt(numarg1, numarg2, argv, opt, eq)
 	}
       if (!strncmp(argv[j],"-Nit",4)) 
 	{
-	  get_num_arg(argv, j, i, numarg2,"%d", &opt->Nit);
+	  get_num_arg(argv, j, i, numarg2,"%d", (int*)&opt->Nit);
 	  k+=2 ;
 	}
       if (!strncmp(argv[j],"-ogsf",6)){
 	get_char_arg(argv, j, i, numarg2, opt->gsfile) ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-wz",3)){
-	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wZ) ;
+	get_num_arg(argv, j, i, numarg2,"%lf", (double*)&opt->wZ) ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-wl",3)){
-	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wL) ;
+	get_num_arg(argv, j, i, numarg2,"%lf", (double*)&opt->wL) ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-wt",3)){
-	get_num_arg(argv, j, i, numarg2,"%lf", &opt->wT) ;
+	get_num_arg(argv, j, i, numarg2,"%lf", (double*)&opt->wT) ;
 	k+=2 ;}
       if (!strncmp(argv[j],"-azp",4)){
 	opt->azp = 1 ;
@@ -2288,11 +2237,13 @@ get_opt(numarg1, numarg2, argv, opt, eq)
 	opt->ntr_val = 0. ;
 	k++ ;}
       if (!strncmp(argv[j],"-noref",6)){
-	opt->ref_val = 0. ;
+	opt->ref_flag = 0 ;
 	k++ ;}
-      if (!strncmp(argv[j],"-nops",5)){
-	opt->ps = 0 ;
-	k++ ;}
+      if (!strncmp(argv[j],"-nops",5))
+	{
+	  opt->ps = 0 ;
+	  k++ ;
+	}
       if (!strncmp(argv[j],"-h",2))
 	disphelp(argv,opt) ;
       if (!strncmp(argv[j],"--help",6))
@@ -2305,25 +2256,17 @@ get_opt(numarg1, numarg2, argv, opt, eq)
 }
 
 void 
-get_param1(argc, argv, M, opt, eq, flag) 
-     int   argc, *M, *flag ;
-     char  **argv   ;
-     str_quake_params *eq      ;
-     structopt *opt ; 
+get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq)
 {
   int numarg1, numarg2 ;
   int max = 48 ;
 
   numarg1 = 0              ;
   numarg2 = argc-numarg1-1 ;
-
   if ( (argc < numarg1+1 ) || (numarg2 > max))
     error_syntax(argv," (nb of arguments) ");
   get_opt(numarg1, numarg2, argv, opt, eq);
   *M    = NM  ;
-  *flag = 1   ;
   if (opt->ntr_val > 0.)
     *M = NM-1 ;
-  if (opt->ref_val > 0.)
-    *flag = 2 ;
 }

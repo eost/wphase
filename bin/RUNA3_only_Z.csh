@@ -1,4 +1,9 @@
 #!/bin/csh -f
+#
+# W phase package - RUNA3 for Z components
+#
+# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+#
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 ##################################
@@ -26,7 +31,7 @@ endif
 set gf_dir   = "./GF"
 set tmp      = `${GREP} GFDIR   i_tmp`
 if ! $status then
-        set gf_dir   = `echo $tmp | ${HEAD} -1 | ${CUT} -d: -f2`
+        set gf_dir   = `$ECHO $tmp | ${HEAD} -1 | ${CUT} -d: -f2`
 endif
 ${RM} -f i_tmp 
 

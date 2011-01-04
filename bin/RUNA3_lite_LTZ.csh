@@ -1,4 +1,9 @@
 #!/bin/csh -f
+#
+# W phase package - RUNA3_lite for L, T, Z components
+#
+# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+#
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 ##################################
@@ -13,8 +18,8 @@ else
     set wT = $my_argv[2]
     set wZ = $my_argv[3]
 else
-    echo "*** ERROR ($0) ***"
-    echo "Syntax: =0 [wL wT wZ]"
+    $ECHO "*** ERROR ($0) ***"
+    $ECHO "Syntax: =0 [wL wT wZ]"
     exit
 endif
 
@@ -41,7 +46,7 @@ endif
 set gf_dir   = "./GF"
 set tmp      = `${GREP} GFDIR   i_tmp`
 if ! $status then
-        set gf_dir   = `echo $tmp | ${HEAD} -1 | ${CUT} -d: -f2`
+        set gf_dir   = `$ECHO $tmp | ${HEAD} -1 | ${CUT} -d: -f2`
 endif
 ${RM} -f i_tmp
 
