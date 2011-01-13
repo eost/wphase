@@ -39,17 +39,18 @@ export FC
 export CFLAGS
 export LDFLAGS
 
-EXE = $(BIN)/rec_dec_filt\
-      $(BIN)/syn_conv_filt\
-      $(BIN)/make_resp_lookup_table\
-      $(BIN)/trim_sac_files\
-      $(BIN)/FAST\
-      $(BIN)/wpinversion_ZNE\
-      $(BIN)/wpinversion_LTZ\
-      $(BIN)/synth_v5\
-      $(BIN)/rot_horiz_cmp\
-      $(BIN)/decim_sac\
-      $(BIN)/saclst
+EXE = 	$(BIN)/WP_HEADER.CSH		\
+	$(BIN)/rec_dec_filt		\
+	$(BIN)/syn_conv_filt		\
+	$(BIN)/make_resp_lookup_table	\
+	$(BIN)/trim_sac_files		\
+	$(BIN)/FAST			\
+	$(BIN)/wpinversion_ZNE		\
+	$(BIN)/wpinversion_LTZ		\
+	$(BIN)/synth_v5			\
+	$(BIN)/rot_horiz_cmp		\
+	$(BIN)/decim_sac		\
+	$(BIN)/saclst
 
 
 
@@ -57,6 +58,10 @@ all : $(EXE)
 
 # enable libmseed dependencies
 with_miniseed:  $(EXE) $(BIN)/trim_sac_files_qrt $(BIN)/mseedlst
+
+# Scripts header
+$(BIN)/WP_HEADER.CSH:configure.csh
+	@ ./configure.csh
 
 # Inversion
 $(BIN)/wpinversion_ZNE:wpinversion_ZNE.o rwsacs.o proto_alloc.o rwtextfiles.o \

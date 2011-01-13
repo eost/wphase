@@ -1,7 +1,16 @@
 #!/bin/csh -f
 
+if ( ! $?WPHASE_HOME ) then
+    echo "*** ERROR : The WPHASE_HOME environment variable is not defined"
+    exit(1)
+else
+    echo "WPHASE_HOME: $WPHASE_HOME"
+endif
+
 set BIN    = $WPHASE_HOME/bin
 set o_file = $BIN/WP_HEADER.CSH
+
+echo "Creating  $BIN/WP_HEADER.CSH"
 rm -f ${o_file}
 
 cat << EOF > ${o_file}
