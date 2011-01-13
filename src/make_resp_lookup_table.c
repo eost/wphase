@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - Restitution coefficients calculation
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -182,7 +179,7 @@ readpoles(int *np, complex *pl, FILE *in, int *ierror)
     {
       if(fscanf (in, "%lf%lf", &pl[i].real, &pl[i].imag) != 2 )
 	{
-	  fprintf (stderr, "ERROR reading poles of pzfiles\n") ;
+	  fprintf (stderr, "Error reading poles of pzfiles\n") ;
 	  *ierror = 99;
 	  return;
 	}
@@ -232,6 +229,7 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 	      ns = sscanf (line, "%s%d", head, nz) ;
 	      if (ns != 2)
 		{
+		  fprintf(stderr,"WARNING (make_resp_lookup_table): incorrect pzfile format: %s (rejected)\n",pzfilename);
 		  *ierror=99 ;
 		  return     ;
 		}
@@ -249,6 +247,7 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 		}
 	      if (ns < 0 || ns > *nz || minZ > Eps )
 		{
+		  fprintf(stderr,"WARNING (make_resp_lookup_table): incorrect pzfile format: %s (rejected)\n",pzfilename);
 		  *ierror=99 ;
 		  return     ;
 		}
@@ -261,7 +260,7 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 	      
 	    }
 	  else
-	    fprintf (stderr, "WARNING (make_resp_lookup_table): ZEROS redundancy in pzfile : %s\n",pzfilename) ;
+	    fprintf (stderr, "WARNING (make_resp_lookup_table): ZEROS redundancy in pzfile: %s\n",pzfilename) ;
 	}
       if(!strncmp(line,"POLES",5))/* We ONLY read the poles following the first header "POLES" */
 	{
@@ -272,7 +271,8 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 	      pflag = 1 ;
 	      readpoles(np,*pl,in,ierror) ;
 	      if (*ierror==99)
-		{
+		{	
+		  fprintf(stderr,"WARNING (make_resp_lookup_table): incorrect pzfile format: %s (rejected)\n",pzfilename);
 		  fclose (in) ;
 		  return      ;
 		}

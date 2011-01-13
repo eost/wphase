@@ -56,7 +56,7 @@ foreach file ($fics_1)
     $SACLST kstnm stla stlo f $file | ${AWK} '{print $2,$3,$4}' >> _tmp_stat_xy 
 end
 
-set nsta   = `${CAT} ${input} | wc -l`
+set nsta   = `${CAT} ${input} | $WC -l`
 
 set fic1   = $fics_1[$nsta]
 set kstnm  = `$SACLST kstnm f $fic1 | ${AWK} '{print $2}'`

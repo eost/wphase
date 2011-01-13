@@ -93,8 +93,7 @@ void jacobi(double **a,int n, int np, double *d, double **v, int *nrot) ;
 void eigsrt(double *d, double **v, int n) ;
 void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d, 
 		 double *vma, double *Cond, structopt *opt, FILE *o_log) ;
-void set_matrices (char *i_saclst, double evdp, double *wp_win4, int *nsac, 
-		   int *nsini, char ***sacfiles, sachdr **hd_synt, double ***data, 
+void set_matrices (int *nsac, int *nsini, char ***sacfiles, sachdr **hd_synt, double ***data, 
 		   double ****G, structopt *opt, str_quake_params *eq, FILE *o_log) ;
 void calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm, double **data,
 		 double ***d, structopt *opt) ;
@@ -166,8 +165,7 @@ main(int argc, char *argv[])
   w_log_header(argv,&opt,&eq,o_log) ;
   
   /* Set G and data       */
-  set_matrices (opt.i_saclst,eq.pde_evdp,eq.wp_win4,&nsac,
-		&nsini,&sacfiles,&hd_synt,&data,&G,&opt,&eq,o_log) ; 
+  set_matrices (&nsac,&nsini,&sacfiles,&hd_synt,&data,&G,&opt,&eq,o_log) ; 
   
   /* Screening            */
   if (opt.med_val > 0.) 
@@ -219,8 +217,7 @@ main(int argc, char *argv[])
       /* Optimum solution */
       opt.dts_val = tsopt ;
       realloc_gridsearch(nsac,&rms,&global_rms,&eq.vm[0],&dcalc,opt.ref_flag+1) ;
-      set_matrices(opt.i_saclst,eq.pde_evdp,eq.wp_win4,&nsac,&nsini,
-		   &sacfiles,&hd_synt,&data,&G,&opt,&eq,o_log) ;    
+      set_matrices(&nsac,&nsini,&sacfiles,&hd_synt,&data,&G,&opt,&eq,o_log) ;    
       inversion(M,nsac,hd_synt,G,data,eq.vm[0],&Cond,&opt,o_log) ;   
       calc_data(nsac,hd_synt,G,eq.vm,data,dcalc,&opt) ;
       calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt) ;
@@ -1411,8 +1408,7 @@ fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts,
 
 
 void 
-set_matrices (char *i_saclst, double evdp, double *wp_win4, int *nsac, 
-	      int *nsini, char ***sacfiles, sachdr **hd_synt, double ***data, 
+set_matrices (int *nsac, int *nsini, char ***sacfiles, sachdr **hd_synt, double ***data, 
 	      double ****G, structopt *opt, str_quake_params *eq, FILE *o_log) 
 {
   int    i, j, flag, flag2,ierror, npts  ;
@@ -1430,7 +1426,7 @@ set_matrices (char *i_saclst, double evdp, double *wp_win4, int *nsac,
 
 
   /* Opening data file list */
-  i_sac = openfile_rt(i_saclst,nsini) ;
+  i_sac = openfile_rt(opt->i_saclst,nsini) ;
   *nsac = *nsini ;
   /* Allocating memory */
   dum      = char_alloc(32)    ;
@@ -1461,7 +1457,7 @@ set_matrices (char *i_saclst, double evdp, double *wp_win4, int *nsac,
   
   /* Set travel times */
   ierror = 1 ; /* error flag */
-  trav_time_init(&nh, &nd, &evdp, dv, tv, &ierror) ;  
+  trav_time_init(&nh, &nd, &eq->pde_evdp, dv, tv, &ierror) ;  
 
   /* Loop on stations */
   ns = 0 ;
@@ -1474,14 +1470,14 @@ set_matrices (char *i_saclst, double evdp, double *wp_win4, int *nsac,
 	{ 
 	  flag = fscanf (i_sac, "%s", datafile) ;
 	  fgets(buf,LSIZE,i_sac); /* end of line */
-	  check_scan(1, flag, i_saclst, i_sac)  ;
+	  check_scan(1, flag, opt->i_saclst, i_sac)  ;
 	}
       else 
 	{
 	  flag = fscanf (i_sac, "%s %f %f %s %s %s %s %s %lf %lf %lf %lf %s",
 			 datafile,&(*hd_synt)[ns].az,&(*hd_synt)[ns].gcarc,dum,dum,dum,dum,dum,
 			 &opt->rms_in[ns],&opt->rms_r[ns],&opt->p2p[ns],&opt->avg[ns],dum) ;
-	  strcpy(buf,i_saclst);
+	  strcpy(buf,opt->i_saclst);
 	  strcat(buf," (nb of columns may be incorrect)");
 	  check_scan(13, flag, buf, i_sac) ;
 	} 
@@ -1494,9 +1490,9 @@ set_matrices (char *i_saclst, double evdp, double *wp_win4, int *nsac,
 	  fprintf(stderr,"**** null weight, rejected : %s\n", datafile) ;
 	  continue ;
 	}
-      if ((float)evdp != hd_data.evdp)	
+      if ((float)eq->pde_evdp != hd_data.evdp)	
 	{
-	  fprintf(stderr,"WARNING : depth %f in sac header is different of %f from pde in CMTFILE\n",(float)evdp, hd_data.evdp);
+	  fprintf(stderr,"WARNING : depth %f in sac header is different of %f from pde in CMTFILE\n",(float)eq->pde_evdp, hd_data.evdp);
 	  fprintf(stderr," ...you should carefully re-check gcarc and evdp header variables in file %s\n",datafile); 
 	}
        
@@ -1508,7 +1504,7 @@ set_matrices (char *i_saclst, double evdp, double *wp_win4, int *nsac,
 	opt->dmax = gcarc ;
       fflush(stdout);
       trav_time(&gcarc, tv, dv, &nd, &Ptt, &ierror) ;
-      wp_time_window(&gcarc, wp_win4, &twp_beg, &twp_end) ;
+      wp_time_window(&gcarc, eq->wp_win4, &twp_beg, &twp_end) ;
       t0 = Ptt + hd_data.o ; 
       n1_data = (int)((t0 + twp_beg - (double)hd_data.b) / ((double)hd_data.delta)) ; /* first data Sample (corrected)  */
       n2_data = n1_data + (int)((twp_end - twp_beg) / ((double)hd_data.delta))      ; /* Last data Sample               */
@@ -1668,8 +1664,7 @@ void fast_ts_gridsearch(int nsac, int M, char **sacfiles, sachdr *hd_synt, doubl
 	  /* Free memory */
 	  realloc_gridsearch(nsac, rms, global_rms, &eq->vm[0], dcalc, flag) ;
 	  /* Compute inversion for opt->dts_val */
-	  set_matrices (opt->i_saclst, eq->pde_evdp, eq->wp_win4, &nsac, &nsini,
-			&sacfiles, &hd_synt, &data, &G, opt, eq, o_log) ;    
+	  set_matrices (&nsac, &nsini,&sacfiles, &hd_synt, &data, &G, opt, eq, o_log) ;    
 	  inversion(M, nsac, hd_synt, G, data, eq->vm[0], &Cond, opt, o_log) ;
 	  calc_data(nsac, hd_synt, G, eq->vm, data, (*dcalc), opt) ;   
 	  calc_rms(nsac, hd_synt, data, (*dcalc), (*rms), (*global_rms), opt) ;
@@ -1753,6 +1748,7 @@ screen_rms(int *nsac, char **sacfiles, double **data,
 	  opt->p2p[newn]  = opt->p2p[j] ;
 	  opt->avg[newn]  = opt->avg[j] ;
 	  opt->wgt[newn]  = opt->wgt[j] ;
+	  opt->rms_r[newn]=opt->rms_r[j] ;
 	  newn++ ;	  
 	}
       else
@@ -1788,6 +1784,7 @@ screen_ratio(int *nsac,char **sacfiles,double **data,double ***G,sachdr *hd_synt
 	  opt->p2p[newn]  = opt->p2p[j] ;
 	  opt->avg[newn]  = opt->avg[j] ;
 	  opt->wgt[newn]  = opt->wgt[j] ;
+	  opt->rms_r[newn]=opt->rms_r[j] ;
 	  newn++ ;	  
 	}
       else
@@ -1834,6 +1831,7 @@ screen_med(int *nsac, char **sacfiles, double **data,
 	  opt->p2p[newn] = opt->p2p[j] ;
 	  opt->avg[newn] = opt->avg[j] ;
 	  opt->wgt[newn] = opt->wgt[j] ;
+	  opt->rms_r[newn]=opt->rms_r[j] ;
 	  newn++ ;
 	}
       else 
