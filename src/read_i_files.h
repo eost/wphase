@@ -65,4 +65,4 @@ int get_cmtf(str_quake_params *eq, int flag) ;
 /* Output : eq : parameters in a structure      */
 void get_i_master(char *file, char **keys, int n, str_quake_params *eq) ;
 void decode_wp_win(char *buffer, double *wp_win4);
-void wp_time_window(double *gcarc, double *wp_win4, double *twp_beg, double *twp_end) ;
+void wp_time_window(double gcarc, double *wp_win4, double *twp_beg, double *twp_end) ;

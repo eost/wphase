@@ -1504,7 +1504,7 @@ set_matrices (int *nsac, int *nsini, char ***sacfiles, sachdr **hd_synt, double 
 	opt->dmax = gcarc ;
       fflush(stdout);
       trav_time(&gcarc, tv, dv, &nd, &Ptt, &ierror) ;
-      wp_time_window(&gcarc, eq->wp_win4, &twp_beg, &twp_end) ;
+      wp_time_window(gcarc, eq->wp_win4, &twp_beg, &twp_end) ;
       t0 = Ptt + hd_data.o ; 
       n1_data = (int)((t0 + twp_beg - (double)hd_data.b) / ((double)hd_data.delta)) ; /* first data Sample (corrected)  */
       n2_data = n1_data + (int)((twp_end - twp_beg) / ((double)hd_data.delta))      ; /* Last data Sample               */

@@ -244,15 +244,14 @@ get_cmtf(eq, flag)
 /*  P arrival time.                                     */
 /*  The window is defined with 1, 2, 3 or 4 parameters  */
 void 
-wp_time_window(gcarc, wp_win4, twp_beg, twp_end)
-     double *gcarc, *wp_win4, *twp_beg, *twp_end ;
+wp_time_window(double gcarc, double *wp_win4, double *twp_beg, double *twp_end)
 {
   double feakdist;
 
-  if (wp_win4[2] > *gcarc) 
+  if (wp_win4[2] > gcarc) 
     feakdist = wp_win4[2] ;
   else
-    feakdist = *gcarc ;
+    feakdist = gcarc ;
   if (wp_win4[3] < feakdist) 
     feakdist = wp_win4[3] ;
 

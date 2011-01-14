@@ -3,14 +3,43 @@
 if ( ! $?WPHASE_HOME ) then
     echo "*** ERROR : The WPHASE_HOME environment variable is not defined"
     exit(1)
-else
-    echo "WPHASE_HOME: $WPHASE_HOME"
+endif
+set SRC = `pwd`
+set w_home1 = `dirname ${WPHASE_HOME}`/`basename $WPHASE_HOME`
+if ( ! -e ${w_home1}/bin) then
+    echo "*** ERROR : The WPHASE_HOME environment variable is incorrect" 
+    echo "***         ($w_home1/bin does not exist)  "
+    exit(1)
+endif
+cd $w_home1
+set w_home2 = `pwd`
+if ( $w_home1 != $w_home2 ) then
+    echo "*** ERROR : The WPHASE_HOME environment variable must be an absolute path"
+    exit(1)
+endif
+cd $SRC
+cd ..
+set w_home2 = `pwd`
+if ( $w_home1 != $w_home2 ) then
+    echo "*** WARNING ***"
+    echo "The WPHASE_HOME environment variable is $WPHASE_HOME"
+    echo "While the current wphase directory is $w_home2"
+    echo "Continue will write ${w_home1}/bin/WP_HEADER.CSH"
+    echo "Continue? [Y/(N)]"
+    set rep = $<
+    if ( $rep != "Y" && $rep != "y" ) then
+	echo "Stop"
+	exit(1)
+    endif
 endif
 
-set BIN    = $WPHASE_HOME/bin
+set BIN    = $w_home1/bin
 set o_file = $BIN/WP_HEADER.CSH
 
+echo "WPHASE_HOME: $WPHASE_HOME"
 echo "Creating  $BIN/WP_HEADER.CSH"
+
+
 rm -f ${o_file}
 
 cat << EOF > ${o_file}
