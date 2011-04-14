@@ -265,7 +265,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 						if lon < lon1 or lon > lon2:
 							if not lons.count(lon):
 								lons.append(lon)
-						if lat < lat1 or lat > lat1:
+						if lat < lat1 or lat > lat2:
 							if not lats.count(lat):
 								lats.append(lat)
 					if len(lats):
