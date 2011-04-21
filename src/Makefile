@@ -17,7 +17,8 @@ CFLAGS   = -g -Wall \
 	   -D__IDSIZE__=$(idlen)\
 	   -D__LSIZE__=$(lineslen) \
 	   -D__SAFETY_DELAY__=$(safetydelay) \
-	   -D__SAFETY_DIST__=$(safetydist)
+	   -D__SAFETY_DIST__=$(safetydist) \
+	   -D__GFS_01D__=1
 
 LDFLAGS  = -g -fsecond-underscore 
 

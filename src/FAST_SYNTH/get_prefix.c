@@ -28,7 +28,11 @@ get_prefix(float cmt_dep, float xdeg, char *best_segm1, char *best_segm2,
 
 /* ############################################################### */
 /* This section should be updated if the distance grid is modified */
-  idist       = 2*(int)floor(5.*xdeg)+1;
+#ifdef __GFS_01D__
+  idist = (int)floor(10.0*xdeg+0.5);
+#else
+  idist = 2*(int)floor(5.*xdeg)+1;
+#endif /* not FSIZE */  
   if (idist <   1) 
     {
       fprintf(stderr, "Warning distance too short!; using 0.1 deg\n");

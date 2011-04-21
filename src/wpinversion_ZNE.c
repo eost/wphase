@@ -1388,7 +1388,7 @@ fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts,
       fprintf( o_log,"**** Incomplete GF, filling with zeros : %s\n", gf_file) ;  
       fprintf(stderr,"**** Incomplete GF,")                                    ;
       fprintf(stderr,"filling with zeros : %s (n1_GF=%d)\n", gf_file, n1_GF )  ;
-      for(i=n1_GF; i<0; i++)
+      for(i=n1_GF; i<((n2_GF<0)?n2_GF+1:0); i++)
 	G[i-n1_GF] = 0. ;
       g = &G[-n1_GF] ;
       npts += n1_GF  ;
@@ -1397,10 +1397,12 @@ fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts,
     }
   /* Read GF samples */
   hd_GF->b += hd_GF->delta*(float)n1_GF  ;
-  hd_GF->npts = n2_GF + 1                  ;
-  rdatsac(gf_file, hd_GF, buffer, &ierror) ;
-  memcpy (g,buffer+n1_GF,npts * sizeof(double));
-  hd_GF->npts = npts ;
+  if (n2_GF>=0)
+    {
+      hd_GF->npts = n2_GF + 1                  ;
+      rdatsac(gf_file, hd_GF, buffer, &ierror) ;
+      memcpy (g,buffer+n1_GF,npts * sizeof(double));
+    }
   return 0;
 }
 /* Corrections, Notes, etc.:            */
