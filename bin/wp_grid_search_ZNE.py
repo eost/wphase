@@ -11,7 +11,7 @@
 #  2009/09/09 -- plot routines are now in a separate script
 #  2010/01/08 -- allow the possibility to extend the spatial GS area 
 #                (if optimums are on edge)
-import os,re,shutil,sys,time,getopt
+import os,re,shutil,sys,time,getopt,math
 from EQ import *
 
 WPHOME = os.path.expandvars('$WPHASE_HOME')
@@ -86,9 +86,9 @@ def add_coor(coor,lat,lon,prevcoor=[]):
 	coor.append([lat,lon])
 	return 0
 
-def search_emptyedges(emptyedges,lat,lon,dx,prevcoor=[]):
-	crds = [[lat+dx,lon-dx],[lat+dx,lon   ],[lat+dx,lon+dx],[lat   ,lon+dx],\
-		[lat-dx,lon+dx],[lat-dx,lon   ],[lat-dx,lon-dx],[lat   ,lon-dx]]
+def search_emptyedges(emptyedges,lat,lon,dx,dy,prevcoor=[]):
+	crds = [[lat+dy,lon-dx],[lat+dy,lon   ],[lat+dy,lon+dx],[lat   ,lon+dx],\
+		[lat-dy,lon+dx],[lat-dy,lon   ],[lat-dy,lon-dx],[lat   ,lon-dx]]
 	for crd in crds:
 		add_coor(emptyedges,crd[0],crd[1],prevcoor)
 
@@ -137,12 +137,13 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 	format  = '%03d %03d %10.4f %10.4f %10.4f %10.4f %10.4f %12.8f %12.8f\n'
 	tmpfile = '_tmp_xy_table'
 
-	Nit  = 2
-	dx   = 0.4
+	Nit  = 3
+	dy   = 0.4
+	dx   = dy/math.cos(eq.lat*math.pi/180.)	
 	lat1 = eq.lat - 1.2
 	lat2 = eq.lat + 1.2
-	lon1 = eq.lon - 1.2
-	lon2 = eq.lon + 1.2 
+	lon1 = eq.lon - 1.2/math.cos(eq.lat*math.pi/180.)
+	lon2 = eq.lon + 1.2/math.cos(eq.lat*math.pi/180.)
 
 	ts = eq.ts
 	hd = eq.hd
@@ -154,9 +155,9 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 		while int(100*lon) <= int(100*lon2):
 			coor.append([lat,lon])
 			lon += dx
-		lat += dx
+		lat += dy
 
-	Nopt   = [5,5,4,3]
+	Nopt   = [5,5,5,5]
 	rmsopt = []
 	latopt = []
 	lonopt = []
@@ -207,15 +208,16 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 			fid.write('Iteration %d:\n' % (it+1))
 			if it != 0:
 				dx = dx/2.
+				dy = dy/2.
 				coor = []
 				for i in xrange(Nopt[it]):
-					add_coor(coor,latopt[i]+dx,lonopt[i]-dx,prevcoor)
-					add_coor(coor,latopt[i]+dx,lonopt[i]   ,prevcoor)
-					add_coor(coor,latopt[i]+dx,lonopt[i]+dx,prevcoor)
+					add_coor(coor,latopt[i]+dy,lonopt[i]-dx,prevcoor)
+					add_coor(coor,latopt[i]+dy,lonopt[i]   ,prevcoor)
+					add_coor(coor,latopt[i]+dy,lonopt[i]+dx,prevcoor)
 					add_coor(coor,latopt[i]   ,lonopt[i]+dx,prevcoor)
-					add_coor(coor,latopt[i]-dx,lonopt[i]+dx,prevcoor)
-					add_coor(coor,latopt[i]-dx,lonopt[i]   ,prevcoor)
-					add_coor(coor,latopt[i]-dx,lonopt[i]-dx,prevcoor)
+					add_coor(coor,latopt[i]-dy,lonopt[i]+dx,prevcoor)
+					add_coor(coor,latopt[i]-dy,lonopt[i]   ,prevcoor)
+					add_coor(coor,latopt[i]-dy,lonopt[i]-dx,prevcoor)
 					add_coor(coor,latopt[i]   ,lonopt[i]-dx,prevcoor)
 		prevcoor.extend(coor)
  		for cds in coor:
@@ -253,9 +255,9 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 		# Spatial grid-search extension
 		if (Nexp < 5):
 			coor = []
-			search_emptyedges(coor,eq.lat,eq.lon,dx,prevcoor)
+			search_emptyedges(coor,eq.lat,eq.lon,dx,dy,prevcoor)
 			for j in xrange(Nopt[it]):
-				search_emptyedges(coor,latopt[j],lonopt[j],dx,prevcoor)
+				search_emptyedges(coor,latopt[j],lonopt[j],dx,dy,prevcoor)
 			if len(coor):
 				print ' ... extending the spatial grid-search area ... '
 				if it == 0:
@@ -289,7 +291,7 @@ def grid_search_xy(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 							lat = lat1
 							while lat <= lat2:
 								add_coor(coor,lat,clon,prevcoor)
-								lat += dx
+								lat += dy
 					Nexp += 1
 					continue
 				else:
@@ -356,15 +358,13 @@ def grid_search_ts(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dmax=90
 		if ts2 > 60.:
 			ts2 = 60.	
 	else:
-		ts1 =  1. 
+		ts1 =  1.
 		if eq.mag <= 7.0:
 			ts2 = 30. 
-		elif eq.mag <8.0:
-			ts2 = 48. 
-		elif eq.mag < 8.5: 		
-			ts2 = 56. 
+		elif eq.mag <= 8.0:
+			ts2 = 100. 
 		else: 
-			ts2 = 168. 
+			ts2 = 168.		
 	########################################
 
 
@@ -481,13 +481,13 @@ def fast_grid_search_ts(datdir,cmtref,ftable,eq,wpwin=[15.],flagref=0,dmin=0.,dm
 		if ts2 > 60.:
 			ts2 = 60.	
 	else:
-		ts1 =  1. 
+		ts1 =  1.
 		if eq.mag <= 7.0:
 			ts2 = 30. 
-		elif eq.mag < 8.5: 		
-			ts2 = 56. 
+		elif eq.mag <= 8.0:
+			ts2 = 100. 
 		else: 
-			ts2 = 168. 
+			ts2 = 168.		
 	#######################################
 	
 	cmttmp = cmtref+'_ts_tmp'
