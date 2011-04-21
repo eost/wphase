@@ -54,7 +54,7 @@ else if ($#my_argv == 6) then
     set ylim_auto  = 'non'
 else
     echo "*** ERROR ($0) ***"
-    echo "Syntax: $0 [ymin ymax dy] [WCMTFILE OUTPUTDIR [ymin ymax dy [ID]]] "
+    echo "Syntax: $0 [IMASTER WCMTFILE ...] "
     exit    
 endif
 
