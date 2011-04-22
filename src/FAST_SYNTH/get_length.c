@@ -30,7 +30,7 @@ get_length(char *segm1, char *segm2)
   if(fd == -1)
 	{
 	  fflush(stdout);
-	  fprintf(stderr, "\n*** ERROR (get_length): sac_GF file %s not accesible\n", sac_GF);
+	  fprintf(stderr, "\n*** ERROR (get_length): sac_GF file %s not accessible\n", sac_GF);
 	  fprintf(stderr, "*** ... Exiting the program ... ***\n");
 	  fflush(stderr);
 	  exit(1);
