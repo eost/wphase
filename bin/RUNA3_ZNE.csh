@@ -34,6 +34,7 @@ ${MKDIR} SYNTH
 
 $EXTRACT
 $CALC
+if $status exit(1)
 $PREPARE
 
 if (-e i_master) then
@@ -49,10 +50,10 @@ if ! $status then
 endif
 ${RM} -f i_tmp
 
-$WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
+$ECHO $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
 	 -pdata fort.15.noth -wn ${wN} -we ${wE} -wz ${wZ} -med
 
-$ECHO $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
+$WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -gfdir ${gf_dir} \
 	 -pdata fort.15.noth -wn ${wN} -we ${wE} -wz ${wZ} -med
 
 ${CP} p_wpinversion p_wpinversion.noth

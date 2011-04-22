@@ -54,5 +54,9 @@ foreach cmp ($cmps)
                 endif
         end
         $FAST_SYNTH CMTSOLUTION_$cmp ../STAT_LIST
+	if $status then
+		$ECHO "*** ERROR (calc_fast_synths) when computing GFs ***"
+		exit(1)
+	endif
 	cd ../..
 end

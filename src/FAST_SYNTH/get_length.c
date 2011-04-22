@@ -29,7 +29,10 @@ get_length(char *segm1, char *segm2)
   fd = open(sac_GF, O_RDONLY, "r");
   if(fd == -1)
 	{
-	  fprintf(stderr, "Error in get_length; sac_GF file %s not accesible\n", sac_GF);
+	  fflush(stdout);
+	  fprintf(stderr, "\n*** ERROR (get_length): sac_GF file %s not accesible\n", sac_GF);
+	  fprintf(stderr, "*** ... Exiting the program ... ***\n");
+	  fflush(stderr);
 	  exit(1);
 	}
 

@@ -20,6 +20,7 @@ ${MKDIR} SYNTH
 
 $EXTRACT
 $CALC
+if $status exit(1)
 $PREPARE
 
 if (-e i_master) then
