@@ -1,17 +1,37 @@
 #!/usr/bin/env python
 # *-* coding: iso-8859-1 *-*
 
-######################################
+############################################################################
+#
+#	              W phase source inversion package 	            
+#                               -------------
+#
+#        Main authors: Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+#                      
+# (c) California Institute of Technology and Université de Strasbourg / CNRS 
+#                                  April 2013
+#
+#    Neither the name of the California Institute of Technology (Caltech) 
+#    nor the names of its contributors may be used to endorse or promote 
+#    products derived from this software without specific prior written 
+#    permission
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+############################################################################
+
 # GRID SEARCH FOR WPHASE INVERSION
-###
-# Z.Duputel, L.Rivera and H.Kanamori
-#  2009/07/15 -- initial version for grid search
-#  2009/07/19 -- optimization for time shift : B-tree sampling method
-#  2009/07/26 -- optimization for centroïd position : Oct-tree sampling method
-#  2009/09/09 -- plot routines are now in a separate script
-#  2010/01/08 -- allow the possibility to extend the spatial GS area 
-#                (if optimums are on edge)
-#  2011/01/28 -- parallel version of the grid-search / 3D grid-search (option -z)
 
 # Time-shift grid-search parameters
 TS_NIT   = 3  # Nb of iterations
