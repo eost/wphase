@@ -9,8 +9,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <complex.h>
 
-#include "complex.h"
 #include "proto_alloc.h"    /* proto_alloc.c  */
 #include "rwtextfiles.h"    /* rwtextfiles.c  */
 #include "read_i_files.h"   /* read_i_files.c */
@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 	  if (finite(a1) && finite(a2) && finite(a3))
 	    fprintf (out, "%-14s%18.9e%18.9e%18.9e\n", id, a1, a2, a3) ; 
 	  else {
-	    fprintf(stderr,"WARNING (make_resp_lookup_table): Non-Finite coefficient detected\n")                 ;
+	    fprintf(stderr,"WARNING (make_resp_lookup_table): Non-Finite coefficient detected\n")  ;
 	    fprintf(stderr,"          id : %s ; c1=%e ; c2=%e ; c3=%e\n", id, a1, a2, a3) ;}
 	}
     }
@@ -131,7 +131,7 @@ get_params(char *file, str_quake_params *eq)
 /* Output parameters : zr : zeros (nz values) */
 /*                                            */
 int
-readzeros(int *nz, complex *zr, FILE *in)
+readzeros(int nz, complex *zr, FILE *in)
 {
   int i, nzn0, nz0, tmp ;
   double rea,ima;
@@ -140,24 +140,20 @@ readzeros(int *nz, complex *zr, FILE *in)
     {
       if( tmp == 0 )
 	break ; 
-      if (i+1>*nz)
+      if (i+1>nz)
 	return -1;
-      zr[i].real = rea ;
-      zr[i].imag = ima ;
+      zr[i] = rea+ima*_Complex_I;
       i++ ;
     }
-  /* nzn0 is the number of zeros specified (often null)*/
+  /* nzn0 is the number of zeros specified (often null)        */
   nzn0 = i ;
   /* nz0 is the number of zeros at 0 for the velocity response */
-  nz0  = *nz - nzn0 ;
+  nz0  = nz - nzn0 ;
   if( nzn0 >= 1 )
     for( i=0; i<nzn0; i++ )
-	zr[(*nz)-i-1] = zr[nzn0-i-1];
-  for( i=0; i<nz0 ; i++ ) // on pourait ne travailler que sur 
-    {                     // des pointeurs, mais il faudrais
-      zr[i].real=0 ;      // déclarer un deuxième pointeur
-      zr[i].imag=0 ;      // sur une struct complex
-    }
+	zr[nz-i-1] = zr[nzn0-i-1];
+  for( i=0; i<nz0 ; i++ ) 
+      zr[i]= 0.0 ; 
   return nzn0;
 }
 
@@ -171,23 +167,23 @@ readzeros(int *nz, complex *zr, FILE *in)
 /* Output parameters : pl : poles (np values) */
 /*                                            */
 void 
-readpoles(int *np, complex *pl, FILE *in, int *ierror) 
+readpoles(int np, complex *pl, FILE *in, int *ierror) 
 {
   int i;
+  double rea,ima;
   i=0 ;
-  while(i < *np)
+  while(i < np)
     {
-      if(fscanf (in, "%lf%lf", &pl[i].real, &pl[i].imag) != 2 )
+      if(fscanf (in, "%lf%lf", &rea, &ima) != 2 )
 	{
 	  fprintf (stderr, "Error reading poles of pzfiles\n") ;
 	  *ierror = 99;
 	  return;
 	}
+      pl[i] = rea+ima*_Complex_I ;
       i++ ;
     }
 }
-
-
 
 
 /************************************************************/
@@ -233,12 +229,16 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 		  *ierror=99 ;
 		  return     ;
 		}
-	      *zr = complex_alloc(*nz)   ;
-	      ns  = readzeros(nz,*zr,in) ;
-	      minZ = abs_c(**zr) ; j = 0 ;
+	      if ((*zr = (complex*)malloc((*nz)*sizeof(complex))) == NULL)
+		{
+		  fprintf(stderr,"FATAL ERROR: Out of memory");
+		  exit(1);
+		} 
+	      ns  = readzeros(*nz,*zr,in) ;
+	      minZ = cabs(**zr) ; j = 0 ;
 	      for(i=0;i<*nz;i++)
 		{
-		  tmpZ = abs_c((*zr)[i]) ;
+		  tmpZ = cabs((*zr)[i]) ;
 		  if (tmpZ < minZ)
 		    {
 		      minZ=tmpZ;
@@ -256,8 +256,7 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 	      for(i=j+1;i<*nz;i++)
 		(*zr)[i-1] = (*zr)[i] ;
 	      *nz = *nz-1 ; /* dispacement -> velocity (nzeros -> nzeros-1) */
-	      zflag = 1;
-	      
+	      zflag = 1;	      
 	    }
 	  else
 	    fprintf (stderr, "WARNING (make_resp_lookup_table): ZEROS redundancy in pzfile: %s\n",pzfilename) ;
@@ -267,9 +266,13 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 	  if( !pflag )
 	    {
 	      ns    = sscanf (line, "%s%d", head, np) ;
-	      *pl   = complex_alloc(*np) ;
+	      if ((*pl = (complex*)malloc((*np)*sizeof(complex))) == NULL)
+		{
+		  fprintf(stderr,"FATAL ERROR: Out of memory");
+		  exit(1);
+		} 
 	      pflag = 1 ;
-	      readpoles(np,*pl,in,ierror) ;
+	      readpoles(*np,*pl,in,ierror) ;
 	      if (*ierror==99)
 		{	
 		  fprintf(stderr,"WARNING (make_resp_lookup_table): incorrect pzfile format: %s (rejected)\n",pzfilename);
@@ -322,25 +325,16 @@ readpzfile (char *pzfilename, int *nz, complex **zr, int *np, complex **pl, doub
 /* Output parameters : resp : (complex) response at w       */
 /*                                                          */
 complex 
-pz2res (double w, int nz, complex *zr, int np, complex *pl, double sg, int *ierror)
+pz2res (double w, int nz, complex *zr, int np, complex *pl, double sg)
 {
   int i;
-  complex num, den, resp;
-  
-  num = cmplx ( 1., 0. ) ;
+  complex num, den ;  
+  num = 1.0; den = 1.0;
   for ( i=0 ; i<nz ; i++ )
-    {
-      num = mul_c( num , sub_c(cmplx(0., w),zr[i]) ) ;
-    }
-
-  den = cmplx ( 1., 0. ) ;
+    num *=  _Complex_I*w - zr[i] ;
   for ( i=0 ; i<np ; i++ )
-    {
-      den = mul_c( den , sub_c(cmplx(0., w),pl[i]) ) ;
-    }
-  
-  resp = div_c( mul_c(num, cmplx(sg, 0)) , den , ierror) ;
-  return (resp) ;
+    den *= _Complex_I*w - pl[i] ;
+  return sg*num/den ;
 }
 
 
@@ -360,21 +354,16 @@ pz2res (double w, int nz, complex *zr, int np, complex *pl, double sg, int *ierr
 /*                     yl : log10(y) (nf floats)             */
 /*                                                           */
 void 
-compresp (int nf, double *f, int nz, complex *zr, int np, complex *pl, double sg, double **y, float **yl, int *ierror)
+compresp (int nf, double *f, int nz, complex *zr, int np, complex *pl, double sg, double **y, float **yl)
 {
   int     i ;
   double  w ;
-  complex resp ;
-  
-  (*y)   = double_alloc(nf) ;
-  (*yl)    = float_alloc(nf) ;
+  (*y)  = double_alloc(nf) ;
+  (*yl) = float_alloc(nf) ;
   for ( i=0; i<nf; i++ )
     {
       w     = 2*M_PI*f[i] ;
-      resp  = pz2res (w, nz, zr, np, pl, sg, ierror) ;
-      if (*ierror == 99)
-	return;
-      (*y)[i]  = abs_c(resp) ;
+      (*y)[i]  = cabs(pz2res (w, nz, zr, np, pl, sg)) ;
       (*yl)[i] = (float)log10((*y)[i]) ;
     }
 }
@@ -396,35 +385,21 @@ compresp (int nf, double *f, int nz, complex *zr, int np, complex *pl, double sg
 /*                     h  : damping factor (1st approx)      */
 /*                                                           */
 void 
-firstparams(double fref, double fl, double nz, complex *zr, double np, complex *pl, double sg, double *gain_factor, double *fc, double *h, int *ierror)
+firstparams(double fref, double fl, double nz, complex *zr, double np, complex *pl, double sg, double *gain_factor, double *fc, double *h)
 {
   double  w0, w, amp01;
-  complex resp ;
   /* Compute the (a priori) gain factor at the reference frequency */
   w0           = 2*M_PI*fref ;
-  resp         = pz2res (w0, nz, zr, np, pl, sg, ierror) ;
-  if (*ierror == 99)
-    return;
-  *gain_factor = abs_c(resp) ;
-
+  *gain_factor = cabs(pz2res (w0, nz, zr, np, pl, sg)) ;
   /* Compute the first approximation of fc */
   w     = 2*M_PI*fl ;
-  resp  = pz2res (w, nz, zr, np, pl, sg, ierror) ;
-  if (*ierror == 99)
-    return;
-  amp01 = abs_c(resp) ;
+  amp01 = cabs(pz2res (w, nz, zr, np, pl, sg)) ;
   *fc   = fl*sqrt((*gain_factor)/amp01) ;
-
   /* Compute the first approximation of h */
   w     = 2*M_PI*(*fc) ;
-  resp  = pz2res (w, nz, zr, np, pl, sg, ierror) ;
-  if (*ierror == 99)
-    return;
-  amp01 = abs_c(resp) ;
-  *h    = (*gain_factor)/(2.*amp01) ;
-  
+  amp01 = cabs(pz2res (w, nz, zr, np, pl, sg)) ;
+  *h    = (*gain_factor)/(2.*amp01) ;  
 }
-
 
 /*****************************************************************/
 /*           s2=rmsestimates(gain_factor,fc,h,nf,f,y)            */
@@ -439,31 +414,26 @@ firstparams(double fref, double fl, double nz, complex *zr, double np, complex *
 /* Output parameter  : s2 : "rms" error                          */
 /*                                                               */
 double 
-rmsestimates(double gain_factor, double fc, double h, int nf, double *f, double *y, int *ierror) 
+rmsestimates(double gain_factor, double fc, double h, int nf, double *f, double *y) 
 {
   int     i ;
   double  s2, *yc, w, wc;
   complex num, den;
-  
   wc = 2.*M_PI*fc ;
   yc = double_alloc(nf) ;
   s2 = 0. ;
   for (i=0; i<nf; i++)
     {
       w     = 2.*M_PI*f[i] ;
-      num   = cmplx(-pow(w,2),0.) ;
-      den   = add_c(add_c(cmplx(-pow(w,2),0.),cmplx(0.,2.*h*wc*w)),cmplx(pow(wc,2),0.)) ;
-      yc[i] = abs_c(div_c(num,den,ierror)) * gain_factor ; /* inverted velocity-response */
-      if (*ierror == 99)
-	return 99;
-      s2    = s2 + pow(y[i]/yc[i] - 1.,2) ;         
+      num   = -w*w ;
+      den   = num + 2.*h*wc*w*_Complex_I + wc*wc ;
+      yc[i] = gain_factor * cabs(num/den); /* inverted velocity-response */
+      s2 = s2 + (y[i]/yc[i] - 1.)*(y[i]/yc[i] - 1.) ;         
     }
-  s2 = sqrt(s2/(double)(nf-1)) ; // pourquoi nf-1 et pas nf???
+  s2 = sqrt(s2/(double)(nf-1)) ; 
   free(yc);
-  return (s2) ;
+  return s2 ;
 }
-
-
 
 /*******************************************************************/
 /*  plzr2resp(pzfilename,tol,fl,fh,nf,fref,&g,&fc,&h,&s2,&ierror)  */
@@ -527,16 +497,18 @@ plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf , do
     return;
 
   /* Compute the velocity-response */
-  compresp (nf, f, nz, zr, np, pl, sg, &y, &yl, ierror) ;
-  if (*ierror == 99)
-    return;
-
+  compresp (nf, f, nz, zr, np, pl, sg, &y, &yl) ;
   /* first approximation of gain_factor, fc and h */
-  firstparams(fref, fl, nz, zr, np, pl, sg, gain_factor, fc, h, ierror) ;
-  if (*ierror == 99)
-    return;
-  printf(" 1st approx. GF, fc and h =    %.7e  %.7e  %.7f\n",*gain_factor, *fc, *h) ;
-
+  firstparams(fref, fl, nz, zr, np, pl, sg, gain_factor, fc, h) ;
+  if (finite(*gain_factor) && finite(*fc) && finite(*h))
+    printf(" 1st approx. GF, fc and h =    %.7e  %.7e  %.7f\n",*gain_factor, *fc, *h) ;
+  else
+    {
+      fprintf(stderr,"WARNING (make_resp_lookup_table): Non-Finite a priori GF, fc or h\n")  ;
+      fprintf(stderr,"          pz : %s ; GF=%e ; fc=%e ; h=%e\n",pzfilename, *gain_factor, *fc,*h)     ;
+      *ierror = 1;
+      return;
+    }
   /* LSQENP */
   b    = float_alloc(3) ;
   b[0] = (float)*gain_factor ; /*  lsq "parameters" */
@@ -548,9 +520,7 @@ plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf , do
   *h           = (double)b[2] ;
   
   /* RMS estimates */
-  *s2 = rmsestimates(*gain_factor, *fc, *h, nf, f, y, ierror) ;
-  if (*ierror == 99)
-    return;
+  *s2 = rmsestimates(*gain_factor, *fc, *h, nf, f, y) ;
   printf(" lsq :  GF, fc, h and rms =    %.7e  %.7e  %.7f      %.7e\n",*gain_factor,*fc,*h,*s2);
   if (*s2 >= tolerance)
     {
@@ -567,8 +537,6 @@ plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf , do
   free((void *) yl);
   free((void *) x);
 }
-
-
 
 void 
 pzfile2id(char *pzfile, char *id, int *ierror) 

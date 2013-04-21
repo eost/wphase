@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - read/write text files subroutines
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -150,8 +147,7 @@ openfile_wt(char *filename)
 /*                     -> chan : channel                */
 /*                     -> ext  : extention              */
 char *
-get_gf_filename(dir, stnm, netwk, chan, ext)
-     char *dir, *stnm, *netwk, *chan, *ext ;
+get_gf_filename(char *dir, char *stnm, char *netwk, char cmpnm, char *ext)
 {
   int n,m ;
   char *sac_filename ;
@@ -180,16 +176,16 @@ get_gf_filename(dir, stnm, netwk, chan, ext)
   strcat(sac_filename, ".");
   n = nbchar(netwk);
   strncat(sac_filename, netwk,n);
-  strcat(sac_filename, ".");
-  n = nbchar(chan);
-  strncat(sac_filename, chan, n);
+  strcat(sac_filename, ".LH");
+  n = nbchar(sac_filename);
+  sac_filename[n]=cmpnm   ;
+  sac_filename[n+1]= '\0' ;
   strcat(sac_filename, ".");
   n = nbchar(ext);
   if (ext[0] == '.')
     m=1;
   else 
     m=0;
-
   strncat(sac_filename, &ext[m],n);
   strcat(sac_filename, "");
   return sac_filename ;

@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - ASCII beach balls
 *                                           
-*       History
-*             2010  Original Coding 
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -11,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 #include "proto_alloc.h"
 
 int 

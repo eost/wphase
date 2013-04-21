@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - STF convolution
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -15,7 +12,6 @@
 /* Subroutines headers */
 #include "proto_alloc.h"  /* proto_alloc.c          */
 #include "rwsacs.h"       /* rwsacs.c               */
-#include "butterworth.h"  /* butterworth_sin.c */
 
 
 void 
@@ -56,65 +52,75 @@ make_stf(int lh, char *type, double *h)
     h[i] = h[i]/al0;
 }
 
-
-
-void 
+void
 runave(double *x, double *y, int npts, int lh, char *type)
 {
-  int    LH, end, pos;
-  int    i, j, il, ir;
-  double cum, *h;
+  int i, j, il, ir, LH;
+  double cum, *h, xl, xr;
 
-  
-  h = double_alloc(1000) ; 
-
-  /* Set STF */
-  make_stf(lh,type,h);
-  
-  /* Ponderated Average in the inner section of the time series*/
-  LH = lh + 1 ; /* half nb of samples (lh is the half nb of intervals)*/
-  end = npts - LH ;
-  pos = lh;
-  for (i = lh ; i <= end ; i++)
+  /* STF */
+  LH = lh + 1 ; /* #samples/2 (lh is #intervals/2) */
+  h = double_alloc(LH) ;
+  make_stf(lh,type,h);  
+  /* Weighted Average */
+  for (i = 0 ; i < npts ; i++)
     {
       il = i;
       ir = i;
-      cum = h[0] * x[i] ; 
+      cum = h[0] * x[i] ;
       for (j = 1; j < LH; j++)
 	{
-	  il = il - 1;
-	  ir = ir + 1;
-	  cum = cum + h[j] * ( x[il] + x[ir] ) ;
+	  il--;
+	  ir++;
+	  xl = (il< 0   ) ? 0. : x[il];
+	  xr = (ir>=npts) ? 0. : x[ir];
+	  cum = cum + h[j] * ( xl + xr ) ;
 	}
-      y[pos] = cum ;
-      pos++;
-    }
-  /* Set average values for borders */
-  for( i=0 ; i < lh ; i++ )
-    {
-      y[i] = y[lh] ;
-      y[npts - lh + i] = y[npts - LH];
+      y[i] = cum ;
     }
   free((void*)h);
 }
 
-
-
-void 
-conv_by_stf(double *delay, double *half_width, char *itype, sachdr *hdr, double *x_in, double *x_conv)
+/************************************************************************/
+/*                      left_taper(x, npts, start, end)                      */
+/************************************************************************/
+/*    Tapering                                                          */
+void left_taper(double *x, int npts, int nbeg, int nend)
 {
-  int lh;
+  int i;
+  double ang, av = 0.;
+  if ( nend > nbeg)
+	{
+	  for (i = nbeg; i <= nend ; i++)
+		av += x[i];
+	  av /= (nend-nbeg+1);
+	  
+	  for (i = 0; i < nbeg; i++)
+		x[i] = 0.;
+	  for (i = nbeg; i < npts ; i++)
+		x[i] -= av;
+	  
+	  ang = M_PI / ((double)(nend-nbeg)) ;
+	  for (i = nbeg; i <= nend ; i++)
+		x[i] *= (1.0 - cos((double)(i-nbeg)*ang))/2.0 ;
+	}
+  else
+	  printf("Warning 'nend <= nbeg'; not applying taper\n");
+}
 
-  /* Remove baseline */
-  dtrd (x_in, hdr->npts, 60) ;
-  printf("baseline removed\n");
-  hdr->b = hdr->b + (*delay);
+void
+conv_by_stf(double delay,double half_width,char *itype,sachdr *hdr,double *x_in,double *x_conv)
+{
+  int lh, nbeg, nend;
+  const int max_base     = 59;   /*  SAMPLES  */
+  const int pre_P_safety = 10;   /*  SAMPLES  */
 
-  /* Perform convolution */
-  lh = (int) ((*half_width)/hdr->delta + 0.1) ;
-  printf("b, nlh, dt, npts=%f %d %f %d\n", hdr->b, lh, hdr->delta, hdr->npts);
-  runave(x_in,x_conv,hdr->npts,lh,itype) ;
+  nbeg = 0;
+  nend =  (int)floor((hdr->t[0] - hdr->b - pre_P_safety)/hdr->delta);
+  if ( nend - nbeg > max_base ) nbeg = nend - max_base;
 
-  /* Remove baseline again */
-  dtrd (x_conv, hdr->npts, 60) ;
+  left_taper(x_in, hdr->npts, nbeg, nend);
+  lh = (int)floor(half_width/hdr->delta + 0.5);
+  runave(x_in,x_conv,hdr->npts,lh,itype);
+  hdr->b    += delay;
 }

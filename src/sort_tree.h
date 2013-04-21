@@ -1,12 +1,12 @@
-/****************************************************************
-*	W phase package - "Tree" sorting header
-*                                           
-*       History
-*             2010  Original Coding
-*
-*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
-*
-*****************************************************************/
+/**********************************************/
+/*  "Tree" sorting subroutines of sac files   */
+/* in order of increasing epicentral distance */
+/**********************************************/
+/* Header : sort_tree.h                       */
+/* Source Code : sort_tree.c                  */
+/**********************************************/
+/* Z. Duputel 05/03/2009                      */
+/**********************************************/
 
 struct tree
 {

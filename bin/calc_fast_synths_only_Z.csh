@@ -1,9 +1,4 @@
 #!/bin/csh -f
-#
-# W phase package - Calculate greens functions for Z components
-#
-# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
-#
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 
@@ -30,7 +25,7 @@ ${RM} -rf $gf_dir
 ${MKDIR} $gf_dir
 
 # setting up the list of stations for which to calculate synthetics.
-${AWK} '{printf "%-4s %-2s %9.4f %9.4f\n",$2,$3,$5,$6}' scr_dat_fil_list >! $gf_dir/STAT_LIST
+${AWK} '{printf "%-4s %-2s %9.3f %9.3f\n",$2,$3,$5,$6}' scr_dat_fil_list >! $gf_dir/STAT_LIST
 
 
 # Elementary moment tensors
@@ -55,9 +50,5 @@ foreach cmp ($cmps)
                 endif
         end
         $FAST_SYNTH_Z CMTSOLUTION_$cmp ../STAT_LIST
-	if $status then
-		$ECHO "*** ERROR (calc_fast_synths) when computing GFs ***"
-		exit(1)
-	endif
 	cd ../..
 end

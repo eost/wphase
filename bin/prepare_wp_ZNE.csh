@@ -1,66 +1,63 @@
 #!/bin/csh -f
-#
-# W phase package - Prepare data and GFs for Z, N and E components
-#
-# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+# Command lines examples:
+# prepare_wp.csh 
+# prepare_wp.csh Z
+# prepare_wp.csh -a
 #
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH
+set LOG      = LOG
+set DATA     = DATA
+set DATA_org = DATA_org
+set CMPS     = "Z N E"
 
-################################################
-
-set CHANS   = "LHN LHE LHZ"
-
-set LOG     = LOG
-set DATA    = DATA
-
-if (-e i_master) then
-        ${GREP} -v "^#" i_master >! i_tmp
-else
-        ${ECHO} "Error: file  i_master not available"
-        exit
+# command line arguments 
+set trim_flag = '-u'
+set my_argv = ($ARGV)
+if ($#my_argv > 0) then
+    set CMPS = $my_argv
+    if ( $CMPS == '-a' ) then
+	set CMPS = "Z N E"
+	set trim_flag = "-a"
+    endif
 endif
 
-set gf_dir   = "./GF"
-set tmp      = `${GREP} GFDIR   i_tmp`
-if ! $status then
-        set gf_dir   = `echo $tmp | ${HEAD} -1 | ${CUT} -d: -f2`
-endif
 
-set CMTFILE  = `${GREP} CMTFILE i_tmp | ${HEAD} -1 | ${CUT} -d: -f2`
-${RM} -f i_tmp
+if ( ! -e ${DATA_org} ) then
+   ${ECHO} "Missing ${DATA_org}"
+   exit 1
+endif
+ 
+if ( -e ${DATA} ) $RM -rf ${DATA}
+${MKDIR} ${DATA}
+${MKDIR} -p ${LOG}
+###############################################
+foreach CMP ($CMPS)
+    ${CP} -f ${DATA_org}/SAC_PZs_*_*_??${CMP}_* ${DATA}
+    ${SACLST} kcmpnm f ${DATA_org}/*.SAC | ${EXPAND} | ${GREP} " ..${CMP}" | ${CUT} -d' ' -f1 | \
+	$XARGS -n 1 -I {} ${DECIMATE} {} ${DATA} >! ${LOG}/_log_decimate
+end
+${LS} ${DATA}/*.SAC >! ${DATA}/_sac_files_list
+
+$TRIM_SAC_FILES i_master ${DATA}/_sac_files_list scr_dat_fil_list $trim_flag # Use of "-u" will allow only one network per-channel
+
+########################
+# Responses Lookup table
+${ECHO} "Creating the responses lookup table ( >! ${LOG}/_log_resps_lookup_table )"
+${LS} -1 ${DATA}/SAC_PZs* >! ${DATA}/pz_fil_list
+$MAKE_RESP_TABLE ${DATA}/pz_fil_list i_master coeffs_rec_lut >! ${LOG}/_log_resps_lookup_table
 
 ################################################
-# deconvolution and filtering 
+# deconvolution and filtering                  #
 ${ECHO} "Data deconvolution and filter...                   ( >! ${LOG}/_log_dec_filt )"
-
-if -e ${LOG} then
-    ${RM} -rf ${LOG}/_log_dec_filt
-else
-    ${MKDIR} ${LOG}
-endif
-
-$REC_DEC_FILT coeffs_rec_lut i_master scr_dat_fil_list dec_bp_dat_fil_list >> ${LOG}/_log_dec_filt
-
-################################################
-# Rotation of data horizontal components (from E/N to L/T)
-#${ECHO} "Rotation of horizontal components...               ( >! ${LOG}/_log_rot_data )"
-#$CHANGE_SAC_HEADERS dec_bp_dat_fil_list upd_dec_bp_dat_fil_list ${DATA} -icmtf ${CMTFILE} >! ${LOG}/_log_rot_data
+$REC_DEC_FILT coeffs_rec_lut i_master scr_dat_fil_list dec_bp_dat_fil_list >! ${LOG}/_log_dec_filt
 
 ################################################
 # Synthetics preparatio:convolution and filter #
-${ECHO} "Synthetics convolution and filter...               ( >! ${LOG}/_log_synths_conv_filt    )"
+${ECHO} "Synthetics convolution and filter...  "
+${PREP_KERNELS_ZNE} scr_dat_fil_list l
+if $status exit(1)
 
-${FIND} ${gf_dir} -name "*sac*" -exec ${RM} \{\} \+
-${RM} -rf ${LOG}/_log_synths_conv_filt syn_fil_list
-foreach CHAN ($CHANS)
-    ${AWK} '{printf "%s.%s\n", $1, $2}' $gf_dir/STAT_LIST | ${SED} -e "s/.*/&.${CHAN}.SAC/" >> syn_fil_list
-end
-
-$SYN_CONV_FILT syn_fil_list l  -imas i_master -gfdir ${gf_dir} >! ${LOG}/_log_synths_conv_filt
-
-###############################################
-# Creating input file for inversion ... 
+################################################
+# Creating input file for inversion ...        #
 ${CUT} -d' ' -f1  dec_bp_dat_fil_list >! i_wpinversion
-
-${RM} -f dat_fil_list

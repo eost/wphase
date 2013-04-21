@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - Hozizontal components rotation
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -34,7 +31,7 @@ void distaz(double    cmt_lat,  double    cmt_lon,  float*    stlats,  float*   
 int 
 main(int argc, char *argv[])
 {
-  int    i,MAX, flag,ind, ierror, nl;
+  int    i,MAX, flag,ind=0, ierror, nl;
   long   int nerr                   ; 
   float  dum, az, baz=0, xdeg ;
   double stla, stlo, stel   ;
@@ -79,9 +76,9 @@ main(int argc, char *argv[])
       else
 	check_scan(9, nl, scr_lst, istaf);
       
-      if (strcmp(cmp, "LHZ") == 0)  /* Vertical component */
+      if (cmp[2]=='Z')  /* Vertical component */
 	{
-	  o_fil = get_gf_filename(o_dir, sta, net, "LHZ", ".data.sac") ;
+	  o_fil = get_gf_filename(o_dir, sta, net, 'Z', ".data.sac") ;
 	  rhdrsac(i_fil, &hdr1, &ierror)        ;
 	  rdatsac(i_fil, &hdr1, x_in1, &ierror) ;
 	  /* az, baz, xdeg are not writen in sac files since we use PDE for the W phase time window */
@@ -91,16 +88,15 @@ main(int argc, char *argv[])
 	  distaz(eq.evla, eq.evlo, &hdr1.stla, &hdr1.stlo, 1, &dum, &az, &baz, &xdeg, &nerr) ; 
 	  fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
 		  o_fil,sta,net,cmp,stla,stlo,stel,az,xdeg) ;
-	  whdrsac(  o_fil, &hdr1) ;
-	  wdatsac(  o_fil, &hdr1, x_in1) ;
+	  wsac(  o_fil, &hdr1, x_in1) ;
 	  free((void*)o_fil) ;
 	  continue ;
 	}
       else if ( !flag || strcmp(prev_sta, sta) != 0 )  /* 1st horizontal component */
 	{
-	  if (strcmp(cmp, "LHE") == 0)
+	  if (cmp[2] == 'E')
 	    ind = 0;
-	  else if (strcmp(cmp, "LHN") == 0)
+	  else if (cmp[2] == 'N')
 	    ind = 1;
 	  else {
 	    fprintf(stderr,"Warning (rot_horiz_cmp) : unknown component %s in file %s\n", cmp, i_fil);
@@ -114,14 +110,14 @@ main(int argc, char *argv[])
 	}
       else if (strcmp(prev_sta, sta) == 0)             /* 2nd horizontal component */
 	{
-	  if (strcmp(cmp, "LHE") == 0) 
+	  if ( cmp[2] == 'E' ) 
 	    {
 	      if (ind == 0) {
 		fprintf(stderr,"Warning (rot_horiz_cmp) : %s redundancy for sta %s\n", cmp, prev_sta);
 		continue ;  }
 	      ind = 0;
 	    }
-	  else if (strcmp(cmp, "LHN") == 0)
+	  else if ( cmp[2] == 'N' )
 	    {
 	      if (ind == 1) {
 		fprintf(stderr,"Warning (rot_horiz_cmp) : %s redundancy for sta %s\n", cmp, prev_sta);
@@ -168,20 +164,18 @@ main(int argc, char *argv[])
 	}      
       /* Writing Longitudinal cmp */
       strcpy(hdproto->kcmpnm, "LHL     ") ;
-      o_fil = get_gf_filename(o_dir, sta, net, "LHL", ".data.sac") ;
+      o_fil = get_gf_filename(o_dir, sta, net, 'L', ".data.sac") ;
       printf("%-9s L : %-f", hdproto->kstnm, hdproto->cmpaz) ;
-      whdrsac( o_fil, hdproto) ;
-      wdatsac( o_fil, hdproto, x_in1) ;
+      wsac( o_fil, hdproto, x_in1) ;
       fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
 	      o_fil,sta,net,"LHL",stla,stlo,stel,az,xdeg);      
       free((void*)o_fil) ;
 
       /* Writing Transverse cmp */
       strcpy(hdproto->kcmpnm, "LHT     ") ;
-      o_fil = get_gf_filename(o_dir, sta, net, "LHT", ".data.sac") ;
+      o_fil = get_gf_filename(o_dir, sta, net, 'T', ".data.sac") ;
       printf(" T : %-f\n", hdproto->cmpaz) ;
-      whdrsac( o_fil, hdproto) ;
-      wdatsac( o_fil, hdproto, x_in2) ;
+      wsac( o_fil, hdproto, x_in2) ;
       fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
 	      o_fil,sta,net,"LHT",stla,stlo,stel,az,xdeg);
       free((void*)o_fil) ;

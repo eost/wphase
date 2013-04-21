@@ -16,7 +16,7 @@ C        NONLINEAR LEAST SQUARES
       COMMON /AFCLSQ/ SE,PHI,PHIZ,WS,XL,IFSS2,IFSS3,IWS6,I,J,JJ,IBK2,
      1                IBKA,IBKM,IPLOT,BS,SA,A
       REAL*8 PHD,XLL,DTG,GTG
-      open(26,file='o_lsqenp')
+      open(26,file='o_lsqenp2')
       JBCH=' '
       JOCH='O'
       JPCH='P'

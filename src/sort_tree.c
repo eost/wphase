@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - "Tree" sorting subroutines
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -122,6 +119,17 @@ addfile(struct tree *mod)
   return new;
 }
 
+int 
+strkey(char C) // 4 is Hardwired
+{
+  int i;
+  char S[4]={'L','B','H','S'} ;
+  for(i=0;i<4;i++)
+    if(S[i]==C)
+      return i;
+  return 4;
+}
+
 
 /***************************************************************/
 /*                   build (root, model)                       */
@@ -139,26 +147,46 @@ build (struct tree * root, struct tree *mod, int flag)
   struct tree   *beg = root;
   struct tree   *new = mod;
 
-  
   if (flag <= 0)
     i = strcmp(new->net,beg->net) ;
   else
     i = 0 ;
   j   = strcmp(new->sta,beg->sta)   ;
-  k   = strcmp(new->cmp,beg->cmp)   ;
+  if (flag<0)
+    k   = strcmp(new->cmp,beg->cmp) ;
+  else
+    {
+      if (new->cmp[2]==beg->cmp[2])
+	k = 0;
+      else
+	k = 1;
+    }
 
   if ((i == 0) && (j == 0) && (k == 0)) /* same network, station and channel */
     {
       if (strcmp(new->locid,beg->locid) == 0)/* same locid => priority to largest npts */
 	{
 	  beg->occur++ ;
-	  if (beg->npts < new->npts) 
-	    { 
-	      beg->npts = new->npts       ; 
-	      strcpy(beg->file,new->file) ;
-	      if (flag > 0)
-		strcpy(beg->net,new->net) ;
+	  if (!strcmp(new->cmp,beg->cmp))
+	    {
+	      if (beg->npts < new->npts)
+		{
+		  beg->npts = new->npts       ;
+		  strcpy(beg->file,new->file) ;
+		  if (flag > 0)
+		    strcpy(beg->net,new->net) ;	 
+		}
 	    }
+	  else 
+	    {	
+	      if (strkey(beg->cmp[0])>strkey(new->cmp[0]))
+		{
+		  beg->npts = new->npts       ;
+		  strcpy(beg->file,new->file) ;
+		  if (flag > 0)
+		    strcpy(beg->net,new->net) ;	 
+		}
+	    }		
 	}
       else if ( flag >= 0 )
 	{

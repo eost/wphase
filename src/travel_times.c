@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - Travel times
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -38,18 +35,15 @@ make_table(char* name, char* table)
 
 
 void 
-trav_time_init(nh, nd, h, dv, tv, ierror)
-int    *nh, *nd ;
-double *h, *dv, *tv ;
-int    *ierror ;
+trav_time_init(int nh, int nd, double h, double *dv, double *tv, int *ierror)
 {
   int    i, j, nl, flag, co;
   double *depths, *tmp, h1, h2, t1, t2;
   char   *file;
   FILE   *P_ttfile ;
- 
-  tmp    = double_alloc((*nh+1) * (*nd+1));
-  depths = double_alloc(*nh);
+  
+  tmp    = double_alloc((nh+1) * (nd+1));
+  depths = double_alloc(nh);
   file  = char_alloc(256) ;
 
   make_table("WPHASE_HOME", file) ;
@@ -62,9 +56,9 @@ int    *ierror ;
   fclose(P_ttfile); 
 
   /* Set clother depths */
-  for (i=1; i<*nh; i++) 
+  for (i=1;i<nh;i++) 
     {
-      if ((*h >= tmp[i]) && (*h <= tmp[i+1])) 
+      if ((h>=tmp[i]) && (h<=tmp[i+1])) 
 	{
 	  flag = 0;
 	  break;
@@ -74,10 +68,10 @@ int    *ierror ;
     {
       if (*ierror == 1)
 	{
-	  fprintf(stderr, "Error: depth: %f out of range\n", *h);
+	  fprintf(stderr, "Error: depth: %f out of range\n",h);
 	  exit(1);
 	}
-      fprintf(stderr, "WARNING : depth: %f out of range; extrapolating ... \n", *h); 
+      fprintf(stderr, "WARNING : depth: %f out of range; extrapolating ... \n",h); 
       *ierror = 1;
       i--;
     }
@@ -87,16 +81,16 @@ int    *ierror ;
   h2 = tmp[j+1];
   co = 0;
   /* Set distance and travel time arrays */
-  for (i = 0; i < *nd; i++)
+  for (i = 0;i<nd;i++)
     {
-      co   += (*nh)+1;
+      co   += nh+1;
       /* Set epicentral distance */
       dv[i] = tmp[co];
       /* Set surrounding travel-times for this epicentral distance */
       t1  = tmp[co+j] ;
       t2  = tmp[co+j+1] ;
       /* Linear Interpolation */
-      tv[i] =  t1 + (t2 - t1) * (*h-h1)/(h2-h1) ;
+      tv[i] =  t1 + (t2 - t1) * (h-h1)/(h2-h1) ;
     }
   free((void*)depths);
   free((void*)file);
@@ -107,18 +101,13 @@ int    *ierror ;
 
 
 void 
-trav_time(d, tv, dv, nd, P_tt, ierror)
-double *d, *tv, *dv;
-int    *nd;
-double *P_tt; 
-int    *ierror;
+trav_time(double d, double *tv, double *dv, int nd, double *P_tt, int *ierror)
 {
   int    i, flag=1;
-
   /* Set clother distances */
-  for (i=0; i<*nd; i++) 
+  for (i=0;i<nd;i++) 
     {
-      if ((*d >= dv[i]) && (*d <= dv[i+1])) 
+      if ((d>=dv[i]) && (d<=dv[i+1])) 
 	{
 	  flag = 0;
 	  break;
@@ -128,12 +117,12 @@ int    *ierror;
     {
       if (*ierror == 1)
 	{
-	  fprintf(stderr, "Error: distance: %f out of range\n", *d);
+	  fprintf(stderr, "Error: distance: %f out of range\n",d);
 	  exit(1);
 	}
-      fprintf(stderr, "WARNING : distance: %f out of range; extrapolating ... \n", *d); 
+      fprintf(stderr, "WARNING : distance: %f out of range; extrapolating ... \n",d); 
       i--;
     }
-  *P_tt = tv[i] + (tv[i+1] - tv[i]) * (*d - dv[i])/(dv[i+1] - dv[i]) ;
+  *P_tt = tv[i] + (tv[i+1] - tv[i]) * (d-dv[i])/(dv[i+1]-dv[i]) ;
 } 
 

@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - STF convolution and butterworth filtering
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -29,41 +26,32 @@ void get_params(int argc, char **argv, char **i_sacs, \
 int 
 main(int argc, char *argv[])
 {
-  int    i, j, nbsta, ierror, count, opt;
+  int    i, j, nbsta, ierror, count, nsects ;
   char   *i_sac_bp, *i_sacs, *path, *sacfile ;
   char   **sfiles, *itype ;
-  double dt, *b1, *b2, *a1, *a2, gain; 
+  double *b1, *b2, *a1, *a2, gain, dt=1.; 
   double *x_in, *x_conv;
   sachdr hdr ;
   str_quake_params eq ;
-
   int    ngfcomp  = 6 ;
   char   *gfcomp[]={"rr","tt","pp","rt","rp","tp"};  
-
-  /* ALLOCATION */
-  path = char_alloc(FSIZE) ;
-  x_in   = double_alloc((int)__LEN_SIG__);
-  x_conv = double_alloc((int)__LEN_SIG__);
-
-  hdr_alloc(&hdr);  
-  sacfile  = char_alloc(FSIZE) ;
-
-
   /* SET INPUT PARAMETERS */
   get_params(argc, argv, &i_sacs, &itype, &i_sac_bp, &eq) ;
   get_sacs(i_sacs, &nbsta, &sfiles) ;
   get_cmtf(&eq, 1) ;
-
-  /*  > if opt == 1 the two first samples of the 
-		    deconvolved signal are zero.
-      > if opt == 0 the convolution is computed
-		    as the remaining sos.         */
-
-  opt = 0; /* *** TO BE MODIFIED *** */
-
   printf("       delay,  half_width\n");
   printf("%12.4f %12.4f\n", eq.ts, eq.hd);
-
+  /* ALLOCATION */
+  path = char_alloc(FSIZE) ;
+  x_in   = double_alloc((int)__LEN_SIG__);
+  x_conv = double_alloc((int)__LEN_SIG__);
+  hdr_alloc(&hdr);  
+  sacfile  = char_alloc(FSIZE) ;
+  nsects = (eq.flow > 0.)? eq.filtorder : eq.filtorder/2 ;
+  b1 = double_alloc(nsects) ; 
+  b2 = double_alloc(nsects) ;
+  a1 = double_alloc(nsects) ; 
+  a2 = double_alloc(nsects) ;
   /* TREATING SYNTHETICS */
   count = 0;
   for ( i = 0; i<ngfcomp; i++)
@@ -85,36 +73,31 @@ main(int argc, char *argv[])
 	  if (ierror)
 	    continue;
 	  rdatsac(sacfile, &hdr, x_in ,&ierror) ;
-	  
 	  /* Perform convolution */
-	  conv_by_stf(&eq.ts, &eq.hd, itype, &hdr, x_in, x_conv) ;
-	  
+	  conv_by_stf(eq.ts,eq.hd,itype,&hdr,x_in,x_conv) ;
 	  /* Write output-file 1 (to be removed???)*/
 	  strcat( sacfile, ".sac");
-	  whdrsac(sacfile, &hdr);
-	  wdatsac(sacfile, &hdr, x_conv);
-	  
+	  wsac(sacfile, &hdr, x_conv);
 	  /* Set the butterworth sos (samp. rate must be the same for all stations)*/
 	  if (count == 0)
 	    {
 	      dt = (double)hdr.delta;
-	      butter_sos(&eq.flow, &eq.fhigh, &eq.filtorder, &dt, &b1, &b2, &a1, &a2, &gain) ;
-
+	      if (eq.flow>0.)
+		bpbu2sos(eq.flow,eq.fhigh,dt,eq.filtorder,&gain,b1,b2,a1,a2);
+	      else
+		lpbu2sos(eq.fhigh,dt,eq.filtorder,&gain,b1,b2,a1,a2);		  
 	    }
 	  else if (dt != (double)hdr.delta)
 	    {
 	      fprintf(stderr, "ERROR: non uniform samp. period between sac files, file : %s\n",sacfile);
 	      exit(1);
-	    }
-	
+	    }	
 	  /* Apply sos */
-	  filter_data(x_conv, &hdr.npts, &eq.filtorder, b1, b2, a1, a2, &gain, &opt) ;
-	  
+	  filter_with_sos(gain,b1,b2,a1,a2,nsects,x_conv,hdr.npts) ; /* Apply sos */	  
 	  /* Write output file 2 */
 	  strcat( sacfile, ".bp");
 	  printf("output: %s\n",sacfile);
-	  whdrsac(sacfile, &hdr);
-	  wdatsac(sacfile, &hdr, x_conv);
+	  wsac(sacfile, &hdr, x_conv);
 	  count++;
 	}
     }

@@ -24,6 +24,10 @@ typedef struct{
   double *segment ;
 } channel ;
 
+typedef struct{
+  int   ratio, n, *facs;
+} Cascade;
+
 void 
 error(const char* p,const char* p2)
 {
@@ -68,7 +72,7 @@ init_FIR(double *coeffs,int Ncoeffs,FIR_filter *FIR)
   for(j=0; j < FIR->n2; j++)
     FIR->coeffs[j] /= anorm;
   for(j=0; j < FIR->n1; j++)
-    FIR->coeffs[j+FIR->n2] = coeffs[FIR->n1-1-j];
+    FIR->coeffs[j+FIR->n2] = FIR->coeffs[FIR->n1-1-j];
   return 0;
 }  
 
@@ -88,12 +92,13 @@ push_back(double *v, int nv, double back)
   v[nv-1] = back;
 }
 
-int 
-decimate(FIR_filter *FIR, int dec_fac, double *yi, int ni, double *yo, int *no)
+int decimate(FIR_filter *FIR, int dec_fac, double *yi, int ni, double *yo, int *no)
 {
   int i,j,N;
   double sample_value ;
   channel chan ;
+
+  if ( dec_fac == 1 ) return 0;
   init_chan(&chan,FIR);
   j = 0 ;
   N = FIR->n1+FIR->n2 ;
@@ -116,6 +121,18 @@ decimate(FIR_filter *FIR, int dec_fac, double *yi, int ni, double *yo, int *no)
     }
   (*no)=j;
   return 0;
-}  
+}
 
-
+void init_casc(Cascade *cascade, int N, int *facs)
+{
+//  const int N=3;
+  int k;
+  (*cascade).n = N;
+  (*cascade).facs = (int *)calloc(N, sizeof(int));
+  (*cascade).ratio = 1;
+  for (k=0; k<N; k++)
+    {
+      (*cascade).facs[k] = facs[k];
+      (*cascade).ratio *= facs[k];
+    }
+}

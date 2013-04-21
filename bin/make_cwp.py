@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # *-* coding: iso-8859-1 *-*
 
 FIGSIZE   = [11.69,8.27]
@@ -119,7 +119,7 @@ if __name__=='__main__':
 	    for l in L:
 		    items = l.strip().split()
 		    sac.rsac(items[0])
-		    if sac.kcmpnm != chan:
+		    if sac.kcmpnm[2] != chan[2]:
 			    continue
 		    stat_label.append(sac.kstnm)
 		    i1 = int(items[3])
@@ -164,7 +164,7 @@ if __name__=='__main__':
 	    pyl.xlim([0,t[-1]])
 	    pyl.xlabel('time, sec')
 	    pyl.ylabel('displacement, mm')
-	    pyl.title('Data fit, W Phase solution, %s'%chan)
+	    pyl.title('Data fit, W Phase solution, %s'%chan[2])
 	    ppW.savefig(papertype='a4',orientation='landscape')
 	    pyl.close()
 	    if isref:
@@ -180,7 +180,7 @@ if __name__=='__main__':
 		    pyl.xlim([0,t[-1]])
 		    pyl.xlabel('time, sec')
 		    pyl.ylabel('displacement, mm')
-		    pyl.title('Data fit, Reference solution, %s'%chan)
+		    pyl.title('Data fit, Reference solution, %s'%chan[2])
 		    ppR.savefig(papertype='a4',orientation='landscape')
 		    pyl.close()
 	    sys.stdout.write('\n')

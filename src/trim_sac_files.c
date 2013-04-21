@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - Trim sac files
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -60,10 +57,8 @@ main(int argc, char *argv[])
   
   /* OPTIONS */
   int un ;
-
   /* Input params */
-  get_params(argc, argv, &un, &i_sacs, &o_sacs, &eq)     ;
-
+  get_params(argc,argv,&un,&i_sacs,&o_sacs,&eq)     ;
   /* Allocate memory */
   fil    = char_alloc(FSIZE) ;
   x_in   = double_alloc((int)__LEN_SIG__);
@@ -72,46 +67,39 @@ main(int argc, char *argv[])
   hdr_alloc(&hdr)    ;  
   root = alloctree();
   mod  = alloctree();
-
   /* Set travel time table */
-  trav_time_init(&nh, &nd, &eq.pde_evdp, dv, tv, &tterr) ;
-
-  /* Read sac file list */
+  trav_time_init(nh,nd,eq.pde_evdp,dv,tv,&tterr) ;
+  /* Main loop */
   i_sacf = openfile_rt(i_sacs,&nc) ;
-  /* ofil   = char_alloc2(nc, FSIZE)  ; */
   nc = 0   ;
   flag = 0 ;
   while( (tmp=fscanf (i_sacf, "%s", fil)) != EOF )
     {
-      check_scan(1, tmp, i_sacs, i_sacf);
-
+      check_scan(1,tmp,i_sacs,i_sacf);
       /* Read sac file */
-      rhdrsac(fil, &hdr, &ierror)       ;
+      rhdrsac(fil,&hdr,&ierror)       ;
       if (hdr.npts > (int)__LEN_SIG__)	hdr.npts = (int)__LEN_SIG__ ;
-      rdatsac(fil, &hdr, x_in, &ierror) ;
-
+      rdatsac(fil,&hdr,x_in,&ierror) ;
       /* Set epicentral distances, azimuth, backazimuth */
       dist = 0. ;
       az   = 0. ;
       baz  = 0. ;
       xdeg = 0. ;
-      distaz(eq.pde_evla, eq.pde_evlo, &hdr.stla, &hdr.stlo, 1, &dist, &az, &baz, &xdeg, &nerr) ;
-
+      distaz(eq.pde_evla,eq.pde_evlo,&hdr.stla,&hdr.stlo,1,&dist,&az,&baz,&xdeg,&nerr) ;
       /* Set travel time */
-      xdegd = (double) xdeg                         ;
-      trav_time(&xdegd, tv, dv, &nd, &P_tt, &tterr) ;
-
+      xdegd = (double)xdeg ;
+      trav_time(xdegd,tv,dv,nd,&P_tt,&tterr) ;
       /* Set event origin time in sac header variable 'o' (relative to the reference time) */
-      ymd2jul(eq.ot_ye, eq.ot_mo, eq.ot_dm, &ot_jday) ;
-      delta_t(eq.ot_ye, ot_jday, eq.ot_ho, eq.ot_mi, eq.ot_se, eq.ot_ms,
-	      hdr.nzyear, hdr.nzjday, hdr.nzhour, hdr.nzmin, hdr.nzsec, hdr.nzmsec, &tdiff) ;
+      ymd2jul(eq.ot_ye,eq.ot_mo,eq.ot_dm,&ot_jday) ;
+      delta_t(eq.ot_ye,ot_jday,eq.ot_ho,eq.ot_mi,eq.ot_se,eq.ot_ms,
+	      hdr.nzyear,hdr.nzjday,hdr.nzhour,hdr.nzmin,hdr.nzsec,hdr.nzmsec,&tdiff) ;
       otime = tdiff ;
-      hdr.t[0]  = (float)(P_tt + tdiff) ; /* P arrival         */
+      hdr.t[0] = (float)(P_tt+tdiff) ; /* P arrival         */
 
       /* Windowing -- Screening by distance */
-      tdiff    += P_tt - (double)hdr.b - eq.preevent - (double)SAFETY_DELAY ;      /* time for the 1st sample */
-      sampstart = (int) (tdiff/((double)hdr.delta) + 0.5)                   ;
-      if ((int)(hdr.delta * 1000.+0.5) != (int)((float)SAMPLEPERIOD * 1000.+0.5)) /* Sampling period check    */
+      tdiff += P_tt-(double)hdr.b-eq.preevent ;   /* time for the 1st sample */
+      sampstart = (int)(tdiff/((double)hdr.delta) + 0.5)                   ;
+      if ((int)(hdr.delta*1000.+0.5) != (int)((float)SAMPLEPERIOD*1000.+0.5)) /* Sampling period check    */
 	{
 	  fprintf(stderr, "WARNING: incorrect samp. period between sac files\n") ;
 	  fprintf(stderr, "     ...file : %s with dt = %e is rejected\n", fil, hdr.delta)  ;
@@ -123,8 +111,7 @@ main(int argc, char *argv[])
 	  /* Set new sac header variables */
 	  hdr.delta = (float) SAMPLEPERIOD  ;
 	  hdr.o     = (float) otime         ;   /* event origin time */
-	  //hdr.npts  = hdr.npts + 1 - sampstart;            /* Error **** nb of samples              */
-	  hdr.npts  = hdr.npts - sampstart ;                 /* nb of samples (corrected)             */
+	  hdr.npts  = hdr.npts - sampstart ;                 /* nb of samples                         */
 	  hdr.b     = hdr.b + ((float)sampstart)*hdr.delta ; /* shift of the first sample (corrected) */
 	  hdr.e     = hdr.b + (hdr.npts-1) * hdr.delta    ; 
 	  hdr.dist  = dist ; /* epicentral distance (km)                      */
@@ -134,25 +121,20 @@ main(int argc, char *argv[])
 	  hdr.evla  = (float) eq.pde_evla ;
 	  hdr.evlo  = (float) eq.pde_evlo ;
 	  hdr.evdp  = (float) eq.pde_evdp ;
-	  
 	  /* Write trimmed sac file */
 	  if (hdr.npts > (int)__LEN_SIG__)
-	    fprintf(stderr,"Warning : traces cut to %d samples.\n", (int)__LEN_SIG__);
-	  whdrsac(fil, &hdr);
-	  //x_out = &x_in[sampstart-1]; /* Error **** shift of the first sample */
-	  x_out = &x_in[sampstart];   /* shift of the first sample (corrected) */	  
-	  wdatsac(fil, &hdr, x_out);
-
-	  /* Sort sac files in a tree */
+	    fprintf(stderr,"Warning : traces cut to %d samples.\n",(int)__LEN_SIG__);
+	  x_out = &x_in[sampstart] ; /* shift of the first sample */	  
+	  wsac(fil,&hdr,x_out)     ;
+	  /* Sort sac files */
 	  if (nc==0)
-	    splithdr(fil, &hdr, root);
+	    splithdr(fil,&hdr,root);
 	  else
 	    {
-	      splithdr(fil, &hdr, mod) ;
-	      build (root, mod, un)     ;
+	      splithdr(fil,&hdr,mod) ;
+	      build (root,mod,un)     ;
 	    }
 	  nc++ ;
-	  /* strcpy(ofil[nc++],fil) ; */
 	}
       else 
 	{
@@ -166,15 +148,9 @@ main(int argc, char *argv[])
       fprintf(stderr, "WARNING: %d files have been rejected because of incorrect sampling period\n",flag);
       fprintf(stderr, "    ...: if to much files are rejected, please screen or decimate data files manually\n");
     }
-  /* i_sacf = openfile_wt(i_sacs)     ; */
-  /* for (i=0; i<nc; i++)               */
-  /*   fprintf(i_sacf,"%s\n",ofil[i]) ; */
-  /* fclose(i_sacf)                   ; */
-
   o_sacf = openfile_wt(o_sacs);
   savetree(root, o_sacf, &eq.dmin, &eq.dmax);
   fclose(o_sacf);
-
   /* Memory Freeing */
   free((void*)fil)    ;
   free((void*)i_sacs) ;
@@ -197,7 +173,7 @@ get_params(int argc, char **argv, int *un, char **i_sacs, char **o_sacs,
   
   if ( argc < 4 ) {
     fprintf (stderr, "*** ERROR (minimum of 3 params needed (%d given)) ***",argc-1)        ;
-    fprintf (stderr, "Syntax : %s i_master(in) i_sac_list(in) o_sac_list(out) [-u(unique network)  -a(all channels)]\n", argv[0]) ;
+    fprintf (stderr, "Syntax : %s i_master(in) i_sac_list(in) o_sac_list(out) [-u(allow only one network per channel)  -a(all channels)]\n", argv[0]) ;
     exit(1) ; }
 
   *un = 0 ; 

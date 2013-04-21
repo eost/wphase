@@ -1,12 +1,4 @@
-/****************************************************************
-*	W phase package - sac files manipulation header
-*                                           
-*       History
-*             2010  Original Coding
-*
-*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
-*
-*****************************************************************/
+/* Header of rwsacs.c subroutines*/
 
 #ifndef ITIME
 #define ITIME 1
@@ -94,16 +86,38 @@ void rhdrsac(char *file, sachdr *hdr, int *ierror);
 /*	      file does not exist, then ierror    */
 /*	      is returned as *ierror = 1 (output) */
 /*                                                */
-/* Output : data : pointer to the proto_allocd       */
+/* Output : data : pointer to the proto_allocd    */
 /*                 data array                     */
 void rdatsac(char *file, sachdr *hdr, double *data, int *ierror);
 
+/************************************************/
+/*            whdr(f, h)                        */
+/************************************************/
+/* Write sac file header                        */
+/* Input  : f : File descriptor                 */
+/*          h : the struct sachdr               */
+int whdr(FILE *fd, sachdr *hdr);
 
+/***************************************************/
+/*         minimax(y, np, ymin, ymax)              */
+/***************************************************/
+/* Calculate ymin,ymax from the np first samples   */
+/* in y                                            */
+void minimax(float *y, int np, float *ymin, float *ymax) ;
+
+/***************************************************/
+/*              wdat(f, h, data)                   */
+/***************************************************/
+/* Write data in sac file                          */
+/* Input  : f : file descriptor                    */
+/*          h : the struct sachdr                  */
+/*          data : array of data points            */
+int wdat(FILE *fd, sachdr *hdr, double *data);
 
 /************************************************/
 /*            whdrsac(filename, h)              */
 /************************************************/
-/* Write sac file header                        */
+/* Overwrite sac file header                    */
 /*   >If "filename" already exists, the header  */
 /*    header is replaced but the data points    */
 /*    are not affected.                         */
@@ -117,7 +131,7 @@ void whdrsac(char *file, sachdr *hdr);
 
 
 /***************************************************/
-/*           wdatsac(filename, h, data)            */
+/*             wsac(filename, h, data)             */
 /***************************************************/
 /* Write data in sac file                          */
 /*   > The sac file must already exist otherwise   */
@@ -126,6 +140,6 @@ void whdrsac(char *file, sachdr *hdr);
 /*          h : the struct sachdr                  */
 /*          data : array of data points            */
 /* Output : data points in the sac file "filename" */
-void wdatsac(char *file, sachdr *hdr, double *data);
+void wsac(char *file, sachdr *hdr, double *data);
 
 

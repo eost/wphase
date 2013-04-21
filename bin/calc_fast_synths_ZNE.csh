@@ -1,9 +1,4 @@
 #!/bin/csh -f
-#
-# W phase package - Calculate greens functions for Z, N and E components
-#
-# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
-#
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 
@@ -12,7 +7,7 @@ if (-e i_master) then
 	${GREP} -v "^#" i_master >! i_tmp
 else
         ${ECHO} "Error: file  i_master not available"
-        exit
+        exit 1
 endif
 ########################################
 
@@ -54,9 +49,5 @@ foreach cmp ($cmps)
                 endif
         end
         $FAST_SYNTH_ROT CMTSOLUTION_$cmp ../STAT_LIST
-	if $status then
-		$ECHO "*** ERROR (calc_fast_synths) when computing GFs ***"
-		exit(1)
-	endif
 	cd ../..
 end

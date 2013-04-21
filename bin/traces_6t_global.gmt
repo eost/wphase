@@ -26,36 +26,34 @@ set Rg        = -R0/360/-90/90
 set my_argv = ($ARGV)
 set sol_id   = 'W'
 set IMASTER = i_master
-set SOLFILE = WCMTSOLUTION
 set SYNDIR  = SYNTH_traces
+set SOLFILE = WCMTSOLUTION
+if ( -e ts_WCMTSOLUTION ) set SOLFILE = ts_WCMTSOLUTION
+if ( -e xy_WCMTSOLUTION ) set SOLFILE = xy_WCMTSOLUTION
+
 if ($#my_argv < 1) then
     echo "using default parameters"
+else if ($#my_argv == 1) then
+    set SOLFILE    = $my_argv[1]
 else if ($#my_argv == 2) then
-    set IMASTER    = $my_argv[1]
-    set SOLFILE    = $my_argv[2]
-else if ($#my_argv == 3) then
-    set IMASTER    = $my_argv[1]
-    set SOLFILE    = $my_argv[2]
-    set SYNDIR     = $my_argv[3]
-else if ($#my_argv == 5) then
-    set IMASTER    = $my_argv[1]
-    set SOLFILE    = $my_argv[2]
-    set ymin       = $my_argv[3]
-    set ymax       = $my_argv[4]
-    set ticks      = $my_argv[5]
+    set SOLFILE    = $my_argv[1]
+    set SYNDIR     = $my_argv[2]
+else if ($#my_argv == 4) then
+    set SOLFILE    = $my_argv[1]
+    set ymin       = $my_argv[2]
+    set ymax       = $my_argv[3]
+    set ticks      = $my_argv[4]
     set ylim_auto  = 'non'  
-else if ($#my_argv == 6) then
-    set IMASTER    = $my_argv[1]
-    set SOLFILE    = $my_argv[2]
-    set ymin       = $my_argv[3]
-    set ymax       = $my_argv[4]
-    set ticks      = $my_argv[5]
-    set sol_id     = $my_argv[6]
+else if ($#my_argv == 5) then
+    set SOLFILE    = $my_argv[1]
+    set ymin       = $my_argv[2]
+    set ymax       = $my_argv[3]
+    set ticks      = $my_argv[4]
+    set sol_id     = $my_argv[5]
     set ylim_auto  = 'non'
 else
-    echo "*** ERROR ($0) ***"
-    echo "Syntax: $0 [IMASTER WCMTFILE ...] "
-    exit    
+    echo "*** Syntax Error ($0) ***"
+    exit 1
 endif
 
 ${ECHO} "Using ${IMASTER} and ${SOLFILE}"
@@ -71,7 +69,7 @@ if (-e ${IMASTER}) then
         ${GREP} -v "^#" ${IMASTER} | ${SED} -e 's/ *:/:/' >! i_tmp
 else
         ${ECHO} "Error: file ${IMASTER} not available"
-        exit
+        exit 1
 endif
 
 set evname = `${GREP} -v "^#" i_tmp | ${GREP}  EVNAME    | ${CUT} -d: -f2 | ${HEAD} -1`
@@ -122,7 +120,8 @@ foreach page (`${SEQ} 1 $npages`)
 		set khole  = `$SACLST khole  f $fic1 | ${AWK} '{print $2}'`
 		set stla   = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo   = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
-		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.complete_synth.bp.sac"
+		set chan   = LH`$ECHO $kcmpnm | $CUT -c3`
+		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${chan}.complete_synth.bp.sac"
 		set YY     = `${ECHO} $item | ${AWK} '{print 6*(3-$1)+2}'` 
 		
 		# Maximal and minimal values
@@ -142,7 +141,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set reg_trace = 0/$length/$ymin/$ymax
 		set XX = -Xa1c
 		# Station name
-		${ECHO} "${kstnm}(${khole},${kcmpnm})" | ${AWK} '{print "0.4 0.9 16 0 6 BC", $1}' |\
+		${ECHO} "${kstnm}(${knetwk},${khole},${kcmpnm})" | ${AWK} '{print "0.4 0.9 12 0 6 BC", $1}' |\
 		$PSTEXT -JX4 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
 		
 		# Globe
@@ -166,8 +165,8 @@ foreach page (`${SEQ} 1 $npages`)
 		set dt2   = `$SACLST delta  f $fic2 | ${AWK} '{print $2}'`
 		set n2    = `$SACLST npts   f $fic2 | ${AWK} '{print $2}'`
 		
-		${OD} -v -j 632 -t fF -w4 -An $fic1        | ${AWK} '{print 1000*$1}'      >! _tmp_Y1
-		${OD} -v -j 632 -t fF -w4 -An $fic2        | ${AWK} '{print 1000*$1}'      >! _tmp_Y2
+		${OD} -v -j 632 -t fF -w4 -An $fic1 | ${HEAD} -$n1 | ${AWK} '{print 1000*$1}' >! _tmp_Y1
+		${OD} -v -j 632 -t fF -w4 -An $fic2 | ${HEAD} -$n2 | ${AWK} '{print 1000*$1}' >! _tmp_Y2
 		${SEQ} 1 $n1 | ${SED} -e "s/^/$b1 $o1 $dt1 /" | ${AWK} '{print $1-$2+$3*$4}'  >! _tmp_X1
 		${SEQ} 1 $n2 | ${SED} -e "s/^/$b2 $o2 $dt1 /" | ${AWK} '{print $1-$2+$3*$4}'  >! _tmp_X2
 		
@@ -212,7 +211,8 @@ foreach page (`${SEQ} 1 $npages`)
 		set khole  = `$SACLST khole f $fic1 | ${AWK} '{print $2}'`		
 		set stla    = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo    = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
-		set fic2    = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.complete_synth.bp.sac"
+		set chan   = LH`$ECHO $kcmpnm | $CUT -c3`
+		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${chan}.complete_synth.bp.sac"
 		set YY      = `${ECHO} $item | ${AWK} '{print 6*(3-$1)+2}'` 
 		
 		# Maximal and minimal values
@@ -232,7 +232,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set reg_trace = 0/$length/$ymin/$ymax
 		set XX = -Xa14.5c
 		# Station name
-		${ECHO} "$kstnm(${khole},${kcmpnm})" | ${AWK} '{print "0.4 0.9 16 0 6 BC", $1}' |\
+		${ECHO} "${kstnm}(${knetwk},${khole},${kcmpnm})" | ${AWK} '{print "0.4 0.9 12 0 6 BC", $1}' |\
 		$PSTEXT -JX4 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
 		
 		# Globe
@@ -256,8 +256,8 @@ foreach page (`${SEQ} 1 $npages`)
 		set dt2     = `$SACLST delta f $fic2 | ${AWK} '{print $2}'`
 		set n2      = `$SACLST npts  f $fic2 | ${AWK} '{print $2}'`
 		
-		${OD} -v -j 632 -t fF -w4 -An $fic1           | ${AWK} '{print 1000*$1}'      >! _tmp_Y1
-		${OD} -v -j 632 -t fF -w4 -An $fic2           | ${AWK} '{print 1000*$1}'      >! _tmp_Y2
+		${OD} -v -j 632 -t fF -w4 -An $fic1 | ${HEAD} -$n1 | ${AWK} '{print 1000*$1}' >! _tmp_Y1
+ 		${OD} -v -j 632 -t fF -w4 -An $fic2 | ${HEAD} -$n2 | ${AWK} '{print 1000*$1}' >! _tmp_Y2
 		${SEQ} 1 $n1 | ${SED} -e "s/^/$b1 $o1 $dt1 /" | ${AWK} '{print $1-$2+$3*$4}'  >! _tmp_X1
 		${SEQ} 1 $n2 | ${SED} -e "s/^/$b2 $o2 $dt1 /" | ${AWK} '{print $1-$2+$3*$4}'  >! _tmp_X2
 		
@@ -291,4 +291,6 @@ foreach page (`${SEQ} 1 $npages`)
 	${ECHO} 0 0 | $PSXY -R0/1/0/1 -JX1 -W$black $K3 -Xa0c -Ya0c >> $PS
 	${PS2PDF} $PS
 end
+${GS} -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=wp_pages_6t.pdf page_6t_*.pdf
+${RM} -f page_6t_*.pdf page_6t_*.ps
 ${RM} -rf i_tmp

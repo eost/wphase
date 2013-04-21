@@ -1,121 +1,71 @@
-/****************************************************************
-*	W phase package - Butterworth filtering headers
-*                                           
-*       History
-*             2010  Original Coding
-*
-*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
-*
-*****************************************************************/
+/****************************************************
+*  W phase package - Butterworth filtering headers  
+*                                          
+*  Zacharie Duputel, Luis Rivera and Hiroo Kanamori
+*****************************************************/
 
-#include "complex.h"      /* complex.c      */
-
+/* WARNING: Everything is coded assuming even filter order     */
 
 /****************************************************/
-/*               m=calc_mean(x,n)                   */
+/*                  dtrd(x, npts)                   */
 /****************************************************/
-/* > Calculate mean (m) of the n first samples of x */
-double calc_mean(double *x,int *nbmoy);
+/*  > Removes trend and/or mean from signal         */
+/*  input : x : input signal                        */
+/*          npts : nb of data points                */
+/*  output signal : x                               */
+void dtrd(double *x, int npts);
 
-/**************************************************/
-/*             dtrd(x, npts, y, NDEG)             */
-/**************************************************/
-/*  > Removes trend and/or mean from signal       */
-/*  input : x : input signal                      */
-/*          npts : nb of data points              */
-/*          NDEC : flag to specify which of mean  */
-/*                 or trend as to be removed      */
-/*                                                */
-/*  output signal : x                             */
-void dtrd(double *x, int npts, int nbmoy);
+/****************************************************/
+/*             rmean(x, npts, jbeg, jend)           */
+/****************************************************/
+/*  Substracts a constant from the input vector     */
+/*  The constant is defined as the average          */
+/*  of a segment of the input signal.               */
+/*                                                  */
+/*  input : x        : input signal                 */
+/*          npts     : length of x                  */
+/*          jbeg,jend: defines the segment of x     */
+/*                     whose average is to be       */
+/*                     substracted from x.          */
+/*                     Both x[jbeg] and x[jend]     */
+/*                     are included in the segment  */
+/*  output signal    : x                            */
+/*  Note:                                           */
+/*  if jbeg < 0 or jend > npts-1 they are modified  */
+/****************************************************/
+void rmean (double *x, const int npts, int *jbeg, int *jend);
 
-
-void taper(double *x, int npts, double start, double end);
-
-
-
-/*************************************************************************/
-/*                    out=decrec (b1, b2, a1, k, fi, fo)                 */
-/*************************************************************************/
-/*    Recusive function to apply a recursive filtering in the special    */
-/*    case where fo(1)=fo(2)=0 and a2 =0.                                */
-/*    >denomonator polynomial is z**2 + a1*z       (!!a2 == 0!!)         */
-/*    >numerator polynomial is z**2 + b1*z + b2                          */
-/*         fi  = input array                                             */
-/*         fo  = output array                                            */   
-/*	   out = fo[k]                                                   */
-/*    Remark : this function appear to be less effective than filt       */
-double decrec (double b1, double b2, double a1, int k, double *fi, double *fo);
-
-
-/*******************************************************************/
-/*        out=filtrec (b1, b2, a1, a2, k, fi, fo)                  */
-/*******************************************************************/
-/*    Recusive function to apply a second order recursive          */
-/*    filter to the data                                           */
-/*    >denomonator polynomial is z**2 + a1*z + a2                  */
-/*    >numerator polynomial is z**2 + b1*z + b2                    */
-/*         fi  = input array                                       */
-/*         fo  = output array                                      */   
-/*	   out = fo[k]                                             */
-/*    Remark : this function appear to be less effective than filt */
-double filtrec (double b1, double b2, double a1, double a2, int k, double *fi, double *fo);
-
+/****************************************************/
+/*               taper(x, npts, p1, p2)             */
+/****************************************************/
+/* Taper of x from samples 0 to nbeg (left side)    */
+/*        and from npts-nend to npts-1 (right side) */
+void taper(double *x, int npts, int nbeg, int nend);
 
 /**************************************************************************/
-/*                   bandpass (fl,fh,dt,n,p,b)                        */
+/*                   lpbu2sos (fc,dt,n,b1,b2,a1,a2,g)                     */
 /**************************************************************************/
-/*
-   Routine to compute bandpass filter poles for Butterworth filter
-       fc = desired cutoff frequency
-       dt = sample rate in seconds
-       n  = number of poles (odd or even number is accepted)
-       p  = pole locations  (RETURNED)
-       z  = zero locations  (RETURNED)
-       b  = gain factor     (RETURNED)
-*/
-/*   Program calculates a continuous Butterworth low pass IIRs with required */
-/*    cut off frequency.                                                     */
-/*   Then a discrete filter is calculated utilizing the bilinear transform   */
-void bandpass (double fl,  double fh,  double dt, int n, complex *p, double *b);
-
-
-void  poles2sos(complex *pb, int order, double *b1, double *b2, double *a1, double *a2);
-
+/* Compute lowpass filter poles for Butterworth filter                    */
+int lpbu2sos(double fc, double dt, int n, double *g, double *b1, double *b2, double *a1, double *a2);
 
 /**************************************************************************/
-/*           butter_sos__(fl, fh, n, sr, b1, b2, a1, a2, scale)           */
+/*                   bpbu2sos (fl,fh,dt,n,g,b1,b2,a1,a2)                    */
 /**************************************************************************/
-/*
-  Creation of a second ordinary section for a digital butterworth filter
-  
-  input : fl : low cut off frequency
-          fh : high cut off frequency
-          n  : order of the filter (even or odd)
-	  sr : sampling period (in seconds)
-         
-  output : b1, b2, a1, a2 pointer to an proto_allocd array containing the
-           second order section 
-	   scale : scale factor of the second order section               */
-                                                                          
-void butter_sos(double *lowCutoff, double *highCutoff, int *filterOrder, double *sampPeriod, double **b1, double **b2, double **a1, double **a2, double *gain);
+/* Compute bandpass filter sos for Butterworth filter                   */
+int bpbu2sos(double fl, double fh, double dt, int n, double *g, double *b1, double *b2, double *a1, double *a2);
+
+/****************************************************/
+/*   filter_with_sos (cst,b1,b2,a1,a2,n,sig,npts)   */
+/****************************************************/
+/* Apply a second order section to the signal sig   */
+/*     denomonator polynomial is z**2 + a1*z + a2   */
+/*     numerator polynomial is z**2 + b1*z + b2     */
+/*     cst         : scale factor of the sos        */
+/*     b1,b2,a1,a2 : sos                            */
+/*     n           : number of rows in the sos      */
+/*     sig         : input/output signal            */
+/*      npts        : number of sample in sig       */
+void filter_with_sos(double g, double *b1, double *b2, double *a1, double *a2, int nsects, 
+		    double *sig, int npts);
 
 
-/*************************************************************/
-/*    filter_data__ (di, np, n, b1, b2, a1, a2, cst)         */
-/*************************************************************/
-/*     Routine to apply a second order section to the data
-       denomonator polynomial is z**2 + a1*z + a2
-       numerator polynomial is z**2 + b1*z + b2
-           di  = input array
-           do  = output array
-           np  = number of points
-	   cst = scale factor of the sos
-	   n   = number of rows of the matrix sos
-	   opt = optionnal parameter for the deconvolution
-                  > if opt == 1 the two first samples of the 
-		                deconvolved signal are zero.
-		  > if opt == 0 the convolution is computed
-		                as the remaining sos. 
-*/
-void  filter_data(double *data, int *numSamp, int *nfilt, double *b1, double *b2, double *a1, double *a2, double *scale, int *opt);

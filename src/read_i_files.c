@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - Read imput files subroutines
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -440,7 +437,7 @@ get_i_master(file, keys, n, eq)
 	    else if (strncmp(&line[nb2],"IDEC_2",6)==0)
 	      {
 		nb2+= 6+nb_blank(&line[nb2+6])+1           ;
-		tmp = sscanf (&line[nb2], "%lf %lf %lf", 
+		tmp = sscanf (&line[nb2], "%d %lf %lf", 
 			      &eq->idtr, &eq->preevent, &eq->fend) ;
 		check_scan(3, tmp, file, i_file)           ;
 		nl++;   

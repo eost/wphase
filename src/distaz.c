@@ -1,10 +1,6 @@
 /****************************************************************
 *	W phase package - Distance, azimuth, backazimuth calculation
 *                                           
-*       History
-*             2008  Original Coding by Luis Rivera and Hiroo Kanamori
-*             2010  Further Updates by Zacharie Duputel
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -58,11 +54,11 @@ distaz(double the, double phe, float *ths, float *phs, int ns, float *dist, floa
 	long laz, lbaz, ldist, lxdeg;
 	long int idx;
 	double a, a1, a12, a12bot, a12top, al, b, b0, b1, c, c0, c1, c2, 
-	 c4, cosa12, costhi, costhk, d, d1, dl, du, e, e1, e1p1, e2, e3, 
-	 ec2, el, eps, f, f1, g, g1, h, h1, onemec2, p1, p2, pdist, pherad, 
-	 phsrad, sc, sd, sina12, sinthi, sinthk, sqrte1p1, ss, t1, t2, 
-	 tanthi, tanthk, temp, therad, thg, thsrad, u1, u1bot, u2, u2bot, 
-	 u2top, v1, v2, x2, y2, z1, z2;
+	  c4, cosa12, costhi, costhk, d, d1, dl, du, e, e1, e1p1, e2, e3, 
+	  ec2, el, f, f1, g, g1, h, h1, onemec2, p1, p2, pdist, pherad, 
+	  phsrad, sc, sd, sina12, sinthi, sinthk, sqrte1p1, ss, t1, t2, 
+	  tanthi, tanthk, temp, therad, thg, thsrad, u1, u1bot, u2, u2bot, 
+	  u2top, v1, v2, x2, y2, z1, z2;//eps
 	static float rad = 6378.160;
 	static float fl = 0.00335293;
 	static float twopideg = 360.;
@@ -123,7 +119,7 @@ distaz(double the, double phe, float *ths, float *phs, int ns, float *dist, floa
 	*nerr = 0;
 	ec2 = 2.*fl - fl*fl;
 	onemec2 = 1. - ec2;
-	eps = 1. + ec2/onemec2;
+	//eps = 1. + ec2/onemec2;
 
 	/* - Check which output items are required. */
 

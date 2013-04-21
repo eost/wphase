@@ -1,9 +1,4 @@
 #!/bin/csh -f
-#
-# W phase package - data quality control
-#
-# Zacharie Duputel, Luis Rivera and Hiroo Kanamori
-#
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 ##################################
@@ -20,12 +15,11 @@ else if ($#my_argv == 3) then
 else
     echo "*** ERROR ($0) ***"
     echo "Syntax: $0 [wZ wN wE]"
-    exit
+    exit 1
 endif
 
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract.csh
-set CALC    = ${BIN}/calc_fast_synths_ZNE.csh
 set PREPARE = ${BIN}/prepare_wp_ZNE.csh
 set WPINVER = ${BIN}/wpinversion_ZNE
 set TRACES  = ${BIN}/traces_6t_global.gmt 
@@ -37,16 +31,15 @@ if (-e i_master) then
         ${GREP} -v "^#" i_master >! i_tmp
 else
         ${ECHO} "Error: file  i_master not available"
-        exit
+        exit 1
 endif
 
 set CMTFILE  = `${GREP} CMTFILE i_tmp | ${HEAD} -1 | ${CUT} -d: -f2`
 ${RM} -f i_tmp
 
-$EXTRACT -a
-$CALC
-$PREPARE
-$WPINVER -osyndir SYNTH -nops
+$EXTRACT
+$PREPARE -a
+$WPINVER -osyndir SYNTH -nops -ocmtf /dev/null > /dev/null
 
 ${RM} -f page_6t*.ps page_6t*.pdf
-${TRACES} i_master ${CMTFILE} SYNTH
+${TRACES} ${CMTFILE} SYNTH

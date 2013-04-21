@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - read/write text file subroutine header
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -40,7 +37,7 @@ FILE *openfile_wt(char *filename);
 
 /********************************************************/
 /* Set standard GF filename                             */
-char *get_gf_filename(char *dir, char *stnm, char *netwk, char *chan, 
+char *get_gf_filename(char *dir, char *stnm, char *netwk, char chan, 
 		      char *ext) ;
 
 

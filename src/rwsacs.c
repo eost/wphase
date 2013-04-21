@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - sac files manipulation subroutines
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/
@@ -147,96 +144,92 @@ hdr_tab(sachdr **hdr, int n)
 void 
 rhdrsac(char *file, sachdr *hdr, int *ierror)
 {
+  const int sz_of_f=4, sz_of_i=4;
   int i;
   FILE *f;
-  
-  	 
-  if (sizeof(int) != 4)    {
-    fprintf(stderr,"ERROR : int not in 32bits\n");
-    exit(1); }
   
   if ((f=fopen(file,"rb"))==NULL)
     {
       if (*ierror == 1)	{
-	fprintf(stderr,"ERROR opening %s to read header\n",file);
-	exit(1); }
+		fprintf(stderr,"ERROR opening %s to read header\n",file);
+		exit(1); }
       *ierror = 1 ;
       return;
       
     }
-  fread(&hdr->delta,sizeof(float),1,f);
-  fread(&hdr->depmin,sizeof(float),1,f);
-  fread(&hdr->depmax,sizeof(float),1,f);
-  fread(&hdr->scale,sizeof(float),1,f);
-  fread(&hdr->odelta,sizeof(float),1,f);
-  fread(&hdr->b,sizeof(float),1,f);
-  fread(&hdr->e,sizeof(float),1,f);
-  fread(&hdr->o,sizeof(float),1,f);
-  fread(&hdr->a,sizeof(float),1,f);
-  fread(&hdr->internal1,sizeof(float),1,f);
+  fread(&hdr->delta,sz_of_f,1,f);
+  fread(&hdr->depmin,sz_of_f,1,f);
+  fread(&hdr->depmax,sz_of_f,1,f);
+  fread(&hdr->scale,sz_of_f,1,f);
+  fread(&hdr->odelta,sz_of_f,1,f);
+  fread(&hdr->b,sz_of_f,1,f);
+  fread(&hdr->e,sz_of_f,1,f);
+  fread(&hdr->o,sz_of_f,1,f);
+  fread(&hdr->a,sz_of_f,1,f);
+  fread(&hdr->internal1,sz_of_f,1,f);
   for (i=0 ; i<10; i++)
-    fread(&hdr->t[i],sizeof(float),1,f);
-  fread(&hdr->f,sizeof(float),1,f);
+    fread(&hdr->t[i],sz_of_f,1,f);
+  fread(&hdr->f,sz_of_f,1,f);
   for (i=0 ; i<10; i++)
-    fread(&hdr->resp[i],sizeof(float),1,f);
-  fread(&hdr->stla,sizeof(float),1,f);
-  fread(&hdr->stlo,sizeof(float),1,f);
-  fread(&hdr->stel,sizeof(float),1,f);
-  fread(&hdr->stdp,sizeof(float),1,f);
-  fread(&hdr->evla,sizeof(float),1,f);
-  fread(&hdr->evlo,sizeof(float),1,f);
-  fread(&hdr->evel,sizeof(float),1,f);
-  fread(&hdr->evdp,sizeof(float),1,f);
-  fread(&hdr->mag,sizeof(float),1,f);
+    fread(&hdr->resp[i],sz_of_f,1,f);
+  fread(&hdr->stla,sz_of_f,1,f);
+  fread(&hdr->stlo,sz_of_f,1,f);
+  fread(&hdr->stel,sz_of_f,1,f);
+  fread(&hdr->stdp,sz_of_f,1,f);
+  fread(&hdr->evla,sz_of_f,1,f);
+  fread(&hdr->evlo,sz_of_f,1,f);
+  fread(&hdr->evel,sz_of_f,1,f);
+  fread(&hdr->evdp,sz_of_f,1,f);
+  fread(&hdr->mag,sz_of_f,1,f);
   for (i=0 ; i<10; i++)
-    fread(&hdr->user[i],sizeof(float),1,f);
-  fread(&hdr->dist,sizeof(float),1,f);
-  fread(&hdr->az,sizeof(float),1,f);
-  fread(&hdr->baz,sizeof(float),1,f);
-  fread(&hdr->gcarc,sizeof(float),1,f);
-  fread(&hdr->internal2,sizeof(float),1,f);
-  fread(&hdr->internal3,sizeof(float),1,f);
-  fread(&hdr->depmen,sizeof(float),1,f);
-  fread(&hdr->cmpaz,sizeof(float),1,f);
-  fread(&hdr->cmpinc,sizeof(float),1,f);
-  fread(&hdr->xminimum,sizeof(float),1,f);
-  fread(&hdr->xmaximum,sizeof(float),1,f);
-  fread(&hdr->yminimum,sizeof(float),1,f);
-  fread(&hdr->ymaximum,sizeof(float),1,f);  
-  fseek(f,7*sizeof(float),SEEK_CUR);
-  fread(&hdr->nzyear,sizeof(int),1,f);  
-  fread(&hdr->nzjday,sizeof(int),1,f);  
-  fread(&hdr->nzhour,sizeof(int),1,f);
-  fread(&hdr->nzmin,sizeof(int),1,f);  
-  fread(&hdr->nzsec,sizeof(int),1,f);  
-  fread(&hdr->nzmsec,sizeof(int),1,f);  
-  fread(&hdr->nvhdr,sizeof(int),1,f);  
-  fread(&hdr->norid,sizeof(int),1,f);  
-  fread(&hdr->nevid,sizeof(int),1,f);
-  fread(&hdr->npts,sizeof(int),1,f); 
-  fread(&hdr->internal4,sizeof(int),1,f);  
-  fread(&hdr->nwfid,sizeof(int),1,f);
-  fread(&hdr->nxsize,sizeof(int),1,f);
-  fread(&hdr->nysize,sizeof(int),1,f);
-  fseek(f,1*sizeof(int),SEEK_CUR);
-  fread(&hdr->iftype,sizeof(int),1,f);
-  fread(&hdr->idep,sizeof(int),1,f);
-  fread(&hdr->iztype,sizeof(int),1,f);
-  fseek(f,1*sizeof(int),SEEK_CUR);
-  fread(&hdr->iinst,sizeof(int),1,f);
-  fread(&hdr->istreg,sizeof(int),1,f);
-  fread(&hdr->ievreg,sizeof(int),1,f);
-  fread(&hdr->ievtyp,sizeof(int),1,f);
-  fread(&hdr->iqual,sizeof(int),1,f);
-  fread(&hdr->isynth,sizeof(int),1,f);
-  fread(&hdr->imagtyp,sizeof(int),1,f);
-  fread(&hdr->imagsrc,sizeof(int),1,f);
-  fseek(f,8*sizeof(int),SEEK_CUR);
-  fread(&hdr->leven,sizeof(int),1,f);
-  fread(&hdr->lpspol,sizeof(int),1,f);
-  fread(&hdr->lovrok,sizeof(int),1,f);
-  fread(&hdr->lcalda,sizeof(int),1,f);
-  fseek(f,1*sizeof(int),SEEK_CUR);
+    fread(&hdr->user[i],sz_of_f,1,f);
+  fread(&hdr->dist,sz_of_f,1,f);
+  fread(&hdr->az,sz_of_f,1,f);
+  fread(&hdr->baz,sz_of_f,1,f);
+  fread(&hdr->gcarc,sz_of_f,1,f);
+  fread(&hdr->internal2,sz_of_f,1,f);
+  fread(&hdr->internal3,sz_of_f,1,f);
+  fread(&hdr->depmen,sz_of_f,1,f);
+  fread(&hdr->cmpaz,sz_of_f,1,f);
+  fread(&hdr->cmpinc,sz_of_f,1,f);
+  fread(&hdr->xminimum,sz_of_f,1,f);
+  fread(&hdr->xmaximum,sz_of_f,1,f);
+  fread(&hdr->yminimum,sz_of_f,1,f);
+  fread(&hdr->ymaximum,sz_of_f,1,f);  
+  fseek(f,7*sz_of_f,SEEK_CUR);
+  fread(&hdr->nzyear,sz_of_i,1,f);  
+  fread(&hdr->nzjday,sz_of_i,1,f);  
+  fread(&hdr->nzhour,sz_of_i,1,f);
+  fread(&hdr->nzmin,sz_of_i,1,f);  
+  fread(&hdr->nzsec,sz_of_i,1,f);  
+  fread(&hdr->nzmsec,sz_of_i,1,f);  
+  fread(&hdr->nvhdr,sz_of_i,1,f);  
+  fread(&hdr->norid,sz_of_i,1,f);  
+  fread(&hdr->nevid,sz_of_i,1,f);
+  fread(&hdr->npts,sz_of_i,1,f); 
+  fread(&hdr->internal4,sz_of_i,1,f);  
+  fread(&hdr->nwfid,sz_of_i,1,f);
+  fread(&hdr->nxsize,sz_of_i,1,f);
+  fread(&hdr->nysize,sz_of_i,1,f);
+  fseek(f,1*sz_of_i,SEEK_CUR);
+  fread(&hdr->iftype,sz_of_i,1,f);
+  fread(&hdr->idep,sz_of_i,1,f);
+  fread(&hdr->iztype,sz_of_i,1,f);
+  fseek(f,1*sz_of_i,SEEK_CUR);
+  fread(&hdr->iinst,sz_of_i,1,f);
+  fread(&hdr->istreg,sz_of_i,1,f);
+  fread(&hdr->ievreg,sz_of_i,1,f);
+  fread(&hdr->ievtyp,sz_of_i,1,f);
+  fread(&hdr->iqual,sz_of_i,1,f);
+  fread(&hdr->isynth,sz_of_i,1,f);
+  fread(&hdr->imagtyp,sz_of_i,1,f);
+  fread(&hdr->imagsrc,sz_of_i,1,f);
+  fseek(f,8*sz_of_i,SEEK_CUR);
+  fread(&hdr->leven,sz_of_i,1,f);
+  fread(&hdr->lpspol,sz_of_i,1,f);
+  fread(&hdr->lovrok,sz_of_i,1,f);
+  fread(&hdr->lcalda,sz_of_i,1,f);
+  fseek(f,1*sz_of_i,SEEK_CUR);
   fgets(hdr->kstnm,9,f);
   fgets(hdr->kevnm,17,f);
   fgets(hdr->khole,9,f);
@@ -279,6 +272,7 @@ rhdrsac(char *file, sachdr *hdr, int *ierror)
 void 
 rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
 {
+  const int sz_of_f = 4;
   int i;
   float *d;
   FILE  *f;
@@ -297,7 +291,7 @@ rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
   fseek(f,632,SEEK_SET);
   d = float_alloc(hdr->npts) ;
 
-  fread(d,sizeof(float),hdr->npts,f);
+  fread(d,sz_of_f,hdr->npts,f);
   for (i=0 ; i<hdr->npts ; i++)
     data[i] = (double)d[i]; /* conversion from float to double */
   /* e */
@@ -307,123 +301,113 @@ rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
 }
 
 
-
-
 /************************************************/
-/*            whdrsac(filename, h)              */
+/*            whdr(f, h)                        */
 /************************************************/
 /* Write sac file header                        */
-/*   >If "filename" already exists, the header  */
-/*    header is replaced but the data points    */
-/*    are not affected.                         */
-/*   >If "filename" does not exists, a new file */
-/*    is created                                */
-/*                                              */
-/* Input  : filename                            */
+/* Input  : f : File descriptor                 */
 /*          h : the struct sachdr               */
-/* Output : header in the sac file "filename    */
-void 
-whdrsac(char *file, sachdr *hdr)
+int
+whdr(FILE *f, sachdr *hdr)
 {
+  const int sz_of_f = 4, sz_of_i = 4;
   int i,dumi;
+  
   float dumf;
   char  dumc[9];
-  FILE *f;
   
   /* Undefined values */
   dumi = -12345;
   dumf = -12345.0;
   strcpy(dumc,"-12345");
   
-  if (sizeof(int) != 4) {
-    fprintf(stderr,"ERROR : int not in 32bits\n");
-    exit(1); }
-  
-  if ((f=fopen(file,"r+b"))==NULL)
-    { /* If file does not exist */
-      if ((f=fopen(file,"wb"))==NULL) {
-	fprintf(stderr,"ERROR opening %s to write sac header\n",file);
-	exit(1); }
+  if (sizeof(int) != 4) 
+    {
+      fprintf(stderr,"ERROR : int not in 32bits\n");
+      return 1;
     }
-  fseek(f,0,SEEK_SET);
-  fwrite(&hdr->delta,sizeof(float),1,f);
-  fwrite(&hdr->depmin,sizeof(float),1,f);
-  fwrite(&hdr->depmax,sizeof(float),1,f);
-  fwrite(&hdr->scale,sizeof(float),1,f);
-  fwrite(&hdr->odelta,sizeof(float),1,f);
-  fwrite(&hdr->b,sizeof(float),1,f);
+  
+  i = fseek(f,0,SEEK_SET);
+  if (i!=0) 
+    return 1;
+  fwrite(&hdr->delta,sz_of_f,1,f);
+  fwrite(&hdr->depmin,sz_of_f,1,f);
+  fwrite(&hdr->depmax,sz_of_f,1,f);
+  fwrite(&hdr->scale,sz_of_f,1,f);
+  fwrite(&hdr->odelta,sz_of_f,1,f);
+  fwrite(&hdr->b,sz_of_f,1,f);
   /* e */
   hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
-  fwrite(&hdr->e,sizeof(float),1,f);
-  fwrite(&hdr->o,sizeof(float),1,f);
-  fwrite(&hdr->a,sizeof(float),1,f);
-  fwrite(&hdr->internal1,sizeof(float),1,f);
+  fwrite(&hdr->e,sz_of_f,1,f);
+  fwrite(&hdr->o,sz_of_f,1,f);
+  fwrite(&hdr->a,sz_of_f,1,f);
+  fwrite(&hdr->internal1,sz_of_f,1,f);
   for (i=0 ; i<10; i++)
-    fwrite(&hdr->t[i],sizeof(float),1,f);
-  fwrite(&hdr->f,sizeof(float),1,f);
+    fwrite(&hdr->t[i],sz_of_f,1,f);
+  fwrite(&hdr->f,sz_of_f,1,f);
   for (i=0 ; i<10; i++)
-    fwrite(&hdr->resp[i],sizeof(float),1,f);
-  fwrite(&hdr->stla,sizeof(float),1,f);
-  fwrite(&hdr->stlo,sizeof(float),1,f);
-  fwrite(&hdr->stel,sizeof(float),1,f);
-  fwrite(&hdr->stdp,sizeof(float),1,f);
-  fwrite(&hdr->evla,sizeof(float),1,f);
-  fwrite(&hdr->evlo,sizeof(float),1,f);
-  fwrite(&hdr->evel,sizeof(float),1,f);
-  fwrite(&hdr->evdp,sizeof(float),1,f);
-  fwrite(&hdr->mag,sizeof(float),1,f);
+    fwrite(&hdr->resp[i],sz_of_f,1,f);
+  fwrite(&hdr->stla,sz_of_f,1,f);
+  fwrite(&hdr->stlo,sz_of_f,1,f);
+  fwrite(&hdr->stel,sz_of_f,1,f);
+  fwrite(&hdr->stdp,sz_of_f,1,f);
+  fwrite(&hdr->evla,sz_of_f,1,f);
+  fwrite(&hdr->evlo,sz_of_f,1,f);
+  fwrite(&hdr->evel,sz_of_f,1,f);
+  fwrite(&hdr->evdp,sz_of_f,1,f);
+  fwrite(&hdr->mag,sz_of_f,1,f);
   for (i=0 ; i<10; i++)
-    fwrite(&hdr->user[i],sizeof(float),1,f);
-  fwrite(&hdr->dist,sizeof(float),1,f);
-  fwrite(&hdr->az,sizeof(float),1,f);
-  fwrite(&hdr->baz,sizeof(float),1,f);
-  fwrite(&hdr->gcarc,sizeof(float),1,f);
-  fwrite(&hdr->internal2,sizeof(float),1,f);
-  fwrite(&hdr->internal3,sizeof(float),1,f);
-  fwrite(&hdr->depmen,sizeof(float),1,f);
-  fwrite(&hdr->cmpaz,sizeof(float),1,f);
-  fwrite(&hdr->cmpinc,sizeof(float),1,f);
-  fwrite(&hdr->xminimum,sizeof(float),1,f);
-  fwrite(&hdr->xmaximum,sizeof(float),1,f);
-  fwrite(&hdr->yminimum,sizeof(float),1,f);
-  fwrite(&hdr->ymaximum,sizeof(float),1,f);  
+    fwrite(&hdr->user[i],sz_of_f,1,f);
+  fwrite(&hdr->dist,sz_of_f,1,f);
+  fwrite(&hdr->az,sz_of_f,1,f);
+  fwrite(&hdr->baz,sz_of_f,1,f);
+  fwrite(&hdr->gcarc,sz_of_f,1,f);
+  fwrite(&hdr->internal2,sz_of_f,1,f);
+  fwrite(&hdr->internal3,sz_of_f,1,f);
+  fwrite(&hdr->depmen,sz_of_f,1,f);
+  fwrite(&hdr->cmpaz,sz_of_f,1,f);
+  fwrite(&hdr->cmpinc,sz_of_f,1,f);
+  fwrite(&hdr->xminimum,sz_of_f,1,f);
+  fwrite(&hdr->xmaximum,sz_of_f,1,f);
+  fwrite(&hdr->yminimum,sz_of_f,1,f);
+  fwrite(&hdr->ymaximum,sz_of_f,1,f);  
   for (i=0; i<7; i++)
-    fwrite(&dumf,sizeof(float),1,f);
-  /*fseek(f,7*sizeof(float),SEEK_CUR);*/
-  fwrite(&hdr->nzyear,sizeof(int),1,f);  
-  fwrite(&hdr->nzjday,sizeof(int),1,f);  
-  fwrite(&hdr->nzhour,sizeof(int),1,f);
-  fwrite(&hdr->nzmin,sizeof(int),1,f);  
-  fwrite(&hdr->nzsec,sizeof(int),1,f);  
-  fwrite(&hdr->nzmsec,sizeof(int),1,f);  
-  fwrite(&hdr->nvhdr,sizeof(int),1,f);  
-  fwrite(&hdr->norid,sizeof(int),1,f);  
-  fwrite(&hdr->nevid,sizeof(int),1,f);
-  fwrite(&hdr->npts,sizeof(int),1,f); 
-  fwrite(&hdr->internal4,sizeof(int),1,f);  
-  fwrite(&hdr->nwfid,sizeof(int),1,f);
-  fwrite(&hdr->nxsize,sizeof(int),1,f);
-  fwrite(&hdr->nysize,sizeof(int),1,f);
-  fwrite(&dumi,sizeof(int),1,f);
-  fwrite(&hdr->iftype,sizeof(int),1,f);
-  fwrite(&hdr->idep,sizeof(int),1,f);
-  fwrite(&hdr->iztype,sizeof(int),1,f);
-  fwrite(&dumi,sizeof(int),1,f);  
-  fwrite(&hdr->iinst,sizeof(int),1,f);
-  fwrite(&hdr->istreg,sizeof(int),1,f);
-  fwrite(&hdr->ievreg,sizeof(int),1,f);
-  fwrite(&hdr->ievtyp,sizeof(int),1,f);
-  fwrite(&hdr->iqual,sizeof(int),1,f);
-  fwrite(&hdr->isynth,sizeof(int),1,f);
-  fwrite(&hdr->imagtyp,sizeof(int),1,f);
-  fwrite(&hdr->imagsrc,sizeof(int),1,f);
+    fwrite(&dumf,sz_of_f,1,f);
+  /*fseek(f,7*sz_of_f,SEEK_CUR);*/
+  fwrite(&hdr->nzyear,sz_of_i,1,f);  
+  fwrite(&hdr->nzjday,sz_of_i,1,f);  
+  fwrite(&hdr->nzhour,sz_of_i,1,f);
+  fwrite(&hdr->nzmin,sz_of_i,1,f);  
+  fwrite(&hdr->nzsec,sz_of_i,1,f);  
+  fwrite(&hdr->nzmsec,sz_of_i,1,f);  
+  fwrite(&hdr->nvhdr,sz_of_i,1,f);  
+  fwrite(&hdr->norid,sz_of_i,1,f);  
+  fwrite(&hdr->nevid,sz_of_i,1,f);
+  fwrite(&hdr->npts,sz_of_i,1,f); 
+  fwrite(&hdr->internal4,sz_of_i,1,f);  
+  fwrite(&hdr->nwfid,sz_of_i,1,f);
+  fwrite(&hdr->nxsize,sz_of_i,1,f);
+  fwrite(&hdr->nysize,sz_of_i,1,f);
+  fwrite(&dumi,sz_of_i,1,f);
+  fwrite(&hdr->iftype,sz_of_i,1,f);
+  fwrite(&hdr->idep,sz_of_i,1,f);
+  fwrite(&hdr->iztype,sz_of_i,1,f);
+  fwrite(&dumi,sz_of_i,1,f);  
+  fwrite(&hdr->iinst,sz_of_i,1,f);
+  fwrite(&hdr->istreg,sz_of_i,1,f);
+  fwrite(&hdr->ievreg,sz_of_i,1,f);
+  fwrite(&hdr->ievtyp,sz_of_i,1,f);
+  fwrite(&hdr->iqual,sz_of_i,1,f);
+  fwrite(&hdr->isynth,sz_of_i,1,f);
+  fwrite(&hdr->imagtyp,sz_of_i,1,f);
+  fwrite(&hdr->imagsrc,sz_of_i,1,f);
   for (i=0; i<8; i++)
-    fwrite(&dumi,sizeof(int),1,f);
-  fwrite(&hdr->leven,sizeof(int),1,f);
-  fwrite(&hdr->lpspol,sizeof(int),1,f);
-  fwrite(&hdr->lovrok,sizeof(int),1,f);
-  fwrite(&hdr->lcalda,sizeof(int),1,f);
-  fwrite(&dumi,sizeof(int),1,f);
+    fwrite(&dumi,sz_of_i,1,f);
+  fwrite(&hdr->leven,sz_of_i,1,f);
+  fwrite(&hdr->lpspol,sz_of_i,1,f);
+  fwrite(&hdr->lovrok,sz_of_i,1,f);
+  fwrite(&hdr->lcalda,sz_of_i,1,f);
+  fwrite(&dumi,sz_of_i,1,f);
   fputs(hdr->kstnm,f); 
   for (i=0 ; i<16; i++) 
     fprintf(f,"%c",hdr->kevnm[i]);
@@ -439,63 +423,136 @@ whdrsac(char *file, sachdr *hdr)
   fputs(hdr->knetwk,f);
   fputs(hdr->kdatrd, f);
   fputs(hdr->kinst,f);
+  i = fseek(f,0,SEEK_SET);
+  if (i!=0) 
+    return 1;
+  return 0;
+}
+
+
+void 
+minimax(float *y, int np, float *ymin, float *ymax) 
+{
+  int i ;
+  *ymin = y[0] ;
+  *ymax = y[0] ;
+  for (i=1 ; i<np ; i++)
+    {
+      if (y[i] > *ymax)
+	*ymax = y[i] ;
+      if (y[i] < *ymin)
+	*ymin = y[i] ;
+    }
+}
+
+
+/***************************************************/
+/*           wdat(f, h, data)                      */
+/***************************************************/
+/* Write data in sac file                          */
+/* Input  : f : file descriptor                    */
+/*          h : the struct sachdr                  */
+/*          data : array of data points            */
+int
+wdat(FILE *f, sachdr *hdr, double *data)
+{
+  const int sz_of_f = 4, sz_of_i = 4;
+  int    i,npts;
+  float *d;
+
+  i = fseek(f,316,SEEK_SET);
+  fread(&npts,sz_of_i,1,f);
+  if (i!=0)
+    return 1;
+  i = fseek(f,632,SEEK_SET);
+  if (i!=0) 
+    return 1;
+  d = float_alloc(hdr->npts) ;
+  for (i=0 ; i<hdr->npts ; i++)
+      d[i] = (float)data[i];
+  fwrite(d,sz_of_f,hdr->npts,f);
+  /* rewrite depmin,depmax */
+  minimax(d,hdr->npts,&hdr->depmin,&hdr->depmax) ;
+  i = fseek(f,4,SEEK_SET);
+  if (i!=0) 
+    return 1;
+  fwrite(&hdr->depmin,sz_of_f,1,f);
+  fwrite(&hdr->depmax,sz_of_f,1,f);    
+  /* rewrite e    */
+  hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
+  i = fseek(f,24,SEEK_SET);
+  if (i!=0) 
+    return 1;
+  fwrite(&hdr->e,sz_of_f,1,f);
+  free((void*)d);
+  i = fseek(f,0,SEEK_SET);
+  if (i!=0) 
+    return 1;
+  return 0;
+}
+
+
+
+/************************************************/
+/*            whdrsac(filename, h)              */
+/************************************************/
+/* Overwrite sac file header                    */
+/*   >If "filename" already exists, the header  */
+/*    header is replaced but the data points    */
+/*    are not affected.                         */
+/*   >If "filename" does not exists, a new file */
+/*    is created                                */
+/*                                              */
+/* Input  : filename                            */
+/*          h : the struct sachdr               */
+/* Output : header in the sac file "filename    */
+void 
+whdrsac(char *file, sachdr *hdr)
+{
+  FILE *f;
+  
+  if ((f=fopen(file,"r+b"))==NULL) 
+    if ((f=fopen(file,"wb"))==NULL) /* If file does not exist */
+      {
+	fprintf(stderr,"ERROR opening %s to write sac header\n",file);
+	exit(1); 
+      }
+  if (whdr(f, hdr))
+    {
+      fprintf(stderr,"ERROR writing header in file %s\n",file);
+      exit(1);
+    }
   fclose(f);
 }
 
 
 /***************************************************/
-/*           wdatsac(filename, h, data)            */
+/*           wsac(filename, h, data)               */
 /***************************************************/
-/* Write data in sac file                          */
-/*   > The sac file must already exist otherwise   */
-/*     an error signal is sended.                  */
+/* Write sac file                                  */
 /* Input  : filename                               */
 /*          h : the struct sachdr                  */
 /*          data : array of data points            */
-/* Output : data points in the sac file "filename" */
 void 
-wdatsac(char *file, sachdr *hdr, double *data)
+wsac(char *file, sachdr *hdr, double *data)
 {
-  int    i,npts;
-  float *d;
   FILE  *f;
   
-    
-  if ((f=fopen(file,"r+b"))==NULL) {
-    fprintf(stderr,"ERROR opening file %s to write data\n",file);
-    exit(1); }
-
-  i = fseek(f,316,SEEK_SET);
-  fread(&npts,sizeof(int),1,f);
-  if (i!=0 || npts != hdr->npts) {
-    fprintf(stderr,"ERROR writing data in file %s\n",file);
-    fprintf(stderr,"npts header = %d, npts memory = %d\n",npts,hdr->npts);
-    exit(1); }
-
-  i = fseek(f,632,SEEK_SET);
-  if (i!=0) {
-    fprintf(stderr,"ERROR writing data in file %s\n",file);
-    exit(1); }
-  d = float_alloc(hdr->npts) ;
-  for (i=0 ; i<hdr->npts ; i++)
-      d[i] = (float)data[i];
-  fwrite(d,sizeof(float),hdr->npts,f);
-
-  /* rewrite e    */
-  hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
-  i = fseek(f,24,SEEK_SET);
-  if (i!=0) {
-    fprintf(stderr,"ERROR writing data in file %s\n",file);
-    exit(1);}
-  fwrite(&hdr->e,sizeof(float),1,f);
-
-  /* rewrite npts */
-  i = fseek(f,316,SEEK_SET);
-  if (i!=0) {
-    fprintf(stderr,"ERROR writing data in file %s\n",file);
-    exit(1);}
-  fwrite(&hdr->npts,sizeof(int),1,f); 
-  free((void*)d);
+  if ((f=fopen(file,"wb"))==NULL) 
+    {
+      fprintf(stderr,"ERROR opening file %s to write data\n",file);
+      exit(1); 
+    }
+  if (whdr(f, hdr))
+    {
+      fprintf(stderr,"ERROR writing header in file %s\n",file);
+      exit(1);
+    }
+  if (wdat(f,hdr,data))
+    {
+      fprintf(stderr,"ERROR writing data in file %s\n",file);
+      exit(1);
+    }
   fclose(f);
 }
 

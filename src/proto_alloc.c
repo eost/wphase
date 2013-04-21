@@ -1,9 +1,6 @@
 /****************************************************************
 *	W phase package - Memory allocation subroutines
 *                                           
-*       History
-*             2010  Original Coding
-*
 *       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 *
 *****************************************************************/

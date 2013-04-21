@@ -1,12 +1,4 @@
-/****************************************************************
-*	W phase package - read imput files header
-*                                           
-*       History
-*             2010  Original Coding
-*
-*       Zacharie Duputel, Luis Rivera and Hiroo Kanamori
-*
-*****************************************************************/
+/* Header of read_i_files.c subroutines */
 
 #ifndef POW
 #define POW 1.e28
@@ -16,13 +8,13 @@
 typedef struct
 {
   char   pdeline[__LSIZE__], cmtfile[__FSIZE__], seed[__FSIZE__] ; 
-  char   gf_dir[__FSIZE__], evnm[__FSIZE__], evid[32] ;
+  char   gf_dir[__FSIZE__], evnm[__FSIZE__], evid[__LSIZE__] ;
   int    ot_ye, ot_mo, ot_dm, ot_ho, ot_mi, ot_se, ot_ms ;
-  int    filtorder, nf, filtnpass     ;
+  int    filtorder, nf, filtnpass, idtr ;
   double pde_evla, pde_evlo, pde_evdp ;
   double evla, evlo, evdp, dmin, dmax ;
   double fl, fh, tol,  flow, fhigh    ;
-  double preevent, idtr, fend, ts, hd ;
+  double preevent, fend, ts, hd ;
   double *wp_win4, **vm   ;
 } str_quake_params ;
 
