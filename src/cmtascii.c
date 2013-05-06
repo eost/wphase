@@ -134,8 +134,8 @@ main(int argc, char *argv[])
   printf("2.(N)     %6.3f ;      %3.0f ;     %3.0f\n",eval3[1],plg[1],azm[1]);
   printf("3.(P)     %6.3f ;      %3.0f ;     %3.0f\n\n",eval3[2],plg[2],azm[2]);
   printf("Best Double Couple: M0=%8.2E dyn.cm\n",M0) ;
-  printf("NP1: Strike=%3.0f ; Dip=%2.0f ; Slip=%3.0f \n",s1,d1,r1) ;
-  printf("NP2: Strike=%3.0f ; Dip=%2.0f ; Slip=%3.0f \n\n",s2,d2,r2) ;
+  printf("NP1: Strike=%5.1f ; Dip=%4.1f ; Slip=%6.1f \n",s1,d1,r1) ;
+  printf("NP2: Strike=%5.1f ; Dip=%4.1f ; Slip=%6.1f \n\n",s2,d2,r2) ;
   /* printf("NP1: Strike=%3.0f ; Dip=%.4f ; Slip=%3.0f \n",s1,d1,r1)   ; */
   /* printf("NP2: Strike=%3.0f ; Dip=%.4f ; Slip=%3.0f \n\n",s2,d2,r2) ; */
   charplot(eq.vm[1], s1,d1, s2,d2, '-', '#', ' ', '\0','\0','\0', RX, RY, stdout)  ;
@@ -223,7 +223,7 @@ void vn2sdr(double *vn, double *vs, double *s, double *d, double *r)
 {
    const float EPSI = 0.001;
    int   i;
-   printf("%f %f %f\n", vn[0], vn[1], vn[2]);
+   /* printf("%f %f %f\n", vn[0], vn[1], vn[2]); */
    if (vn[0] < 0.)              // Upwards normal
       for(i=0; i<3; i++)
       {
