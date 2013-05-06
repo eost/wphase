@@ -7,7 +7,7 @@
 #
 #        Main authors: Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 #                      
-# (c) California Institute of Technology and Université de Strasbourg / CNRS 
+# (c) California Institute of Technology and Universite de Strasbourg / CNRS 
 #                                  April 2013
 #
 #    Neither the name of the California Institute of Technology (Caltech) 
