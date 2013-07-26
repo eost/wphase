@@ -101,7 +101,7 @@ def parse_config(cfg_file):
 	try:
 		config_lines = open(cfg_file, 'r').readlines()
 		for line in config_lines:
-			if line.find('#') != -1:
+			if line.find('#')==0:
 				continue
 			if line.rstrip():
 				key,value = line.strip().split(':')

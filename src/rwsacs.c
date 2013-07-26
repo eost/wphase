@@ -335,7 +335,7 @@ rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
 int
 whdr(FILE *f, sachdr *hdr)
 {
-  const int sz_of_f = 4, sz_of_i = 4;
+  const int sz_of_f = 4, sz_of_i = 4, sz_of_c = 1;
   int i,dumi;
   
   float dumf;
@@ -433,21 +433,20 @@ whdr(FILE *f, sachdr *hdr)
   fwrite(&hdr->lovrok,sz_of_i,1,f);
   fwrite(&hdr->lcalda,sz_of_i,1,f);
   fwrite(&dumi,sz_of_i,1,f);
-  fputs(hdr->kstnm,f); 
-  for (i=0 ; i<16; i++) 
-    fprintf(f,"%c",hdr->kevnm[i]);
-  fputs(hdr->khole,f); 
-  fputs(hdr->ko,f); 
-  fputs(hdr->ka,f); 
+  fwrite(hdr->kstnm,sz_of_c,8,f);  
+  fwrite(hdr->kevnm,sz_of_c,16,f);
+  fwrite(hdr->khole,sz_of_c,8,f);
+  fwrite(hdr->ko,sz_of_c,8,f);
+  fwrite(hdr->ka,sz_of_c,8,f);
   for (i=0 ; i<10 ; i++) 
-    fputs(hdr->kt[i],f); 
-  fputs(hdr->kf,f); 
-    for (i=0 ; i<3 ; i++)
-    fputs(hdr->kuser[i],f);
-  fputs(hdr->kcmpnm,f);
-  fputs(hdr->knetwk,f);
-  fputs(hdr->kdatrd, f);
-  fputs(hdr->kinst,f);
+    fwrite(hdr->kt[i],sz_of_c,8,f);
+  fwrite(hdr->kf,sz_of_c,8,f);
+  for (i=0 ; i<3 ; i++)
+    fwrite(hdr->kuser[i],sz_of_c,8,f);
+  fwrite(hdr->kcmpnm,sz_of_c,8,f);
+  fwrite(hdr->knetwk,sz_of_c,8,f);
+  fwrite(hdr->kdatrd,sz_of_c,8,f);
+  fwrite(hdr->kinst,sz_of_c,8,f);
   i = fseek(f,0,SEEK_SET);
   if (i!=0) 
     return 1;
