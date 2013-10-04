@@ -93,7 +93,7 @@ main(int argc, char *argv[])
   x_in  = double_alloc(MAX) ;
   x_int = double_alloc(MAX) ;
   /* Allocate tree and sac header */
-  hdr_alloc(&hdr)      ;
+  hdr_init(&hdr)      ;
   datfil = alloctree();
   datfil->d = NULL ;
   datfil->g = NULL ;
@@ -113,15 +113,15 @@ main(int argc, char *argv[])
   i = 0 ; count = 0 ;
   datfil->occur = 1 ;
   datfil->npts = -12345 ;
-  while( (tmp=fscanf(i_sacf,"%s %s %s %s %lf %lf %lf %lf %lf\n",
+  while( (tmp=fscanf(i_sacf,"%s %s %s %s %s %lf %lf %lf %lf %lf\n",
 		     datfil->file,datfil->sta,datfil->net,datfil->cmp,
-		     &datfil->stla,&datfil->stlo,&datfil->stel,
+			 datfil->locid,&datfil->stla,&datfil->stlo,&datfil->cmpaz,
 		     &datfil->az,&datfil->xdeg)) != EOF )
     {
       if (tmp == 0)
 	break;
       else
-	check_scan(9,tmp,i_sacfile,i_sacf) ;
+	check_scan(10,tmp,i_sacfile,i_sacf) ;
       /* Read input sac file */
       rhdrsac(datfil->file,&hdr,&ierror) ;
       if (hdr.npts > MAX) hdr.npts = MAX ;	

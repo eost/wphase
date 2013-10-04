@@ -142,7 +142,7 @@ conv_by_stf(double delay,double half_width,char *itype,sachdr *hdr,double *x_in,
 
   nbeg = 0;
   nend =  (int)floor((hdr->t[0] - hdr->b - pre_P_safety)/hdr->delta);
-  if ( nend - nbeg > max_base ) nbeg = nend - max_base;
+   if ( nend - nbeg > max_base ) nbeg = nend - max_base;
 
   left_taper(x_in, hdr->npts, nbeg, nend);
   lh = (int)floor(half_width/hdr->delta + 0.5);

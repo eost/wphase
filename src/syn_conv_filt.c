@@ -70,7 +70,7 @@ main(int argc, char *argv[])
   path = char_alloc(FSIZE) ;
   x_in   = double_alloc((int)__LEN_SIG__);
   x_conv = double_alloc((int)__LEN_SIG__);
-  hdr_alloc(&hdr);  
+  hdr_init(&hdr);  
   sacfile  = char_alloc(FSIZE) ;
   nsects = (eq.flow > 0.)? eq.filtorder : eq.filtorder/2 ;
   b1 = double_alloc(nsects) ; 

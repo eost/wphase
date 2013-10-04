@@ -117,3 +117,41 @@ taper_syn_only_Z(double *Z, sachdr *hdr)
     }
   return;
 }
+
+void 
+taper_one_trace(double *Z, sachdr *hdr)    // This is identical to taper_only_Z 
+{
+  int    n1, n2,j;
+  double fac, bl;
+  
+  if (hdr->t[0]==-12345.0 || hdr->delta == -12345.0 || 
+      hdr->b==-12345.0|| hdr->npts == -12345)
+    {
+      fprintf(stderr,"*** ERROR - P arrival time not specified in sac header T[0] ***\n");
+      exit(1);
+    }
+
+  n1 = 0;
+  n2 = (int)((hdr->t[0]-hdr->b)/hdr->delta);
+  if (n2 > hdr->npts) n2 = hdr->npts;    
+  if(n2 > n1+1)
+    {
+      bl = 0.;
+      for (j=n1; j<n2; j++)
+	{
+	  bl += Z[j];
+	}
+      bl /= (float)(n2-n1);
+      for (j=0; j<hdr->npts; j++)
+	{
+	  Z[j] -= bl;
+	}
+      
+      for (j=n1; j<n2; j++)
+	{
+	  fac   = (1.-cos((float)(j-n1)*M_PI/(float)(n2-n1-1)))/2.;
+	  Z[j] *= fac;
+	}
+    }
+  return;
+}

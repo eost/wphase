@@ -100,7 +100,7 @@ main(int argc, char **argv)
   tv = double_alloc(nd); /* travel times */
   dv = double_alloc(nd); /* distances    */ 
   /* Sac header allocation */
-  hdr_alloc(&hdr)  ; /* header for synthetics      */
+  hdr_init(&hdr)  ; /* header for synthetics      */
 
   /* Tapering before the P arrival */
   if(argc == 4)

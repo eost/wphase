@@ -82,6 +82,7 @@ import os,sys,re
 import getopt as go
 import shutil as sh
 import pylab as pyl
+from subprocess import call
 
 pyl.rcParams.update(plotparams)
 
@@ -128,6 +129,8 @@ class Sac:
 		self.stlo   =  -12345.
 		self.evla   =  -12345.
 		self.evlo   =  -12345.
+		self.cmpaz  =  -12345.
+		self.cmpinc =  -12345.
 		self.az     =  -12345.
 		self.baz    =  -12345.
 		self.gcarc  =  -12345.
@@ -164,6 +167,9 @@ class Sac:
 			self.az      = pyl.fromfile(fid,'float32',   1)[0]
 			self.baz     = pyl.fromfile(fid,'float32',   1)[0]
 			self.gcarc   = pyl.fromfile(fid,'float32',   1)[0]
+			fid.seek(228,0)
+			self.cmpaz   = pyl.fromfile(fid,'float32',   1)[0]
+			self.cmpinc  = pyl.fromfile(fid,'float32',   1)[0]
 			fid.seek(280,0);
 			self.nzyear  = pyl.fromfile(fid,  'int32',   1)[0]
 			self.nzjday  = pyl.fromfile(fid,  'int32',   1)[0]
@@ -305,6 +311,9 @@ if __name__ == '__main__':
 		if l[:4]=='page' and l[-4:]=='.pdf':
 			rm(l)
 	# Compute synthetics
+	cmd    = SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir
+	print cmd
+	#status = call(cmd, shell=True, stdin=sys.stdin, stdout=sys.stdout);
 	status = os.system(SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir+' > %s_tmp_synths'%(LOGDIR))
 	if status:
 		print 'Error while running '+SYNTHS
@@ -339,8 +348,9 @@ if __name__ == '__main__':
 		fic1 = items[0]
 		sacdata.rsac(fic1)
 		chan = 'LH'+sacdata.kcmpnm[2]
-		fic2 = syndir+'/%s.%s.%s.complete_synth.bp.sac'\
-		       %(sacdata.kstnm,sacdata.knetwk,chan)
+		loc  = sacdata.khole
+		fic2 = syndir+'/%s.%s.%s.%s.complete_synth.bp.sac'\
+		       %(sacdata.kstnm,sacdata.knetwk,chan,loc)
 		sacsynt.rsac(fic2)		
 		# pages
 		if count > perpage:
@@ -380,9 +390,16 @@ if __name__ == '__main__':
 			ylims = YLIMFIXED
 		pyl.ylim(ylims)		
 		# Annotations
-		label = '%s, %s $(\phi,\Delta) = %6.1f^{\circ}, %6.1f^{\circ}$\t\t'%(sacdata.kstnm,
-							      sacdata.kcmpnm,sacdata.az,sacdata.gcarc)	
-		pyl.title(label,fontsize=11.0,va='center',ha='center')
+		if sacdata.kcmpnm[2] == 'Z':
+			label = r'%s %s %s %s $(\phi,\Delta) = %6.1f^{\circ}, %6.1f^{\circ}$'%(
+					sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+			sacdata.az, sacdata.gcarc)
+		else:
+			label  = r'%s %s %s %s $(\phi,\Delta,\alpha) = %6.1f^{\circ},'
+			label += '%6.1f^{\circ}, %6.1f^{\circ}$'
+			label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+			sacdata.az, sacdata.gcarc, sacdata.cmpaz)	
+		pyl.title(label,fontsize=10.0,va='center',ha='center')
 		if not (count-1)%nc:
 			pyl.ylabel('mm',fontsize=10)
 		if (count-1)/nc == nl-1 or nchan+nc > ntot:

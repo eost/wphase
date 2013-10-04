@@ -162,17 +162,17 @@ openfile_wt(char *filename)
 }
   
 
-/********************************************************/
-/*   C = get_gf_filename(dir, stnm, net, chan, ext)     */
-/********************************************************/
-/* Set standard GF filename                             */
-/* input params are :  -> dir  : directory              */
-/*                     -> stnm : station name           */
-/*                     -> net  : network                */
-/*                     -> chan : channel                */
-/*                     -> ext  : extention              */
+/*********************************************************/
+/*   C = get_gf_filename(dir, stnm, net, cmpnm, loc, ext)*/
+/*********************************************************/
+/* Set standard GF filename                              */
+/* input params are :  -> dir  : directory               */
+/*                     -> stnm : station name            */
+/*                     -> net  : network                 */
+/*                     -> chan : channel                 */
+/*                     -> ext  : extention               */
 char *
-get_gf_filename(char *dir, char *stnm, char *netwk, char cmpnm, char *ext)
+get_gf_filename(char *dir, char *stnm, char *netwk, char *cmpnm, char *loc, char *ext)
 {
   int n,m ;
   char *sac_filename ;
@@ -197,16 +197,12 @@ get_gf_filename(char *dir, char *stnm, char *netwk, char cmpnm, char *ext)
       strcpy(sac_filename, dir);
       strncat(sac_filename, stnm,m);
     }
-
-  strcat(sac_filename, ".");
-  n = nbchar(netwk);
-  strncat(sac_filename, netwk,n);
-  strcat(sac_filename, ".LH");
-  n = nbchar(sac_filename);
-  sac_filename[n]=cmpnm   ;
-  sac_filename[n+1]= '\0' ;
-  strcat(sac_filename, ".");
-  n = nbchar(ext);
+  // If loc is empty  (more precisely "  "; it is set to "--")
+  if ( strncmp(loc, "  ", 2 ) == 0 )  strncpy(loc, "--", 2);
+  strcat(sac_filename, "."); n = nbchar(netwk); strncat(sac_filename, netwk,n);
+  strcat(sac_filename, "."); n = nbchar(cmpnm); strncat(sac_filename, cmpnm,n);
+  strcat(sac_filename, "."); n = nbchar(loc);   strncat(sac_filename, loc,2);
+  strcat(sac_filename, "."); n = nbchar(ext);
   if (ext[0] == '.')
     m=1;
   else 

@@ -9,7 +9,7 @@ source $WPHASE_HOME/bin/WP_HEADER.CSH
 set LOG      = LOG
 set DATA     = DATA
 set DATA_org = DATA_org
-set CMPS     = "Z N E"
+set CMPS     = "Z N E 1 2"
 
 # command line arguments 
 set trim_flag = '-u'
@@ -17,7 +17,7 @@ set my_argv = ($ARGV)
 if ($#my_argv > 0) then
     set CMPS = $my_argv
     if ( $CMPS == '-a' ) then
-	set CMPS = "Z N E"
+	set CMPS = "Z N E 1 2"
 	set trim_flag = "-a"
     endif
 endif

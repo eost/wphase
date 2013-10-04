@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
   init_FIR(dec5,Ndec5,&FIR5);
 
   // Decimates to 1sps
-  hdr_alloc(&hdr);
+  hdr_init(&hdr);
 
   rhdrsac(i_sac_filename, &hdr, &ierror);
   y = double_alloc(hdr.npts);

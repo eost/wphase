@@ -99,14 +99,15 @@ splithdr(char *ch, sachdr *hdr, struct tree *new)
   new->npts = hdr->npts ;
 
   /* Set azimuth and great circle arc lengths */
-  new->az   = (double)hdr->az ;
-  new->xdeg = (double)hdr->gcarc ;
-  new->stla = (double)hdr->stla ;
-  new->stlo = (double)hdr->stlo ;
-  new->stel = (double)hdr->stel ;  
+  new->cmpaz = (double)hdr->cmpaz ;
+  new->az    = (double)hdr->az ;
+  new->xdeg  = (double)hdr->gcarc ;
+  new->stla  = (double)hdr->stla ;
+  new->stlo  = (double)hdr->stlo ;
+  new->stel  = (double)hdr->stel ;  
   /* Pointers to branches*/
-  new->d    = NULL ;
-  new->g    = NULL ;
+  new->d     = NULL ;
+  new->g     = NULL ;
 }
 
 /***************************************************************/
@@ -132,6 +133,7 @@ addfile(struct tree *mod)
   strcpy(new->cmp,mod->cmp) ;
   new->occur = mod->occur ;
   strcpy(new->locid,mod->locid) ;
+  new->cmpaz   = mod->cmpaz ;
   new->az   = mod->az ;
   new->xdeg = mod->xdeg ;
   new->stla = mod->stla ;
@@ -317,9 +319,9 @@ savetree(struct tree *root, FILE *o_sacf, double *DMIN, double *DMAX)
     {
       savetree (beg->g, o_sacf, DMIN, DMAX);
       if ( (beg->xdeg >= *DMIN) && (beg->xdeg <= *DMAX) )
-	{	         //file sta  net  cmp  stla   stlo stel     az     xdeg
-	  fprintf(o_sacf,"%-65s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
-		  beg->file,beg->sta,beg->net,beg->cmp,beg->stla,beg->stlo,beg->stel,
+	{	         //file sta  net  cmp  locid stla   stlo cmpaz    az     xdeg
+	  fprintf(o_sacf,"%-65s %-7s %-4s %-5s %-4s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
+			  beg->file,beg->sta,beg->net,beg->cmp,beg->locid,beg->stla,beg->stlo,beg->cmpaz,
 		  beg->az, beg->xdeg);
 	  if (beg->occur > 1)
 	    {
@@ -344,7 +346,7 @@ disptree (struct tree *root)
   if (beg)
     {
       disptree (beg->g);
-      printf ("%45s %8s %8s %8s %8s %12.4f %12.4f %4d\n", beg->file, beg->sta, beg->net, beg->cmp, beg->locid, beg->az, beg->xdeg, beg->occur);
+      printf ("%45s %8s %8s %8s %8s %12.4f %12.4f %12.4f %4d\n", beg->file, beg->sta, beg->net, beg->cmp, beg->locid, beg->cmpaz, beg->az, beg->xdeg, beg->occur);
       //printf ("%45s %12.4f\n", beg->file, beg->xdeg);
       disptree (beg->d);
     }

@@ -46,19 +46,21 @@
 #define  NON  0
 
 /* External routines */
-int r_scr_dat_fil_list(char* file, char*** stats, char*** nets, float** stlats, 
-		       float** stlons);
-void taper_syn(double *R, double *T, double *P, sachdr *hdr);
+int r_scr_dat_fil_list(char* file, char*** stats, char*** nets, char *** cmps,
+					   char*** locs, float** stlats, float** stlons, float **cmpazs);
+void taper_one_trace(double *S, sachdr *hdr);
 void distaz(double cmt_lat, double cmt_lon, float* stlats, float* stlons, 
 	    int nstat, float* dists, float* azs, float* bazs, float* xdegs,
 	    long int* nerr);  
-void rotate_traces(double *T, double *P, float baz, int npts, double *N, double *E);
-void save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan, 
+void rotate_traces(double *T, double *P, float baz, int npts, double *H);
+void save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan, char* loc, 
 		 float *lat, float *lon, sachdr *hdr,  double*   depval);
-void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
-		    str_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);
+void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
+		    str_quake_params *eq, sachdr *hdr, double **GFs, double *Z);
+void fast_synth_only_Hs_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
+						   str_quake_params *eq, sachdr *hdr, double **GFs, double *TH,double *PH );
 void crea_dir(const char *path);
-
+void conv_by_stf(double delay,double half_width,char *itype,sachdr *hdr,double *x_in,double *x_conv);
 /* Internal routines */
 void get_params(int argc, char **argv, char *stat_file, char *itype, 
 		char *i_master, str_quake_params *eq, int *tapering);
@@ -66,15 +68,15 @@ void get_params(int argc, char **argv, char *stat_file, char *itype,
 int 
 main(int argc, char **argv)
 {
-  int i,j,k,flag,jstat,nstat,ngfcomp=6,nsects,ierror=1 ;
+  int i,j,flag,jchan,nchans,ngfcomp=6,nsects,ierror=1 ;
   int tapering=NON,nh=NDEPTHS,nd=NDISTAS ;
   long int nerr = 0 ; 
   char stat_file[FSIZE],i_master[FSIZE],path[FSIZE];
-  char sacfile[FSIZE],itype[2],*chans[]={"LHZ","LHN","LHE"};
+  char sacfile[FSIZE],itype[2], ori;
   char *gfcomp[]={"rr","tt","pp","rt","rp","tp"}; 
-  char **stats, **nets ; 
-  float *stlats,*stlons,*dists,*azs,*bazs,*xdegs,b     ;
-  double **GFs,*Z,*TH,*PH,*E,*N,*x_conv,**WAV,*tv,*dv  ;
+  char **stats, **nets, **cmps, **locs ; 
+  float *stlats,*stlons,*dists,*cmpazs, *azs,*bazs,*xdegs ;
+  double **GFs,*S,*TH,*PH,*x_conv,*tv,*dv  ;
   double *b1,*b2,*a1,*a2,gain,dt=1.; 
   str_quake_params eq; 
   sachdr   hdr; 
@@ -84,20 +86,14 @@ main(int argc, char **argv)
   get_cmtf(&eq, 1) ;
   /* Allocations */
   GFs = double_alloc2(10,__LEN_SIG__);/* GFs: Rrr, Rtt, Rpp, Rrt */
-  Z   = double_alloc(__LEN_SIG__) ;   /* Vertical components     */
   TH  = double_alloc(__LEN_SIG__) ;   /* Radial components       */
   PH  = double_alloc(__LEN_SIG__) ;   /* Transverse components   */
-  E   = double_alloc(__LEN_SIG__) ;   /* East components         */
-  N   = double_alloc(__LEN_SIG__) ;   /* North components        */
+  S   = double_alloc(__LEN_SIG__) ;   /* work copy */
   x_conv   = double_alloc((int)__LEN_SIG__) ;
   eq.vm    = double_alloc2p(2) ;
   eq.vm[1] = double_alloc(6)   ;
   eq.vm[0] = double_alloc(6)   ;   
-  WAV      = double_alloc2p(3) ;
-  *WAV     = Z ;
-  *(WAV+1) = N ;
-  *(WAV+2) = E ;
-  hdr_alloc(&hdr)  ; /* SAC header allocation      */
+  hdr_init(&hdr)  ; /* SAC header allocation      */
   nsects = (eq.flow > 0.)? eq.filtorder : eq.filtorder/2 ;
   b1 = double_alloc(nsects) ; 
   b2 = double_alloc(nsects) ;
@@ -106,13 +102,13 @@ main(int argc, char **argv)
   tv = double_alloc(nd); /* travel times */
   dv = double_alloc(nd); /* distances    */
   /* Reading CMTSOLUTION and STAT_FILE */
-  nstat = r_scr_dat_fil_list(stat_file, &stats, &nets, &stlats, &stlons) ;
-  dists = float_calloc(nstat) ; 
-  azs   = float_calloc(nstat) ;
-  bazs  = float_calloc(nstat) ;
-  xdegs = float_calloc(nstat) ;
+  nchans = r_scr_dat_fil_list(stat_file, &stats, &nets, &cmps, &locs, &stlats, &stlons,&cmpazs) ;
+  dists  = float_calloc(nchans) ; 
+  azs    = float_calloc(nchans) ;
+  bazs   = float_calloc(nchans) ;
+  xdegs  = float_calloc(nchans) ;
   /* Distance, azimuth, back-azimuth, etc  */
-  distaz(eq.evla, eq.evlo, stlats, stlons, nstat, dists, azs, bazs, xdegs, &nerr) ;
+  distaz(eq.evla, eq.evlo, stlats, stlons, nchans, dists, azs, bazs, xdegs, &nerr) ;
   /* Set travel time table for depth = dep */
   trav_time_init(nh,nd,eq.evdp,dv,tv,&ierror);
   /* Excitation kernels calculation */
@@ -128,29 +124,43 @@ main(int argc, char **argv)
       crea_dir(path)         ;
       strcat(path,"/")       ;  
       for(j=0;j<ngfcomp;j++)/* Inititializing the MT components */
-	eq.vm[1][j] = 0. ;
+		eq.vm[1][j] = 0. ;
       eq.vm[1][i]   = 1. ;
-      for (jstat=0;jstat<nstat;jstat++) /* Computing exitation kernels for MT component #i at each station */
-	{ 
+      for (jchan=0;jchan<nchans;jchan++) /* Computing kernels for MT component #i at each station */
+		{ 
+		  flag = 0;
 	  /* Computing Z, TH, PH  */
-	  printf("%-5s", stats[jstat]) ;
-	  fast_synth_sub(azs[jstat], bazs[jstat], xdegs[jstat], tv, dv, nd, &eq, &hdr, GFs, Z, TH, PH);
-	  rotate_traces(TH, PH, bazs[jstat], hdr.npts, N, E)   ; /* Rotating TH, PH to N, E */
-	  if (tapering == YES) taper_syn(Z,N,E,&hdr);
-	  b = hdr.b;
-	  for(k=0;k<3;k++)
-	    {
-	      hdr.b = b ;
-	      strcpy(sacfile,path)         ; /* Save Raw GF SAC */
-	      strcat(sacfile,stats[jstat]) ;
-	      strcat(sacfile,".")          ;
-	      strcat(sacfile,nets[jstat])  ;
-	      strcat(sacfile,".")          ;
-	      strcat(sacfile,chans[k])     ;
-	      strcat(sacfile,".SAC")       ;
-	      save_gf_sac(sacfile,stats[jstat],nets[jstat],chans[k],&stlats[jstat],&stlons[jstat],&hdr,WAV[k]) ; 
-	      conv_by_stf(eq.ts,eq.hd,itype,&hdr,WAV[k],x_conv) ;/* Perform convolution  */
-	      if (flag == 0) /* Set the butterworth sos (dt must be the same for all stations)  */
+		  ori = cmps[jchan][2];
+		  printf("%-5s", stats[jchan]) ;
+		  if ( ori == 'Z' )
+			{
+			  fast_synth_only_Z_sub(azs[jchan], bazs[jchan], xdegs[jchan], tv,dv,nd,&eq,&hdr,GFs,S);
+			  hdr.cmpaz  = 0.;
+			  hdr.cmpinc = 0.;
+			}
+		  else if ( ori == 'N' || ori == 'E' || ori == '1' || ori == '2' ) 
+			{
+			  fast_synth_only_Hs_sub(azs[jchan], bazs[jchan], xdegs[jchan],tv,dv,nd,&eq,&hdr,GFs,TH,PH);
+			  rotate_traces(TH, PH, bazs[jchan]-cmpazs[jchan], hdr.npts, S) ; /*Rotating TH, PH to H*/
+			  hdr.cmpaz  = cmpazs[jchan];
+			  hdr.cmpinc = 90.;
+			}
+		  else
+			continue;
+
+		  if (tapering == YES) taper_one_trace(S,&hdr);
+		  strcpy(sacfile,path)         ; /* Save Raw GF SAC */
+		  strcat(sacfile,stats[jchan]) ;
+		  strcat(sacfile,".")          ;
+		  strcat(sacfile,nets[jchan])  ;
+		  strcat(sacfile,".")          ;
+		  strcat(sacfile,cmps[jchan])  ;
+		  strcat(sacfile,".")          ;
+		  strcat(sacfile,locs[jchan])  ;
+		  strcat(sacfile,".SAC")       ;
+		  save_gf_sac(sacfile,stats[jchan],nets[jchan],cmps[jchan],locs[jchan],&stlats[jchan],&stlons[jchan],&hdr,S) ; 
+		  conv_by_stf(eq.ts,eq.hd,itype,&hdr,S,x_conv) ;/* Perform convolution  */
+		  if (flag == 0) /* Set the butterworth sos (dt must be the same for all stations)  */
 			{
 			  flag = 1 ; 
 			  dt = (double)hdr.delta ;
@@ -159,18 +169,18 @@ main(int argc, char **argv)
 			  else
 				lpbu2sos(eq.fhigh,dt,eq.filtorder,&gain,b1,b2,a1,a2);		  
 			}
-	      else if (dt != (double)hdr.delta)
+		  else if (dt != (double)hdr.delta)
 			{
 			  fprintf(stderr, "ERROR: non uniform samp. period between sac files, file : %s\n",sacfile);
+			  fprintf(stderr, "%f  !=  %f\n", dt, hdr.delta);
 			  exit(1);
 			}
-	      strcat(sacfile,".sac") ; /* Save SAC after STF convolution   */
-	      save_gf_sac(sacfile,stats[jstat],nets[jstat],chans[k],&stlats[jstat],&stlons[jstat],&hdr,x_conv) ; 
-	      filter_with_sos(gain,b1,b2,a1,a2,nsects,x_conv,hdr.npts) ; /* Apply sos */
-	      strcat(sacfile,".bp") ; /* Save SAC after bandpass filtering */
-	      save_gf_sac(sacfile,stats[jstat],nets[jstat],chans[k],&stlats[jstat],&stlons[jstat],&hdr,x_conv) ;
-	    }
-	}
+		  strcat(sacfile,".sac") ; /* Save SAC after STF convolution   */
+		  save_gf_sac(sacfile,stats[jchan],nets[jchan],cmps[jchan],locs[jchan],&stlats[jchan],&stlons[jchan],&hdr,x_conv) ; 
+		  filter_with_sos(gain,b1,b2,a1,a2,nsects,x_conv,hdr.npts) ; /* Apply sos */
+		  strcat(sacfile,".bp") ; /* Save SAC after bandpass filtering */
+		  save_gf_sac(sacfile,stats[jchan],nets[jchan],cmps[jchan],locs[jchan],&stlats[jchan],&stlons[jchan],&hdr,x_conv) ;
+		}
       printf("\n");
     }
   /* Freeing memory */
@@ -178,16 +188,13 @@ main(int argc, char **argv)
   free((void*)b2) ;
   free((void*)a1) ;
   free((void*)a2) ;
-  free((void*)Z) ; 
+  free((void*)S) ; 
   free((void*)PH); 
   free((void*)TH); 
-  free((void*)E) ; 
-  free((void*)N) ;
   free((void*)x_conv);
   for(i=0; i<10; i++)
     free((void *)GFs[i]) ;
-  free((void**)GFs)      ;  
-  free((void**)WAV)      ;  
+  free((void**)GFs)      ;    
   free((void*)eq.vm[0])  ;
   free((void*)eq.vm[1])  ;
   free((void**)eq.vm)    ;
@@ -195,7 +202,7 @@ main(int argc, char **argv)
   free((void*)azs)       ;
   free((void*)bazs)      ;
   free((void*)xdegs)     ;
-  for (i=0;i< nstat;i++)
+  for (i=0;i< nchans;i++)
     {
       free((void*)stats[i]) ;
       free((void*)nets[i])  ;
@@ -204,6 +211,7 @@ main(int argc, char **argv)
   free((void**)nets)  ;
   free((void*)stlats) ;
   free((void*)stlons) ;
+  free((void*)cmpazs) ;
   if(tapering == YES) 
     {
       free((void*)tv);
@@ -214,7 +222,7 @@ main(int argc, char **argv)
 }
 
 void 
-save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan, 
+save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan, char *loc,
 	    float *lat, float *lon, sachdr *hdr,  double*   depval)
 {
   int  i,nbc;
@@ -223,16 +231,25 @@ save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan,
   for (i=nbc; i<8; i++) 
     hdr->kstnm[i] = ' ';
   hdr->kstnm[8] = '\0';
+
   nbc = strlen(netwk);
   strncpy(hdr->knetwk,netwk,nbc);
   for (i=nbc; i<8; i++)
     hdr->knetwk[i] = ' ';
   hdr->knetwk[8] = '\0';  
+
   nbc = strlen(chan);
   strncpy(hdr->kcmpnm,chan, nbc);
   for (i=nbc; i<8; i++)
     hdr->kcmpnm[i] = ' ';
   hdr->kcmpnm[8] = '\0';
+
+  nbc = strlen(loc);
+ strncpy(hdr->khole,loc, nbc);
+  for (i=nbc; i<8; i++)
+    hdr->khole[i] = ' ';
+  hdr->khole[8] = '\0';
+
   hdr->stla = *lat;
   hdr->stlo = *lon;
   wsac(sac_filename, hdr, depval);

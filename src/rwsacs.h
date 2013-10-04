@@ -76,8 +76,8 @@ typedef struct
 
 
 /*************************************/
-/* Allocates memory for a sac header */
-void hdr_alloc(sachdr *hdr);
+/* Initialization of a sac header    */
+void hdr_init(sachdr *hdr);
 
 /*********************************************/
 /* Allocates memory for a tab of sac headers */

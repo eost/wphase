@@ -60,7 +60,7 @@ FILE *openfile_wt(char *filename);
 
 /********************************************************/
 /* Set standard GF filename                             */
-char *get_gf_filename(char *dir, char *stnm, char *netwk, char chan, 
-		      char *ext) ;
+char *get_gf_filename(char *dir, char *stnm, char *netwk, char *chan, 
+					  char *loc, char *ext) ;
 
 

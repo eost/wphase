@@ -204,6 +204,7 @@ def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,f
 	for c in comments:
 		optpar += ' -comments "'+c+'"'
 	print 'Command_line:'+EXE+optpar
+	
 	os.system(EXE+optpar)
 	# Update eq
 	eq.rcmtfile(wcmtfile)

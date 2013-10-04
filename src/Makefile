@@ -69,7 +69,6 @@ EXE = 	$(BIN)/WP_HEADER.CSH		\
 	$(BIN)/wpinversion_ZNE		\
 	$(BIN)/wpinversion_LTZ		\
 	$(BIN)/synth_v6			\
-	$(BIN)/rot_horiz_cmp		\
 	$(BIN)/saclst                  	\
 	$(BIN)/fast_synth 		\
 	$(BIN)/fast_synth_only_Z  	\

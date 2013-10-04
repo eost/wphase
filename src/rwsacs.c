@@ -44,7 +44,7 @@
 /* Default type of file = ITIME (time series file) */
 
 void 
-hdr_alloc(sachdr *hdr)
+hdr_init(sachdr *hdr)
 {
   int i;
   hdr->delta = -12345. ;
@@ -148,7 +148,7 @@ hdr_tab(sachdr **hdr, int n)
       exit(1);    
     }
   for(i=0; i<n; i++)
-    hdr_alloc(&((*hdr)[i])) ;
+    hdr_init(&((*hdr)[i])) ;
 }
 
 

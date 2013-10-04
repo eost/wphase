@@ -94,7 +94,7 @@ main(int argc, char **argv)
   *WAV     = Z  ;
   *(WAV+1) = TH ;
   *(WAV+2) = PH ;
-  hdr_alloc(&hdr) ; /* SAC header allocation */
+  hdr_init(&hdr) ; /* SAC header allocation */
   nsects = (eq.flow > 0.)? eq.filtorder : eq.filtorder/2 ;
   b1 = double_alloc(nsects) ; 
   b2 = double_alloc(nsects) ;

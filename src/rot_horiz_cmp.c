@@ -77,8 +77,8 @@ main(int argc, char *argv[])
   x_in2 = double_alloc(MAX) ;
 
   /* Allocate sac header    */
-  hdr_alloc(&hdr1) ; 
-  hdr_alloc(&hdr2) ;
+  hdr_init(&hdr1) ; 
+  hdr_init(&hdr2) ;
   
   /* String Allocation      */
   i_fil = char_alloc(FSIZE) ;
@@ -103,7 +103,7 @@ main(int argc, char *argv[])
       
       if (cmp[2]=='Z')  /* Vertical component */
 	{
-	  o_fil = get_gf_filename(o_dir, sta, net, 'Z', ".data.sac") ;
+	  o_fil = get_gf_filename(o_dir, sta, net, "LHZ", ".data.sac") ;
 	  rhdrsac(i_fil, &hdr1, &ierror)        ;
 	  rdatsac(i_fil, &hdr1, x_in1, &ierror) ;
 	  /* az, baz, xdeg are not writen in sac files since we use PDE for the W phase time window */
@@ -189,7 +189,7 @@ main(int argc, char *argv[])
 	}      
       /* Writing Longitudinal cmp */
       strcpy(hdproto->kcmpnm, "LHL     ") ;
-      o_fil = get_gf_filename(o_dir, sta, net, 'L', ".data.sac") ;
+      o_fil = get_gf_filename(o_dir, sta, net, "LHL", ".data.sac") ;
       printf("%-9s L : %-f", hdproto->kstnm, hdproto->cmpaz) ;
       wsac( o_fil, hdproto, x_in1) ;
       fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",
@@ -198,7 +198,7 @@ main(int argc, char *argv[])
 
       /* Writing Transverse cmp */
       strcpy(hdproto->kcmpnm, "LHT     ") ;
-      o_fil = get_gf_filename(o_dir, sta, net, 'T', ".data.sac") ;
+      o_fil = get_gf_filename(o_dir, sta, net, "LHT", ".data.sac") ;
       printf(" T : %-f\n", hdproto->cmpaz) ;
       wsac( o_fil, hdproto, x_in2) ;
       fprintf(ostaf,"%-50s %-9s %-9s %-9s %12.4f %12.4f %12.4f %12.4f %12.4f\n",

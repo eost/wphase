@@ -42,10 +42,12 @@
 #include "butterworth.h"  /* butterworth_sin.c */
 #include "syn_conv_sub.h" /* syn_conv_sub.c */
 #include "travel_times.h" /* travel_times.c */
+#include "wpinversion_ZNE.h"
 
-void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
-		    str_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);
-void rotate_traces(double *T, double *P, float baz, int npts, double *N, double *E);
+//void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
+//		    str_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);
+//void rotate_traces(double *T, double *P, float baz, int npts, double *N, double *E);
+
 void distaz(double cmt_lat, double cmt_lon, float* stlats, float* stlons, 
 	    int nstat, float* dists, float* azs, float* bazs, float* xdegs,
 	    long int* nerr);  
@@ -56,14 +58,14 @@ main(int argc, char *argv[])
 {
   int i, j, ns, flag, flagr, ierror, nsects, nh=NDEPTHS, nd=NDISTAS ;
   long int nerr ;
-  double **GFs,*Z,*TH,*PH,*E,*N,*x_conv,**WAV ;
+  double **GFs,*S,*TH,*PH,*x_conv ;
   double *b1, *b2, *a1, *a2, gain, dt=1.0     ; 
   double *tv, *dv ;
   float dist,az,baz,xdeg;
   char i_master[FSIZE], i_wpfilname[FSIZE], datafile[FSIZE], buf[200] ;
-  char o_dir[FSIZE], *o_file,stnm[9],netwk[9],cmpnm[9];
-  char stacmp[]={'Z','N','E','L','T'}  ;
-  char itype[2]="l";
+  char o_dir[FSIZE], *o_file,stnm[9],netwk[9],cmpnm[9], khole[9];
+  char stacmp[]={'Z','N','E','1','2'}  ;
+  char itype[2]="l", ori;
   str_quake_params eq ;
   sachdr hd_data, hd_synt ; 
   FILE *i_wp ;
@@ -98,20 +100,12 @@ main(int argc, char *argv[])
   eq.vm[0] = double_calloc(6)  ;  
   eq.vm[1] = double_calloc(6)  ;
   GFs    = double_alloc2(10,__LEN_SIG__) ;/* GFs: Rrr, Rtt, Rpp, Rrt  */
-  Z      = double_alloc(__LEN_SIG__) ;/*    Vertical components   */
+  S      = double_alloc(__LEN_SIG__) ;/*    Vertical components   */
   TH     = double_alloc(__LEN_SIG__) ;/*    Radial components     */
   PH     = double_alloc(__LEN_SIG__) ;/*    Transverse components */
-  E      = double_alloc(__LEN_SIG__) ;/*    East components       */
-  N      = double_alloc(__LEN_SIG__) ;/*    North components      */
   x_conv = double_alloc(__LEN_SIG__) ;
-  WAV      = double_alloc2p(5) ;
-  *WAV     = Z  ;
-  *(WAV+1) = N  ;
-  *(WAV+2) = E  ;  
-  *(WAV+3) = TH ;  
-  *(WAV+4) = PH ;  
-  hdr_alloc(&hd_data) ;
-  hdr_alloc(&hd_synt) ;  
+  hdr_init(&hd_data) ;
+  hdr_init(&hd_synt) ;  
   nsects = (eq.flow > 0.)? eq.filtorder : eq.filtorder/2 ;
   b1 = double_alloc(nsects) ; 
   b2 = double_alloc(nsects) ;
@@ -139,25 +133,36 @@ main(int argc, char *argv[])
       baz  = 0. ;
       xdeg = 0. ;
       distaz(eq.evla,eq.evlo,&hd_data.stla,&hd_data.stlo,1,&dist,&az,&baz,&xdeg,&nerr) ;
-      /* Computing Z, TH, PH  */	  
-      fast_synth_sub(az,baz,xdeg,tv,dv,nd,&eq,&hd_synt,GFs,Z,TH,PH);
-      rotate_traces(TH,PH,baz,hd_synt.npts,N,E) ; /* Rotating TH, PH to N, E */
+
+	  ori = hd_data.kcmpnm[2];
+		  
+	  if ( ori == 'Z' )
+		fast_synth_only_Z_sub(az,baz,xdeg, tv,dv,nd,&eq,&hd_synt,GFs,S);
+		  else if ( ori == 'N' || ori == 'E' || ori == '1' || ori == '2' ) 
+			{
+			  fast_synth_only_Hs_sub(az,baz,xdeg,tv,dv,nd,&eq,&hd_synt,GFs,TH,PH);
+			  rotate_traces(TH, PH, baz-hd_data.cmpaz,hd_synt.npts, S) ; /*Rotating TH, PH to H*/
+			}
+		  else
+			continue;
+
       sscanf(hd_data.kstnm,"%s",stnm);
       sscanf(hd_data.knetwk,"%s",netwk);
       sscanf(hd_data.kcmpnm,"%s",cmpnm);
+      strcpy(khole, hd_data.khole);             // It can contain blanks
       for(j=0;j<5;j++)
-	{
-	  if (cmpnm[2] == stacmp[j])
-	    break;
-	}
+		{
+		  if (cmpnm[2] == stacmp[j])
+			break;
+		}
       if (j==5)
-	{
-	  fprintf(stderr,"*** ERROR: Unknownk component %s for sta %s\n",cmpnm,stnm) ;
-	  fprintf(stderr,"    -> Exiting\n") ;
-	  fflush(stderr);
-	  exit(1);
-	}
-      conv_by_stf(eq.ts,eq.hd,itype,&hd_synt,WAV[j],x_conv) ;/* Perform convolution */
+		{
+		  fprintf(stderr,"*** ERROR: Unknownk component %s for sta %s\n",cmpnm,stnm) ;
+		  fprintf(stderr,"    -> Exiting\n") ;
+		  fflush(stderr);
+		  exit(1);
+		}
+      conv_by_stf(eq.ts,eq.hd,itype,&hd_synt,S,x_conv) ;/* Perform convolution */
       strcpy(hd_synt.kstnm,hd_data.kstnm)   ;
       strcpy(hd_synt.kcmpnm,hd_data.kcmpnm) ;
       strcpy(hd_synt.knetwk,hd_data.knetwk) ;
@@ -167,7 +172,7 @@ main(int argc, char *argv[])
       hd_synt.evlo = eq.pde_evlo;
       hd_synt.evdp = eq.pde_evdp;
       /* Write output file 1 */
-      o_file = get_gf_filename(o_dir,stnm,netwk,cmpnm[2],".complete_synth.sac") ;
+      o_file = get_gf_filename(o_dir,stnm,netwk,cmpnm,khole,".complete_synth.sac") ;
       wsac(o_file,&hd_synt,x_conv);
       free((void*)o_file) ;
       if (flag == 0) /* Set the butterworth sos (dt must be the same for all stations)   */
@@ -186,18 +191,15 @@ main(int argc, char *argv[])
 	}	  
       filter_with_sos(gain,b1,b2,a1,a2,nsects,x_conv,hd_synt.npts) ; /* Apply sos */
       /* Write output file 2 */
-      o_file = get_gf_filename(o_dir,stnm,netwk,cmpnm[2],".complete_synth.bp.sac") ;
+      o_file = get_gf_filename(o_dir,stnm,netwk,cmpnm,khole,".complete_synth.bp.sac") ;
       printf("Writing sac file : %s\n",o_file) ;
       wsac(o_file,&hd_synt,x_conv);
       free((void*)o_file) ;
     }
   fclose(i_wp);
-  free((void*)Z);
-  free((void*)N);
-  free((void*)E);
+  free((void*)S);
   free((void*)TH);
   free((void*)PH);
-  free((void**)WAV);
   for(j=0;j<10;j++)
     free((void*)GFs[j]);
   free((void**)GFs);

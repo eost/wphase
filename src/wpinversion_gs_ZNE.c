@@ -52,6 +52,23 @@ void get_opt(int numarg1, int numarg2, char **argv, structopt *opt, str_quake_pa
 void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq);
 void get_param2(char *file, structopt *opt, str_quake_params *eq) ;
 
+
+void save_G(double ***G, int nsac, sachdr *hd_synt, char *file)
+{
+  int i,j,k;
+  FILE *fd;
+  fd = fopen(file, "wt");
+  for (i=0; i<nsac; i++)
+	for (j=0; j<hd_synt[i].npts; j++)
+	  {
+		for (k=0; k<6; k++)
+		  fprintf(fd, "%17.8e ", G[i][k][j]);
+		fprintf(fd, "\n");
+	  }
+  fclose(fd);
+}
+  
+
 int 
 main(int argc, char *argv[])
 {
@@ -163,8 +180,10 @@ main(int argc, char *argv[])
 	  eq.ts += tsopt  ;      
 	  eq.hd = eq.ts ;
 	}
-      realloc_gridsearch(nsac,rms,global_rms,dcalc,opt.ref_flag+1) ;      
+      realloc_gridsearch(nsac,rms,global_rms,dcalc,opt.ref_flag+1) ;
+	  save_G(G, nsac, hd_synt, "G_file_before");
       calc_kernel(&eq,&opt,hd_synt,nsac,"l",nd,dv,tv,G,o_log) ;
+	  save_G(G, nsac, hd_synt, "G_file_after");
       if (opt.dc_flag) /* Double Couple inversion                 */
 	{              /* Warning: This has not been fully tested */
 	  for(i=0;i<4;i++)

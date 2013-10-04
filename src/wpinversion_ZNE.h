@@ -160,13 +160,19 @@ void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char 
 void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
 		    str_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);
 
+void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
+					  str_quake_params *eq, sachdr *hdr, double **GFs, double *Z);
+
+void fast_synth_only_Hs_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
+					   str_quake_params *eq, sachdr *hdr, double **GFs, double *TH, double *PH);
+
 void distaz(double cmt_lat, double cmt_lon, float* stlats, float* stlons, 
 	    int nstat, float* dists, float* azs, float* bazs, float* xdegs,
 	    long int* nerr);  
 
 void get_depths(char *path, double *depths, int *nd);
 
-void rotate_traces(double *T, double *P, float baz, int npts, double *N, double *E);
+void rotate_traces(double *T, double *P, float baz, int npts, double *S);
 
 int fill_kernel_G(sachdr *hd_GF,sachdr *hd_data,double Ptt,double twp_beg, 
 		  double twp_end,double *elem_disp,double *G,structopt *opt,FILE *o_log);

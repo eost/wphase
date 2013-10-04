@@ -32,17 +32,13 @@
 #include <stdlib.h>
 
 void 
-rotate_traces(double *T, double *P, float baz, int npts, double *N, double *E)
+rotate_traces(double *T, double *P, float alpha, int npts, double *H)
 {
   double co, si;
   int j;
 
-  co = cos(M_PI*(double)baz/180.);
-  si = sin(M_PI*(double)baz/180.);
-
+  co = cos(M_PI*(double)alpha/180.);
+  si = sin(M_PI*(double)alpha/180.);
   for(j=0; j<npts; j++)
-	{
-	  N[j] = -co*T[j] - si*P[j];
-	  E[j] = -si*T[j] + co*P[j];
-	}
+	  H[j] = -co*T[j] - si*P[j];
 }

@@ -88,7 +88,7 @@ main(int argc, char **argv)
   eq.vm    = double_alloc2p(2) ;
   eq.vm[1] = double_alloc(6)   ;
   eq.vm[0] = double_alloc(6)   ;   
-  hdr_alloc(&hdr)  ; /* SAC header allocation          */
+  hdr_init(&hdr)  ; /* SAC header allocation          */
   nsects = (eq.flow > 0.)? eq.filtorder : eq.filtorder/2 ;
   b1 = double_alloc(nsects) ; 
   b2 = double_alloc(nsects) ;

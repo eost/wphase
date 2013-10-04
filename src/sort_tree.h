@@ -40,7 +40,7 @@ struct tree
 {
   char   file[FSIZE], sta[9], net[9];
   char   cmp[9], locid[9]; 
-  double az, xdeg,stla,stlo,stel;
+  double cmpaz, az, xdeg,stla,stlo,stel;
   int    occur, npts;
   struct tree   *g, *d;
 };

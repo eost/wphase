@@ -60,37 +60,42 @@ read_stats(char* file, char*** stats, char*** nets, float** stlats, float** stlo
 }
 
 int 
-r_scr_dat_fil_list(char* file, char*** stats, char*** nets, float** stlats, float** stlons)
+r_scr_dat_fil_list(char* file, char*** stats, char*** nets, char*** cmps, char*** locs, float** stlats, float** stlons, float** cmpazs)
 {
   FILE* fp;  
-  int   ns, jstat, nstat,i,k,flag;
-  char  dum1[FSIZE],dum2[FSIZE],stat[FSIZE],net[FSIZE];
-  float dum3,dum4,dum5,lat,lon;
+  int   ns, jstat, nstat,i,k;
+  char  dum1[FSIZE], cmp[8], stat[8], net[8], loc[8];
+  float dum4,dum5,lat,lon,cmpaz;
   fp = openfile_rt(file,&k);
   *stats  = char_calloc2(k,5) ;
   *nets   = char_calloc2(k,3) ;
+  *cmps   = char_calloc2(k,3) ;
+  *locs   = char_calloc2(k,2) ;
   *stlats = float_calloc(k) ;
   *stlons = float_calloc(k) ;
+  *cmpazs = float_calloc(k) ;
   nstat = 0 ;
   for(jstat=0; jstat<k; jstat++)
     {
-      ns = fscanf(fp,"%s %s %s %s %f %f %f %f %f\n",
-		  dum1,stat,net,dum2,&lat,&lon,&dum3,
-		  &dum4,&dum5);
-      check_scan(9, ns, file, fp) ;
-      flag = 0;
-      for(i=0;i<nstat;i++)
-	if ((!strcmp(stat,(*stats)[i])) && (!strcmp(net,(*nets)[i])))
-	  {
-	    flag = 1;
-	    break;
-	  }
-      if (flag)
-	continue;
-      strcpy((*stats)[nstat],stat) ;
-      strcpy((*nets)[nstat],net)   ;
+      ns = fscanf(fp,"%s %s %s %s %s %f %f %f %f %f\n",
+				  dum1,stat,net,cmp,loc,&lat,&lon,&cmpaz,&dum4,&dum5);
+      check_scan(10, ns, file, fp) ;
+      /* flag = 0; */
+      /* for(i=0;i<nstat;i++) */
+	  /* 	if ((!strcmp(stat,(*stats)[i])) && (!strcmp(net,(*nets)[i]))) */
+	  /* 	  { */
+	  /* 		flag = 1; */
+	  /* 		break; */
+	  /* 	  } */
+      /* if (flag) */
+	  /* 	continue; */
+      strcpy((*stats)[nstat], stat) ;
+      strcpy((*nets)[nstat],  net )  ;
+	  strcpy((*cmps)[nstat],  cmp ) ;
+	  strcpy((*locs)[nstat],  loc ) ;
       (*stlats)[nstat] = lat ;
       (*stlons)[nstat] = lon ;
+      (*cmpazs)[nstat] = cmpaz ;
       nstat++;
     }
   fclose(fp);

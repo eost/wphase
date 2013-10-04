@@ -89,7 +89,7 @@ main(int argc, char *argv[])
   x_in   = double_alloc((int)__LEN_SIG__);
   dv     = double_alloc(nd);
   tv     = double_alloc(nd);
-  hdr_alloc(&hdr)    ;  
+  hdr_init(&hdr)    ;  
   root = alloctree();
   mod  = alloctree();
   /* Set travel time table */

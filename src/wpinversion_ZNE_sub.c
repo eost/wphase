@@ -50,6 +50,17 @@
 double round(double x);
 
 void 
+save_trace(double *TH, sachdr hdr, char *file)
+{
+  int i;
+  FILE *fd;
+  fd = fopen(file, "wt");
+  for (i=0; i< hdr.npts; i++)
+	fprintf(fd, "%17.7e\n", TH[i]);
+  fclose(fd);
+}
+
+void 
 output_products(structopt *opt, str_quake_params *eq, double s1a, double d1a, 
 				double r1a, double s2a, double d2a, double r2a, double **TMa, 
 				double *eval3a, double M0a, double M0_12a, double Mwa, 
@@ -675,7 +686,11 @@ calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
   /* Computing data */
   for(s=0;s<nsac;s++)
     {
-      if (hd_synt[s].kcmpnm[2] != 'Z' && hd_synt[s].kcmpnm[2] != 'N' && hd_synt[s].kcmpnm[2] != 'E')
+      if (hd_synt[s].kcmpnm[2] != 'Z' && 
+		  hd_synt[s].kcmpnm[2] != 'N' && 
+		  hd_synt[s].kcmpnm[2] != 'E' &&
+		  hd_synt[s].kcmpnm[2] != '1' &&
+		  hd_synt[s].kcmpnm[2] != '2'  )
 		{
 		  fprintf(stderr,"ERROR calc_data : invalid component\n") ;
 		  exit(1) ;       
@@ -711,9 +726,9 @@ calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
 		{
 		  if (hd_synt[s].kcmpnm[2] == 'Z')
 			ocmp = o_Z ;
-		  else if (hd_synt[s].kcmpnm[2] == 'N')
+		  else if (hd_synt[s].kcmpnm[2] == 'N' || hd_synt[s].kcmpnm[2] == '1' )
 			ocmp = o_N ;
-		  else if (hd_synt[s].kcmpnm[2] == 'E')
+		  else if (hd_synt[s].kcmpnm[2] == 'E' || hd_synt[s].kcmpnm[2] == '2' )
 			ocmp = o_E ;
 		  N = hd_synt[s].npts ;
 		  for(i=0 ; i<N ; i++)
@@ -729,8 +744,8 @@ calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
 			  fprintf(ocmp,"\n") ;
 			}
 		  file = get_gf_filename(opt->osacdir, hd_synt[s].kstnm, 
-								 hd_synt[s].knetwk, hd_synt[s].kcmpnm[2], 
-								 "synth.sac") ;
+								 hd_synt[s].knetwk, hd_synt[s].kcmpnm, 
+								 hd_synt[s].khole, "synth.sac") ;
 		  wsac(file, &hd_synt[s], d[s][0]) ;
 		  /* Memory Freeing */
 		  free((void*)file) ;
@@ -1264,9 +1279,9 @@ set_wgt(int ns, sachdr *hd_data,structopt *opt)
 {  
   if (hd_data->kcmpnm[2] == 'Z')
     opt->wgt[ns] *= opt->wZ;
-  else if (hd_data->kcmpnm[2] == 'N')
+  else if (hd_data->kcmpnm[2] == 'N' || hd_data->kcmpnm[2] == '1')
     opt->wgt[ns] *= opt->wN;
-  else if (hd_data->kcmpnm[2] == 'E')
+  else if (hd_data->kcmpnm[2] == 'E' || hd_data->kcmpnm[2] == '2')
     opt->wgt[ns] *= opt->wE;
   else
     opt->wgt[ns] = 0. ;
@@ -1442,8 +1457,8 @@ set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,double ***
   dv       = double_alloc(nd)  ;
   tv       = double_alloc(nd)  ;
   tmparray = double_alloc((int)__LEN_SIG__) ;  
-  hdr_alloc(&hd_data) ;
-  hdr_alloc(&hd_GF)   ;
+  hdr_init(&hd_data) ;
+  hdr_init(&hd_GF)   ;
   flag2 = 0 ;
   if ( *data == NULL    && *G == NULL       &&  opt->wgt == NULL &&   \
        opt->rms_in == NULL && opt->p2p == NULL && opt->avg == NULL && \
@@ -1535,7 +1550,7 @@ set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,double ***
 		  /* GF filename */
 		  strcpy(gf_file,eq->gf_dir);
 		  GF = get_gf_filename(gfdirs[j], hd_data.kstnm, hd_data.knetwk, 
-							   hd_data.kcmpnm[2], ".SAC.sac.bp") ;
+							   hd_data.kcmpnm, hd_data.khole, ".SAC.sac.bp") ;
 		  strcat(gf_file,GF);
 		  free((void*) GF);
 		  flag = fill_G(gf_file, datafile, &hd_GF, &hd_data, npts, Ptt, twp_beg, twp_end, 
@@ -1821,7 +1836,7 @@ load_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,
   /* Allocating memory */
   gf_file  = char_alloc(FSIZE) ;
   tmparray = double_alloc((int)__LEN_SIG__) ;  
-  hdr_alloc(&hd_GF)   ;
+  hdr_init(&hd_GF)   ;
 
   /* Loop on channels */
   for(i=0; i<nsac; i++)
@@ -1835,8 +1850,9 @@ load_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,
 		{
 		  strcpy(gf_file,eq->gf_dir);
 		  GF = get_gf_filename(gfdirs[j], hd_synth[i].kstnm, 
-							   hd_synth[i].knetwk, hd_synth[i].kcmpnm[2], 
-							   ".SAC.sac.bp") ;
+							   hd_synth[i].knetwk, hd_synth[i].kcmpnm, 
+							   hd_synth[i].khole, ".SAC.sac.bp") ;
+		  
 		  strcat(gf_file,GF);
 		  free((void*) GF);
 		  flag = fill_G(gf_file,gf_file,&hd_GF,hd_synth+i,hd_synth[i].npts,Ptt,twp_beg,twp_end, 
@@ -2760,13 +2776,12 @@ set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char ***sa
   char   datafile[FSIZE],dum[64],buf[LSIZE] ;
   FILE   *i_sac;  
   sachdr hd_data;
-
   /* Opening data file list */
   i_sac = openfile_rt(opt->i_saclst,nsac) ;
   /* Allocating memory */
   tmparray = double_alloc((int)__LEN_SIG__) ;  
   *data    = double_alloc2p(*nsac) ;
-  hdr_alloc(&hd_data) ;
+  hdr_init(&hd_data) ;
   opt->wgt  = double_alloc( *nsac ) ;
   *sacfiles = char_alloc2(*nsac,FSIZE) ;
   opt->rms_in = double_alloc(*nsac) ;
@@ -2858,13 +2873,17 @@ set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char ***sa
       strcpy((*hd_synt)[ns].kstnm, hd_data.kstnm)   ; 
       strcpy((*hd_synt)[ns].knetwk, hd_data.knetwk) ; 
       strcpy((*hd_synt)[ns].kcmpnm, hd_data.kcmpnm) ; 
-      (*hd_synt)[ns].az    = hd_data.az    ;
-      (*hd_synt)[ns].gcarc = hd_data.gcarc ;
-      (*hd_synt)[ns].stla  = hd_data.stla  ;
-      (*hd_synt)[ns].stlo  = hd_data.stlo  ;
-      (*hd_synt)[ns].evlo  = hd_data.evlo  ;
-      (*hd_synt)[ns].evla  = hd_data.evla  ;
-      (*hd_synt)[ns].evdp  = hd_data.evdp  ;
+	  strcpy((*hd_synt)[ns].khole, hd_data.khole) ; 
+      (*hd_synt)[ns].az     = hd_data.az     ;
+	  (*hd_synt)[ns].baz    = hd_data.baz    ;
+      (*hd_synt)[ns].gcarc  = hd_data.gcarc  ;
+      (*hd_synt)[ns].stla   = hd_data.stla   ;
+      (*hd_synt)[ns].stlo   = hd_data.stlo   ;
+      (*hd_synt)[ns].evlo   = hd_data.evlo   ;
+      (*hd_synt)[ns].evla   = hd_data.evla   ;
+      (*hd_synt)[ns].evdp   = hd_data.evdp   ;
+	  (*hd_synt)[ns].cmpaz  = hd_data.cmpaz  ;
+	  (*hd_synt)[ns].cmpinc = hd_data.cmpinc ;
       /* Calculate seismogram peak-to-peak and average amplitude */
       if (opt->op_pa <= 0.) 
 		{
@@ -2922,6 +2941,22 @@ make_stat_list(sachdr *hd_synth,int nsac,char ***stats,float **stlats,float **st
   for(i=nstat;i<k;i++)
     free((void*)(*stats)[i]);
   return nstat;
+}
+
+void
+make_chan_list(sachdr *hd_synth,int nsac, float **stlats,float **stlons)
+{
+  int   i;
+  char  conv[40];
+
+  *stlats = float_calloc(nsac) ;
+  *stlons = float_calloc(nsac) ;
+  for(i=0; i<nsac; i++)
+    {
+      /* Round lat/lon to 4 digits */
+      sprintf(conv,"%12.4f %12.4f",hd_synth[i].stla,hd_synth[i].stlo);
+      sscanf(conv,"%f %f",&(*stlats)[i],&(*stlons)[i]);
+    }
 }
 
 
@@ -2997,16 +3032,15 @@ void
 calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,char *itype,
 			int nd,double *dv,double *tv, double ***G,FILE *o_log)
 {
-  int   i,j,k,l,ns,jstat,jsac,nstat,nsects,flag,flag2,ngfcomp=6,npts,ierror=1 ;
+  int   i,j,ns,jsac,nsects,flag,flag2,ngfcomp=6,ierror=1 ;
   long  int nerr ;
-  char  **stats  ; 
-  char  stacmp[]={'Z','N','E'}  ;
-  float *stlats,*stlons,*dists,*azs,*bazs,*xdegs,b ;
-  double **GFs,*Z,*TH,*PH,*E,*N,*x_conv,**WAV    ;
+  char  ori  ; 
+  float *stlats,*stlons,*dists,*azs,*bazs,*xdegs ;
+  double **GFs,*S,*TH,*PH,*x_conv   ;
   double gcarc,Ptt,twp_beg,twp_end, *ref_vm=NULL ;
   double *b1,*b2,*a1,*a2,gain,dt=1.; 
   sachdr hdr; 
-  nstat=make_stat_list(hd_synth,nsac,&stats,&stlats,&stlons);
+  make_chan_list(hd_synth,nsac,&stlats,&stlons);
   /* Memory Allocations */
   if (opt->ref_flag)
     {
@@ -3014,29 +3048,23 @@ calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,char *
       for(i=0;i<NM;i++) 
 		ref_vm[i] = eq->vm[1][i] ;
     }
-  dists = float_calloc(nstat) ; 
-  azs   = float_calloc(nstat) ;
-  bazs  = float_calloc(nstat) ;
-  xdegs = float_calloc(nstat) ;
+  dists = float_calloc(nsac) ; 
+  azs   = float_calloc(nsac) ;
+  bazs  = float_calloc(nsac) ;
+  xdegs = float_calloc(nsac) ;
   GFs   = double_alloc2(10,__LEN_SIG__) ;/* GFs: Rrr, Rtt, Rpp, Rrt  */
-  Z     = double_alloc(__LEN_SIG__)     ;/*    Vertical components   */
+  S     = double_alloc(__LEN_SIG__)     ;/*    Vertical components   */
   TH    = double_alloc(__LEN_SIG__)     ;/*    Radial components     */
   PH    = double_alloc(__LEN_SIG__)     ;/*    Transverse components */
-  E     = double_alloc(__LEN_SIG__)     ;/*    East components       */
-  N     = double_alloc(__LEN_SIG__)     ;/*    North components      */
   x_conv   = double_alloc(__LEN_SIG__)  ;
-  WAV      = double_alloc2p(3) ;
-  *WAV     = Z ;
-  *(WAV+1) = N ;
-  *(WAV+2) = E ;
-  hdr_alloc(&hdr) ; /* SAC header allocation       */
+  hdr_init(&hdr) ; /* SAC header allocation       */
   nsects = (eq->flow > 0.)? eq->filtorder : eq->filtorder/2 ;
   b1 = double_alloc(nsects) ; 
   b2 = double_alloc(nsects) ;
   a1 = double_alloc(nsects) ; 
   a2 = double_alloc(nsects) ;
   /* Distance, azimuth, back-azimuth, etc          */
-  distaz(eq->evla, eq->evlo, stlats, stlons, nstat, dists, azs, bazs, xdegs, &nerr) ;
+  distaz(eq->evla, eq->evlo, stlats, stlons, nsac, dists, azs, bazs, xdegs, &nerr) ;
   flag = 0 ;  
   for(i=0;i<ngfcomp;i++) /* Main loop */
     {
@@ -3044,75 +3072,62 @@ calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,char *
       for(j=0;j<ngfcomp;j++) /* Inititializing the MT components */
 		eq->vm[1][j] = 0. ;
       eq->vm[1][i]   = 1. ;
-      for (jstat=0;jstat<nstat;jstat++) /* Computing exitation kernels for MT component #i at each station */
-		{ 
-		  gcarc = (double)hd_synth[ns].gcarc     ;
+	  for(jsac=0;jsac<nsac;jsac++)
+		{
+		  gcarc = (double)hd_synth[jsac].gcarc;
 		  trav_time(gcarc,tv,dv,nd,&Ptt,&ierror) ;
 		  wp_time_window(gcarc,eq->wp_win4,&twp_beg,&twp_end) ; /* Data Time Window  */
 		  flag2 = 0;
-		  /* Computing Z, TH, PH  */ 
-		  fast_synth_sub(azs[jstat],bazs[jstat],xdegs[jstat],tv,dv,nd,eq,&hdr,GFs,Z,TH,PH);
-		  rotate_traces(TH, PH, bazs[jstat], hdr.npts, N, E)  ; /* Rotating TH, PH to N, E */
-		  b    = hdr.b    ;
-		  npts = hdr.npts ;
-		  k    = strlen(stats[jstat]);
-		  for(jsac=0;jsac<nsac;jsac++)
+		  ori = hd_synth[ns].kcmpnm[2];
+		  
+		  if ( ori == 'Z' )
+			  fast_synth_only_Z_sub(azs[jsac],bazs[jsac],xdegs[jsac], tv,dv,nd,eq,&hdr,GFs,S);
+		  else if ( ori == 'N' || ori == 'E' || ori == '1' || ori == '2' ) 
 			{
-			  l = nbchar(hd_synth[jsac].kstnm);
-			  if ( k==l && !strncmp(hd_synth[jsac].kstnm,stats[jstat],k) )
-				{
-				  for(j=0;j<3;j++) /* Which component (either LHZ, LHN or LHE)? */
-					if (hd_synth[jsac].kcmpnm[2] == stacmp[j])
-					  break;
-				  if (j==3)
-					{
-					  fprintf(stderr,"*** ERROR: Unknownk component %s for sta %s\n",hd_synth[jsac].kcmpnm,hd_synth[jsac].kstnm);
-					  fprintf(stderr,"    -> Exiting\n") ;
-					  fflush(stderr);
-					  exit(1);
-					}
-				  hdr.b    = b    ; /* Re-initialize hdr */
-				  hdr.npts = npts ;
-				  conv_by_stf(eq->ts,eq->hd,itype,&hdr,WAV[j],x_conv) ;/* Perform convolution */
-				  if (flag == 0) /* Set the butterworth sos (dt must be the same for all stations)   */
-					{
-					  flag = 1 ; 
-					  dt = (double)hdr.delta;
-					  if (eq->flow>0.)
-						bpbu2sos(eq->flow,eq->fhigh,dt,eq->filtorder,&gain,b1,b2,a1,a2);
-					  else
-						lpbu2sos(eq->fhigh,dt,eq->filtorder,&gain,b1,b2,a1,a2);		  		      
-					}
-				  else if (dt != (double)hdr.delta) /* Check the sampling frequency (must be uniform) */
-					{
-					  fprintf(stderr, "*** ERROR: non uniform samp. period between sac files (%s)\n",hd_synth[jsac].kstnm);
-					  fprintf(stderr,"    -> Exiting\n") ;
-					  fflush(stderr);
-					  exit(1);
-					}	  
-				  filter_with_sos(gain,b1,b2,a1,a2,nsects,x_conv,hdr.npts) ; /* Apply sos */
-				  flag2 = fill_kernel_G(&hdr,&(hd_synth[jsac]),Ptt,twp_beg,twp_end,x_conv,G[jsac][i],opt,o_log);
-				  if (flag2)
-					{
-					  fprintf(stderr,"*** ERROR: Incomplete green function for %s, %s\n",stats[jstat],hd_synth[jsac].kstnm) ;
-					  fprintf(stderr,"    -> Exiting\n") ;
-					  fflush(stderr);
-					  exit(1);
-					}
-				  hd_synth[jsac].b  = hdr.b + hd_synth[jsac].o - hdr.o ;
-				  ns++;
-				}
+			  fast_synth_only_Hs_sub(azs[jsac],bazs[jsac],xdegs[jsac],tv,dv,nd,eq,&hdr,GFs,TH,PH);
+			  rotate_traces(TH, PH, bazs[jsac]-hd_synth[jsac].cmpaz, hdr.npts, S) ; /*Rotating TH, PH to H*/
 			}
+		  else
+			continue;
+		  
+		  conv_by_stf(eq->ts,eq->hd,itype,&hdr,S,x_conv) ;/* Perform convolution */
+		  if (flag == 0) /* Set the butterworth sos (dt must be the same for all stations)   */
+			{
+			  flag = 1 ; 
+			  dt = (double)hdr.delta;
+			  if (eq->flow>0.)
+				bpbu2sos(eq->flow,eq->fhigh,dt,eq->filtorder,&gain,b1,b2,a1,a2);
+			  else
+				lpbu2sos(eq->fhigh,dt,eq->filtorder,&gain,b1,b2,a1,a2);		  		      
+			}
+		  else if (dt != (double)hdr.delta) /* Check the sampling frequency (must be uniform) */
+			{
+			  fprintf(stderr, "*** ERROR: non uniform samp. period between sac files (%s)\n",hd_synth[jsac].kstnm);
+			  fprintf(stderr,"    -> Exiting\n") ;
+			  fflush(stderr);
+			  exit(1);
+			}	  
+		  filter_with_sos(gain,b1,b2,a1,a2,nsects,x_conv,hdr.npts) ; /* Apply sos */
+		  flag2 = fill_kernel_G(&hdr,&(hd_synth[jsac]),Ptt,twp_beg,twp_end,x_conv,G[jsac][i],opt,o_log); 
+		  if (flag2)
+			{
+			  fprintf(stderr,"*** ERROR: Incomplete green function for %s\n",hd_synth[jsac].kstnm) ;
+			  fprintf(stderr,"    -> Exiting\n") ;
+			  fflush(stderr);
+			  exit(1);
+			}
+		  hd_synth[jsac].b  = hdr.b + hd_synth[jsac].o - hdr.o ;
+		  ns++;
 		}
-      if (nsac!=ns)
+	  if (nsac!=ns)
 		{	
 		  fprintf(stderr,"\n*** ERROR: Kernel G is incomplete (%d vs %d)\n",nsac,ns);  
 		  fprintf(stderr,"    -> Exiting\n") ;
 		  fflush(stderr);
 		  exit(1);	  
 		}
-    }
-
+	}
+  
   /* Free Memory */
   if (opt->ref_flag)
     {
@@ -3120,9 +3135,6 @@ calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,char *
 		eq->vm[1][i] = ref_vm[i] ;
       free((void*)ref_vm);
     }
-  for(i=0;i<nstat;i++)
-    free((void*)stats[i]);
-  free((void**)stats) ;
   free((void*)stlats) ;
   free((void*)stlons) ;
   free((void*)dists)  ;
@@ -3133,12 +3145,9 @@ calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,char *
     free((void*)GFs[i]) ;
   free((void**)GFs)     ;
   free((void*)x_conv)   ;
-  free((void*)Z)    ;
-  free((void*)N)    ;
-  free((void*)E)    ;
+  free((void*)S)    ;
   free((void*)TH)   ;
   free((void*)PH)   ;
-  free((void**)WAV) ;
   free((void*)a1)   ;
   free((void*)a2)   ;
   free((void*)b1)   ;

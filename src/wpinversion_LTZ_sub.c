@@ -705,8 +705,8 @@ calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
 	      fprintf(ocmp,"\n") ;
 	    }
 	  file = get_gf_filename(opt->osacdir, hd_synt[s].kstnm, 
-				 hd_synt[s].knetwk, hd_synt[s].kcmpnm[2], 
-				 "synth.sac") ;
+				 hd_synt[s].knetwk, hd_synt[s].kcmpnm, 
+				 hd_synt[s].khole, "synth.sac") ;
 	  wsac(file, &hd_synt[s], d[s][0]) ;
 	  /* Memory Freeing */
 	  free((void*)file) ;
@@ -1418,8 +1418,8 @@ set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,double ***
   dv       = double_alloc(nd)  ;
   tv       = double_alloc(nd)  ;
   tmparray = double_alloc((int)__LEN_SIG__) ;  
-  hdr_alloc(&hd_data) ;
-  hdr_alloc(&hd_GF)   ;
+  hdr_init(&hd_data) ;
+  hdr_init(&hd_GF)   ;
   flag2 = 0 ;
   if ( *data == NULL    && *G == NULL       &&  opt->wgt == NULL &&   \
        opt->rms_in == NULL && opt->p2p == NULL && opt->avg == NULL && \
@@ -1511,7 +1511,7 @@ set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,double ***
 	  /* GF filename */
 	  strcpy(gf_file,eq->gf_dir);
 	  GF = get_gf_filename(gfdirs[j], hd_data.kstnm, hd_data.knetwk, 
-			       hd_data.kcmpnm[2], ".SAC.sac.bp") ;
+			       hd_data.kcmpnm, hd_data.khole, ".SAC.sac.bp") ;
 	  strcat(gf_file,GF);
 	  free((void*) GF);
 	  flag = fill_G(gf_file, datafile, &hd_GF, &hd_data, npts, Ptt, twp_beg, twp_end, 
@@ -1795,7 +1795,7 @@ load_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,
   /* Allocating memory */
   gf_file  = char_alloc(FSIZE) ;
   tmparray = double_alloc((int)__LEN_SIG__) ;  
-  hdr_alloc(&hd_GF)   ;
+  hdr_init(&hd_GF)   ;
 
   /* Loop on channels */
   for(i=0; i<nsac; i++)
@@ -1809,8 +1809,8 @@ load_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,
 	{
 	  strcpy(gf_file,eq->gf_dir);
 	  GF = get_gf_filename(gfdirs[j], hd_synth[i].kstnm, 
-			       hd_synth[i].knetwk, hd_synth[i].kcmpnm[2], 
-			       ".SAC.sac.bp") ;
+			       hd_synth[i].knetwk, hd_synth[i].kcmpnm, 
+			       hd_synth[i].khole, ".SAC.sac.bp") ;
 	  strcat(gf_file,GF);
 	  free((void*) GF);
 	  flag = fill_G(gf_file,gf_file,&hd_GF,hd_synth+i,hd_synth[i].npts,Ptt,twp_beg,twp_end, 
@@ -2740,7 +2740,7 @@ set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char ***sa
   /* Allocating memory */
   tmparray = double_alloc((int)__LEN_SIG__) ;  
   *data    = double_alloc2p(*nsac) ;
-  hdr_alloc(&hd_data) ;
+  hdr_init(&hd_data) ;
   opt->wgt  = double_alloc( *nsac ) ;
   *sacfiles = char_alloc2(*nsac,FSIZE) ;
   opt->rms_in = double_alloc(*nsac) ;
@@ -3003,7 +3003,7 @@ calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,char *
   *WAV     = Z ;
   *(WAV+1) = N ;
   *(WAV+2) = E ;
-  hdr_alloc(&hdr) ; /* SAC header allocation       */
+  hdr_init(&hdr) ; /* SAC header allocation       */
   nsects = (eq->flow > 0.)? eq->filtorder : eq->filtorder/2 ;
   b1 = double_alloc(nsects) ; 
   b2 = double_alloc(nsects) ;
