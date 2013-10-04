@@ -1,4 +1,4 @@
-#!/bin/csh -fv
+#!/bin/csh -f
 
 source $WPHASE_HOME/bin/WP_HEADER.CSH
 
@@ -120,7 +120,9 @@ foreach page (`${SEQ} 1 $npages`)
 		set khole  = `$SACLST khole  f $fic1 | ${AWK} '{print $2}'`
 		set stla   = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo   = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
+		set cmpaz  = `$SACLST cmpaz  f $fic1 | ${AWK} '{print $2}'`
 		set chan   = LH`$ECHO $kcmpnm | $CUT -c3`
+		if ( $khole == "" ) set khole = "--"
 		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${chan}.${khole}.complete_synth.bp.sac"
 		set YY     = `${ECHO} $item | ${AWK} '{print 6*(3-$1)+2}'` 
 		set XX = -Xa1c
@@ -141,8 +143,9 @@ foreach page (`${SEQ} 1 $npages`)
 		set o1    = `$SACLST o      f $fic1 | ${AWK} '{print $2}'`
 		set dt1   = `$SACLST delta  f $fic1 | ${AWK} '{print $2}'`
 		set n1    = `$SACLST npts   f $fic1 | ${AWK} '{print $2}'`
-		set gcarc = `$SACLST gcarc  f $fic1 | ${AWK} '{print $2}'`
-		set az    = `$SACLST az     f $fic1 | ${AWK} '{print $2}'`
+		set gcarc = `$SACLST gcarc f $fic1 | ${AWK} '{print $2}'`
+		set az    = `$SACLST az    f $fic1 | ${AWK} '{print $2}'`
+		set cmpaz = `$SACLST cmpaz f $fic1 | ${AWK} '{print $2}'`
 		####
 		set b2    = `$SACLST b      f $fic2 | ${AWK} '{print $2}'`
 		set o2    = `$SACLST o      f $fic2 | ${AWK} '{print $2}'`
@@ -191,8 +194,13 @@ foreach page (`${SEQ} 1 $npages`)
 		${ECHO} $wte 0 | $PSXY -R$reg_trace -JX8/4 -W$red -G$red -Sc$size $XX -Ya${YY}c $K2 >> $PS
 		###
 		
-		set string = `${ECHO} $az $gcarc | ${AWK} '{printf "(@~f,D@~) = %7.1f\\272, %7.1f\\272", $1,$2}'`
-		${ECHO} "4.5 3. 10 0 6 BL  $string" | $PSTEXT -JX1 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
+	if ( $kcmpnm == "LHZ" ) then
+			set string = `${ECHO} $az $gcarc | ${AWK} '{printf "(@~f,D@~) = %7.1f\\272, %7.1f\\272", $1,$2}'`
+		else
+			set string = `${ECHO} $az $gcarc $cmpaz | ${AWK} '{printf "(@~f,D,a@~) = %7.1f\\272, %7.1f\\272, %7.1f\\272", $1,$2,$3}'`
+		endif
+
+		${ECHO} "3.7 3.3 10 0 6 BL  $string" | $PSTEXT -JX1 -R0/1/0/1 -N  $K2 -G1 $XX -Ya${YY}c  >> $PS
 		
 		if ($nsta == $#fics_1) then
 			${ECHO} 0 0 | $PSXY -R0/1/0/1 -JX1 -W$black $K3 -Xa0c -Ya0c >> $PS
@@ -216,6 +224,7 @@ foreach page (`${SEQ} 1 $npages`)
 		set stla    = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo    = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
 		set chan    = LH`$ECHO $kcmpnm | $CUT -c3`
+		if ( $khole == "" ) set khole = "--"
 		set fic2    = "${SYNDIR}/${kstnm}.${knetwk}.${chan}.${khole}.complete_synth.bp.sac"
 		set YY      = `${ECHO} $item | ${AWK} '{print 6*(3-$1)+2}'` 
 		
@@ -233,17 +242,18 @@ foreach page (`${SEQ} 1 $npages`)
 		$PSBASEMAP -R0/360/0/90 -JE0/90/3c -B/g30a30      $XX -Ya${YY}c $K2  >> $PS
 		
 		# Traces
-		set b1      = `$SACLST b     f $fic1 | ${AWK} '{print $2}'`
-		set o1      = `$SACLST o     f $fic1 | ${AWK} '{print $2}'`
-		set dt1     = `$SACLST delta f $fic1 | ${AWK} '{print $2}'`
-		set n1      = `$SACLST npts  f $fic1 | ${AWK} '{print $2}'`
-		set gcarc   = `$SACLST gcarc f $fic1 | ${AWK} '{print $2}'`
-		set az      = `$SACLST az    f $fic1 | ${AWK} '{print $2}'`
+		set b1    = `$SACLST b     f $fic1 | ${AWK} '{print $2}'`
+		set o1    = `$SACLST o     f $fic1 | ${AWK} '{print $2}'`
+		set dt1   = `$SACLST delta f $fic1 | ${AWK} '{print $2}'`
+		set n1    = `$SACLST npts  f $fic1 | ${AWK} '{print $2}'`
+		set gcarc = `$SACLST gcarc f $fic1 | ${AWK} '{print $2}'`
+		set az    = `$SACLST az    f $fic1 | ${AWK} '{print $2}'`
+		set cmpaz = `$SACLST cmpaz f $fic1 | ${AWK} '{print $2}'`
 		####
-		set b2      = `$SACLST b     f $fic2 | ${AWK} '{print $2}'`
-		set o2      = `$SACLST o     f $fic2 | ${AWK} '{print $2}'`
-		set dt2     = `$SACLST delta f $fic2 | ${AWK} '{print $2}'`
-		set n2      = `$SACLST npts  f $fic2 | ${AWK} '{print $2}'`
+		set b2    = `$SACLST b     f $fic2 | ${AWK} '{print $2}'`
+		set o2    = `$SACLST o     f $fic2 | ${AWK} '{print $2}'`
+		set dt2   = `$SACLST delta f $fic2 | ${AWK} '{print $2}'`
+		set n2    = `$SACLST npts  f $fic2 | ${AWK} '{print $2}'`
 
 		set NN1 = `echo $length $o1 $b1 $dt1 | ${AWK} '{print int(($1+$2-$3)/$4)}'`
 		set NN2 = `echo $length $o2 $b2 $dt2 | ${AWK} '{print int(($1+$2-$3)/$4)}'`
@@ -284,9 +294,12 @@ foreach page (`${SEQ} 1 $npages`)
 		${ECHO} $wtb 0 | $PSXY -R$reg_trace -JX8/4 -W$red -G$red -Sc$size $XX -Ya${YY}c $K2 >> $PS
 		${ECHO} $wte 0 | $PSXY -R$reg_trace -JX8/4 -W$red -G$red -Sc$size $XX -Ya${YY}c $K2 >> $PS
 		###
-		
-		set string = `${ECHO} $az $gcarc | ${AWK} '{printf "(@~f,D@~) = %7.1f\\272, %7.1f\\272", $1,$2}'`
-		${ECHO} "4.5 3. 10 0 6 BL  $string" | $PSTEXT -JX1 -R0/1/0/1 -N $K2 -G1 $XX -Ya${YY}c  >> $PS
+		if ( $kcmpnm == "LHZ" ) then
+			set string = `${ECHO} $az $gcarc | ${AWK} '{printf "(@~f,D@~) = %7.1f\\272, %7.1f\\272", $1,$2}'`
+		else
+			set string = `${ECHO} $az $gcarc $cmpaz | ${AWK} '{printf "(@~f,D,a@~) = %7.1f\\272, %7.1f\\272, %7.1f\\272", $1,$2,$3}'`
+		endif
+		${ECHO} "3.7 3.3 10 0 6 BL  $string" | $PSTEXT -JX1 -R0/1/0/1 -N $K2 -G1 $XX -Ya${YY}c  >> $PS
 		
 		if ($nsta == $#fics_1) then
 			${ECHO} 0 0 | $PSXY -R0/1/0/1 -JX1 -W$black $K3 -Xa0c -Ya0c >> $PS
