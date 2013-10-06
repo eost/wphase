@@ -84,6 +84,7 @@ OBJS =  read_stats.o     \
 	get_prefix.o     \
 	rotate_cmt.o     \
 	rotate_traces.o  \
+	rotate_2_ortho_traces.o  \
 	yyyymmdd2jjj.o   \
 	save_sac.o       \
 	get_length.o     \

@@ -52,7 +52,7 @@ void distaz(double cmt_lat, double cmt_lon, float* stlats, float* stlons,
 	    int nstat, float* dists, float* azs, float* bazs, float* xdegs,
 	    long int* nerr);  
 
-void rotate_traces(double *T, double *P, float baz, int npts, double *N, double *E);
+void rotate_2_ortho_traces(double *T, double *P, float baz, int npts, double *N, double *E);
 
 void save_sac(char *stnm, char *netwk, char *chan, float *lat, float *lon, 
 	      sachdr *hdr,  double*   depval);
@@ -147,7 +147,7 @@ main(int argc, char **argv)
       fast_synth_sub(azs[jstat], bazs[jstat], xdegs[jstat], tv, dv, nd, &eq, &hdr, GFs, Z, TH, PH);
       if (tapering == YES)
 	taper_syn(Z,TH,PH,&hdr.npts,&hdr.delta,&(xdegs[jstat]),tv,dv,nd) ;
-      rotate_traces(TH, PH, bazs[jstat], hdr.npts, N, E)   ; /* Rotating TH, PH to N, E */
+      rotate_2_ortho_traces(TH, PH, bazs[jstat], hdr.npts, N, E)   ; /* Rotating TH, PH to N, E */
       save_sac(stats[jstat], nets[jstat], "LHZ", &stlats[jstat] , &stlons[jstat], &hdr, Z) ;
       save_sac(stats[jstat], nets[jstat], "LHE", &stlats[jstat] , &stlons[jstat], &hdr, E) ;
       save_sac(stats[jstat], nets[jstat], "LHN", &stlats[jstat] , &stlons[jstat], &hdr, N) ; 
