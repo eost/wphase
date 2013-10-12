@@ -121,9 +121,8 @@ foreach page (`${SEQ} 1 $npages`)
 		set stla   = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo   = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
 		set cmpaz  = `$SACLST cmpaz  f $fic1 | ${AWK} '{print $2}'`
-		set chan   = LH`$ECHO $kcmpnm | $CUT -c3`
 		if ( $khole == "" ) set khole = "--"
-		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${chan}.${khole}.complete_synth.bp.sac"
+		set fic2   = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.${khole}.complete_synth.bp.sac"
 		set YY     = `${ECHO} $item | ${AWK} '{print 6*(3-$1)+2}'` 
 		set XX = -Xa1c
 		# Station name
@@ -223,9 +222,8 @@ foreach page (`${SEQ} 1 $npages`)
 		set khole   = `$SACLST khole f $fic1 | ${AWK} '{print $2}'`		
 		set stla    = `$SACLST stla   f $fic1 | ${AWK} '{print $2}'`
 		set stlo    = `$SACLST stlo   f $fic1 | ${AWK} '{print $2}'`
-		set chan    = LH`$ECHO $kcmpnm | $CUT -c3`
 		if ( $khole == "" ) set khole = "--"
-		set fic2    = "${SYNDIR}/${kstnm}.${knetwk}.${chan}.${khole}.complete_synth.bp.sac"
+		set fic2    = "${SYNDIR}/${kstnm}.${knetwk}.${kcmpnm}.${khole}.complete_synth.bp.sac"
 		set YY      = `${ECHO} $item | ${AWK} '{print 6*(3-$1)+2}'` 
 		
 		set XX = -Xa14.5c

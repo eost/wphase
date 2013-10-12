@@ -347,7 +347,7 @@ if __name__ == '__main__':
 		items = l.strip().split()
 		fic1 = items[0]
 		sacdata.rsac(fic1)
-		chan = 'LH'+sacdata.kcmpnm[2]
+		chan = sacdata.kcmpnm[0:3]
 		loc  = sacdata.khole
 		fic2 = syndir+'/%s.%s.%s.%s.complete_synth.bp.sac'\
 		       %(sacdata.kstnm,sacdata.knetwk,chan,loc)
