@@ -100,8 +100,7 @@ set REC_DEC_FILT         = \$BIN/rec_dec_filt
 set SYN_CONV_FILT        = \$BIN/syn_conv_filt
 set ROT_HORIZ_CMP        = \$BIN/rot_horiz_cmp
 
-set PREP_KERNELS_ZNE     = \${BIN}/prep_kernels_ZNE
-set PREP_KERNELS_LTZ     = \${BIN}/prep_kernels_LTZ
+set PREP_KERNELS         = \${BIN}/prep_kernels
 set PREP_KERNELS_only_Z  = \${BIN}/prep_kernels_only_Z
 
 set FAST_SYNTH_Z         = \$BIN/fast_synth_only_Z

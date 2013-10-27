@@ -28,7 +28,7 @@
 *
 ****************************************************************************/
 
-/*     W phase inversion for LTZ components     */
+/*     W phase inversion   */
 
 #include <stdio.h>
 #include <string.h>
@@ -44,7 +44,7 @@
 #include "rwtextfiles.h"  /* rwtextfiles.c  */
 #include "travel_times.h" /* travel_times.c */
 #include "read_i_files.h" /* read_i_files.c */
-#include "wpinversion_LTZ.h"
+#include "wpinversion.h"
 
 
 /* *** EXTERNAL FUNCTIONS *** */
@@ -275,8 +275,8 @@ disphelp(char **argv,structopt *opt)
   
   fprintf(stderr,"\n data weighting and screening: \n");  
   fprintf(stderr,"  -wz real_value          weight for LHZ channels (%f)\n",opt->wZ);
-  fprintf(stderr,"  -wl real_value          weight for LHL channels (%f)\n",opt->wL);
-  fprintf(stderr,"  -wt real_value          weight for LHT channels (%f)\n",opt->wT);
+  fprintf(stderr,"  -wn real_value          weight for LHN channels (%f)\n",opt->wN);
+  fprintf(stderr,"  -we real_value          weight for LHE channels (%f)\n",opt->wE);
   fprintf(stderr,"  -azp                    azimuth weighting (no az. ponderation)\n");
   fprintf(stderr,"  -med                    screening data before inversion (no pre-screening)\n") ;
   fprintf(stderr,"  -th real_value          reject data using a rms threshold (no rms threshold)\n") ; 
@@ -392,13 +392,13 @@ get_opt(numarg1, numarg2, argv, opt, eq)
 
   strcpy(opt->i_master,"i_master")   ;
   strcpy(   eq->gf_dir,"")   ;
-  strcpy(opt->i_saclst,"i_wpinversion") ;
-  strcpy(opt->o_saclst,"o_wpinversion") ;
-  strcpy(opt->log,"wpinversion.log")    ;
-  strcpy(opt->o_covf,"o_covariance")    ;
-  strcpy(opt->o_cmtf,"WCMTSOLUTION")    ;
+  strcpy(opt->i_saclst,"i_wpinversion")  ;
+  strcpy(opt->o_saclst,"o_wpinversion")  ;
+  strcpy(opt->log,"wpinversion.log")     ;
+  strcpy(opt->o_covf,"o_covariance")     ;
+  strcpy(opt->o_cmtf,"WCMTSOLUTION")     ;
   strcpy(opt->p_data,"fort.15")  ;
-  strcpy(opt->psfile,"p_wpinversion")   ;
+  strcpy(opt->psfile,"p_wpinversion.ps") ;
   strcpy(opt->wpbmfile,"")  ;
   strcpy(opt->refbmfile,"") ;
   strcpy(opt->osacdir,"./") ;
@@ -413,8 +413,8 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->ref_flag  = 1  ;
   opt->ntr_val   = 1. ;
   opt->wZ        = 1. ;
-  opt->wL        = 1. ;
-  opt->wT        = 1. ;
+  opt->wN        = 1. ;
+  opt->wE        = 1. ;
   opt->azp       = 0. ;
   opt->ps        = 1  ;
   opt->dts_val   = 0. ;
@@ -429,126 +429,133 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->dc_flag   = 0  ;
   opt->ip        = 0  ;
   opt->ib[0]     = 0  ;
+  opt->ncom      = 0  ;
   k = 0 ;
   for( i = 0; i<numarg2; i++ )
     {
       j = i + numarg1 + 1 ;
       fflush(stdout);
       if (!strncmp(argv[j],"-imas",5)){
-	get_char_arg(argv,j,i,numarg2,opt->i_master) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->i_master) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-ifil",5)){
-	get_char_arg(argv,j,i,numarg2,opt->i_saclst) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->i_saclst) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-ofil",5)){
-	get_char_arg(argv,j,i,numarg2,opt->o_saclst) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->o_saclst) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-log",4)){
-	get_char_arg(argv,j,i,numarg2,opt->log) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->log) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-ocovf",6)){
-	get_char_arg(argv,j,i,numarg2,opt->o_covf) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->o_covf) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-ocmtf",6)){
-	get_char_arg(argv,j,i,numarg2,opt->o_cmtf) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->o_cmtf) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-pdata",6)){
-	get_char_arg(argv,j,i,numarg2,opt->p_data) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->p_data) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-icmtf",6)){
-	get_char_arg(argv,j,i,numarg2,eq->cmtfile) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,eq->cmtfile) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-gfdir",6)){
-	get_char_arg(argv,j,i,numarg2,eq->gf_dir) ;
-	add_slash(eq->gf_dir);
-	k+=2 ;}   
+		get_char_arg(argv,j,i,numarg2,eq->gf_dir) ;
+		add_slash(eq->gf_dir);
+		k+=2 ;}   
+      if (!strncmp(argv[j],"-comment",8)){
+		if (opt->ncom >= NCOM)
+		  fprintf(stderr,"WARNING: Too many comments: Comment %s ignored.",argv[j+1]);
+		else
+		  get_char_arg(argv,j,i,numarg2,opt->comments[opt->ncom++]) ;
+		k+=2 ;}   
       if (!strncmp(argv[j],"-osyndir",8)){
-	get_char_arg(argv,j,i,numarg2,opt->osacdir) ;
-	k+=2 ;}      
+		get_char_arg(argv,j,i,numarg2,opt->osacdir) ;
+		k+=2 ;}      
       if (!strncmp(argv[j],"-ps",6)){
-	get_char_arg(argv,j,i,numarg2,opt->psfile) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->psfile) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-wpbm",6)){
-	get_char_arg(argv,j,i,numarg2,opt->wpbmfile) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->wpbmfile) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-refbm",6)){
-	get_char_arg(argv,j,i,numarg2,opt->refbmfile) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->refbmfile) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-th",3)){
-	get_num_arg(argv,j,i,numarg2,"%lf",&opt->th_val) ;
-	k+=2 ;}
+		get_num_arg(argv,j,i,numarg2,"%lf",&opt->th_val) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-nr",3)){
-	get_num_arg(argv,j,i,numarg2,"%lf",(double*)&opt->rms_r_th) ;
-	if (opt->rms_r_th < 1.)
-	  opt->rms_r_th = 1./opt->rms_r_th ;
-	k+=2 ;}
+		get_num_arg(argv,j,i,numarg2,"%lf",(double*)&opt->rms_r_th) ;
+		if (opt->rms_r_th < 1.)
+		  opt->rms_r_th = 1./opt->rms_r_th ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-cth",4)){
-	get_num_arg(argv,j,i,numarg2,"%lf",&opt->cth_val) ;
-	k+=2 ;}
+		get_num_arg(argv,j,i,numarg2,"%lf",&opt->cth_val) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-df",3)){
-	get_num_arg(argv,j,i,numarg2,"%lf",&opt->df_val) ;
-	k+=2 ;}
+		get_num_arg(argv,j,i,numarg2,"%lf",&opt->df_val) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-dts",4)){
-	get_num_arg(argv,j,i,numarg2,"%lf",&opt->dts_val);
-	k+=2 ;}
+		get_num_arg(argv,j,i,numarg2,"%lf",&opt->dts_val);
+		k+=2 ;}
       if (!strncmp(argv[j],"-ogsf",6)){
-	get_char_arg(argv,j,i,numarg2,opt->tsgsfile) ;
-	k+=2 ;}
+		get_char_arg(argv,j,i,numarg2,opt->tsgsfile) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-wz",3)){
-	get_num_arg(argv,j,i,numarg2,"%lf", &opt->wZ) ;
-	k+=2 ;}
-      if (!strncmp(argv[j],"-wl",3)){
-	get_num_arg(argv,j,i,numarg2,"%lf", &opt->wL) ;
-	k+=2 ;}
-      if (!strncmp(argv[j],"-wt",3)){
-	get_num_arg(argv,j,i,numarg2,"%lf", &opt->wT) ;
-	k+=2 ;}
+		get_num_arg(argv,j,i,numarg2,"%lf", &opt->wZ) ;
+		k+=2 ;}
+      if (!strncmp(argv[j],"-wn",3)){
+		get_num_arg(argv,j,i,numarg2,"%lf", &opt->wN) ;
+		k+=2 ;}
+      if (!strncmp(argv[j],"-we",3)){
+		get_num_arg(argv,j,i,numarg2,"%lf", &opt->wE) ;
+		k+=2 ;}
       if (!strncmp(argv[j],"-strike",7)){
-	opt->dc_flag = 1;
-	get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+0) ;	
-	opt->ib[opt->ip++] = 1;
-	k+=2 ;}      
+		opt->dc_flag = 1;
+		get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+0) ;	
+		opt->ib[opt->ip++] = 1;
+		k+=2 ;}      
       if (!strncmp(argv[j],"-dip",4)){	
-	opt->dc_flag = 1;
-	get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+1) ;	
-	opt->ib[opt->ip++] = 2;
-	k+=2 ;}      
+		opt->dc_flag = 1;
+		get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+1) ;	
+		opt->ib[opt->ip++] = 2;
+		k+=2 ;}      
       if (!strncmp(argv[j],"-rake",5)){
-	opt->dc_flag = 1;
-	get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+2) ;	
-	opt->ib[opt->ip++] = 3;
-	k+=2 ;}      
+		opt->dc_flag = 1;
+		get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+2) ;	
+		opt->ib[opt->ip++] = 3;
+		k+=2 ;}      
       if (!strncmp(argv[j],"-mom",4)){
-	opt->dc_flag = 1;
-	get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+3) ;
-	opt->priorsdrM0[3] /= POW;
-	opt->ib[opt->ip++] = 4;
-	k+=2 ;}      
+		opt->dc_flag = 1;
+		get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+3) ;
+		opt->priorsdrM0[3] /= POW;
+		opt->ib[opt->ip++] = 4;
+		k+=2 ;}      
       if (!strncmp(argv[j],"-dc",3)){
-	opt->dc_flag = 1 ;
-	k++ ;}      
+		opt->dc_flag = 1 ;
+		k++ ;}      
       if (!strncmp(argv[j],"-azp",4)){
-	opt->azp = 1 ;
-	k+=1 ;}
+		opt->azp = 1 ;
+		k+=1 ;}
       if (!strncmp(argv[j],"-med",4)){
-	opt->med_val = 1 ;	
-	k++ ;}
+		opt->med_val = 1 ;	
+		k++ ;}
       if (!strncmp(argv[j],"-old",4)){
-	opt->op_pa   = 1. ;	
-	k++ ;}
+		opt->op_pa   = 1. ;	
+		k++ ;}
       if (!strncmp(argv[j],"-nont",5)){
-	opt->ntr_val = 0. ;
-	k++ ;}
+		opt->ntr_val = 0. ;
+		k++ ;}
       if (!strncmp(argv[j],"-noref",6)){
-	opt->ref_flag = 0 ;
-	k++ ;}
+		opt->ref_flag = 0 ;
+		k++ ;}
       if (!strncmp(argv[j],"-nops",5)){
-	opt->ps = 0 ;
-	k++ ;}
+		opt->ps = 0 ;
+		k++ ;}
       if (!strncmp(argv[j],"-h",2))
-	disphelp(argv,opt) ;
+		disphelp(argv,opt) ;
       if (!strncmp(argv[j],"--help",6))
-	disphelp(argv,opt) ;
+		disphelp(argv,opt) ;
     }
   if (k != numarg2)
     error_syntax(argv,"") ;
@@ -559,7 +566,7 @@ void
 get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq) 
 {
   int numarg1, numarg2 ;
-  int max = 55 ;
+  int max = 128 ;
 
   numarg1 = 0              ;
   numarg2 = argc-numarg1-1 ;

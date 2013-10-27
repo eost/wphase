@@ -1,6 +1,6 @@
 #!/bin/csh -f
 #
-# W phase package - RUNA3 for Z, N, E components
+# W phase package - RUNA3 (median and rms screening)
 #
 # Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 #
@@ -16,8 +16,8 @@ endif
 set my_argv = ($ARGV)
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract.csh
-set PREPARE = ${BIN}/prepare_wp_ZNE.csh
-set WPINVER = ${BIN}/wpinversion_ZNE
+set PREPARE = ${BIN}/prepare_wp.csh
+set WPINVER = ${BIN}/wpinversion
 
 set median  = "-med"
 set p2p_scr = `$GREP ^P2P_SCREENING i_master| $CUT -d':' -f2`

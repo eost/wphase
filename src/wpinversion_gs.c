@@ -28,7 +28,7 @@
 *
 ****************************************************************************/
 
-/*     Centroid grid-search for LTZ components     */
+/*     Centroid grid-search     */
 
 #include <stdio.h>
 #include <string.h>
@@ -46,11 +46,28 @@
 #include "read_i_files.h" /* read_i_files.c */
 #include "butterworth.h" 
 #include "syn_conv_sub.h" 
-#include "wpinversion_LTZ.h"
+#include "wpinversion.h"
 
 void get_opt(int numarg1, int numarg2, char **argv, structopt *opt, str_quake_params *eq) ;
 void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq);
 void get_param2(char *file, structopt *opt, str_quake_params *eq) ;
+
+
+void save_G(double ***G, int nsac, sachdr *hd_synt, char *file)
+{
+  int i,j,k;
+  FILE *fd;
+  fd = fopen(file, "wt");
+  for (i=0; i<nsac; i++)
+	for (j=0; j<hd_synt[i].npts; j++)
+	  {
+		for (k=0; k<6; k++)
+		  fprintf(fd, "%17.8e ", G[i][k][j]);
+		fprintf(fd, "\n");
+	  }
+  fclose(fd);
+}
+  
 
 int 
 main(int argc, char *argv[])
@@ -144,7 +161,7 @@ main(int argc, char *argv[])
   if (opt.dts_step > 0.)
     {      
       strcpy(opt.o_cmtf,"ts_WCMTSOLUTION")  ;
-      strcpy(opt.psfile,"ts_p_wpinversion") ;
+      strcpy(opt.psfile,"ts_p_wpinversion.ps") ;
       strcpy(opt.p_data,"ts_fort.15")       ;
       strcpy(opt.o_saclst,"ts_o_wpinversion") ;
       strcpy(opt.o_covf,"ts_o_covariance")  ;
@@ -163,8 +180,10 @@ main(int argc, char *argv[])
 	  eq.ts += tsopt  ;      
 	  eq.hd = eq.ts ;
 	}
-      realloc_gridsearch(nsac,rms,global_rms,dcalc,opt.ref_flag+1) ;      
+      realloc_gridsearch(nsac,rms,global_rms,dcalc,opt.ref_flag+1) ;
+	  //save_G(G, nsac, hd_synt, "G_file_before");
       calc_kernel(&eq,&opt,hd_synt,nsac,"l",nd,dv,tv,G,o_log) ;
+	  //save_G(G, nsac, hd_synt, "G_file_after");
       if (opt.dc_flag) /* Double Couple inversion                 */
 	{              /* Warning: This has not been fully tested */
 	  for(i=0;i<4;i++)
@@ -195,7 +214,7 @@ main(int argc, char *argv[])
   if (opt.xy_dx > 0. || opt.dz > 0.)
     {
       strcpy(opt.o_cmtf,"xy_WCMTSOLUTION")  ;
-      strcpy(opt.psfile,"xy_p_wpinversion") ;
+      strcpy(opt.psfile,"xy_p_wpinversion.ps") ;
       strcpy(opt.p_data,"xy_fort.15")       ;
       strcpy(opt.o_covf,"xy_o_covariance")  ;
       strcpy(opt.o_saclst,"xy_o_wpinversion") ;
@@ -363,8 +382,8 @@ disphelp(char **argv,structopt *opt)
   
   fprintf(stderr,"\n data weighting and screening: \n");  
   fprintf(stderr,"  -wz real_value          weight for LHZ channels (%f)\n",opt->wZ);
-  fprintf(stderr,"  -wl real_value          weight for LHL channels (%f)\n",opt->wL);
-  fprintf(stderr,"  -wt real_value          weight for LHT channels (%f)\n",opt->wT);
+  fprintf(stderr,"  -wn real_value          weight for LHN channels (%f)\n",opt->wN);
+  fprintf(stderr,"  -we real_value          weight for LHE channels (%f)\n",opt->wE);
 
   fprintf(stderr,"\n  -h, --help              display this help and exit\n\nReport bugs to: <zacharie.duputel@eost.u-strasbg.fr>\n") ;
   fflush(stdout);
@@ -473,7 +492,7 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   strcpy(opt->o_covf,"gs_o_covariance")  ;
   strcpy(opt->o_cmtf,"gs_WCMTSOLUTION")  ;
   strcpy(opt->p_data,"gs_fort.15")       ;
-  strcpy(opt->psfile,"gs_p_wpinversion") ;
+  strcpy(opt->psfile,"gs_p_wpinversion.ps") ;
   strcpy(opt->wpbmfile,"")  ;
   strcpy(opt->refbmfile,"") ;
   strcpy(opt->osacdir,"./") ;
@@ -488,8 +507,8 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->ref_flag  = 1   ;
   opt->ntr_val   = 1.  ;
   opt->wZ        = 1.  ;
-  opt->wL        = 1.  ;
-  opt->wT        = 1.  ;
+  opt->wN        = 1.  ;
+  opt->wE        = 1.  ;
   opt->azp       = 0.  ;
   opt->ps        = 1   ;
   opt->dts_val   = 0.  ;
@@ -507,88 +526,97 @@ get_opt(numarg1, numarg2, argv, opt, eq)
   opt->dc_flag   = 0   ;
   opt->ip        = 0   ;
   opt->ib[0]     = 0   ;
+  opt->ncom      = 0  ;
   k = 0 ;
   for( i = 0; i<numarg2; i++ )
     {
       j = i + numarg1 + 1 ;
       if (!strncmp(argv[j],"-imas",5))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->i_master) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->i_master) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-ifil",5))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->i_saclst) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->i_saclst) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-ofil",5))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->o_saclst) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->o_saclst) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-log",4))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->log) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->log) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-ocovf",6))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->o_covf) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->o_covf) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-ocmtf",6))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->o_cmtf) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->o_cmtf) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-icmtf",6))
-	{
-	  get_char_arg(argv, j, i, numarg2, eq->cmtfile) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, eq->cmtfile) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-gfdir",6))
-	{
-	  get_char_arg(argv, j, i, numarg2, eq->gf_dir) ;
-	  add_slash(eq->gf_dir);
-	  k+=2 ;
-	}   
+		{
+		  get_char_arg(argv, j, i, numarg2, eq->gf_dir) ;
+		  add_slash(eq->gf_dir);
+		  k+=2 ;
+		}   
+	  if (!strncmp(argv[j],"-comment",8))
+		{
+		  if (opt->ncom >= NCOM)
+			fprintf(stderr,"WARNING: Too many comments: Comment %s ignored.",argv[j+1]);
+		  else
+			get_char_arg(argv,j,i,numarg2,opt->comments[opt->ncom++]) ;
+		  k+=2 ;
+		}   
       else if (!strncmp(argv[j],"-osyndir",8))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->osacdir) ;
-	  k+=2 ;
-	} 
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->osacdir) ;
+		  k+=2 ;
+		} 
       else if (!strncmp(argv[j],"-wpbm",6))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->wpbmfile) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->wpbmfile) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-refbm",6))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->refbmfile) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->refbmfile) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-cth",4))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->cth_val) ;
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->cth_val) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-df",3))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->df_val) ;
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->df_val) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-ts_Nit",7)) 
-	{
-	  get_num_arg(argv, j, i, numarg2, "%d", (int*)&(opt->ts_Nit));
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2, "%d", (int*)&(opt->ts_Nit));
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-dts",4))
-	{ 
-	  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->dts_val); 
-	  k+=2 ;
-	} 
+		{ 
+		  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->dts_val); 
+		  k+=2 ;
+		} 
       else if (!strncmp(argv[j],"-ts",3)) 
-	{ 
+		{ 
       	  get_num_arg3(argv, j, i, numarg2, &opt->dts_min, &opt->dts_step, &opt->dts_max) ;
       	  if (opt->dts_min > opt->dts_max)
       	    error_syntax(argv,"Incompatible arguments -- tsmin < tsmax is required (-ts)") ;
@@ -600,132 +628,132 @@ get_opt(numarg1, numarg2, argv, opt, eq)
       	  i++  ;
       	}
       else if (!strncmp(argv[j],"-hdsafe",7))
-	{ 
-	  opt->hdsafe = 1;
-	  k+=1 ;}       
+		{ 
+		  opt->hdsafe = 1;
+		  k+=1 ;}       
       else if (!strncmp(argv[j],"-xy_Nit",7)) 
-	{
-	  get_num_arg(argv, j, i, numarg2,"%d", (int*)&opt->xy_Nit);
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2,"%d", (int*)&opt->xy_Nit);
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-dx",3))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->xy_dx) ;
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->xy_dx) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-Nx",3))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%d",(int*)&opt->xy_Nx) ;
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2,"%d",(int*)&opt->xy_Nx) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-dz",3))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->dz) ;
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->dz) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-minz",5))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->mindep) ;
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2,"%lf",(double*)&opt->mindep) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-noxy",5)) 
-	{
-	  opt->xy_dx = 0. ;
-	  k+=1 ;
-	}
+		{
+		  opt->xy_dx = 0. ;
+		  k+=1 ;
+		}
       else if (!strncmp(argv[j],"-nots",5)) 
-	{
-	  opt->dts_step = 0. ;
-	  k+=1 ;
-	}
+		{
+		  opt->dts_step = 0. ;
+		  k+=1 ;
+		}
       else if (!strncmp(argv[j],"-Nopt",5))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%d",(int*)&opt->xy_Nopt) ;
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2,"%d",(int*)&opt->xy_Nopt) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-otsgsf",7))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->tsgsfile) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->tsgsfile) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-oxygsf",7))
-	{
-	  get_char_arg(argv, j, i, numarg2, opt->xygsfile) ;
-	  k+=2 ;
-	}
+		{
+		  get_char_arg(argv, j, i, numarg2, opt->xygsfile) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-wz",3))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%lf", (double*)&opt->wZ) ;
-	  k+=2 ;
-	}
-      else if (!strncmp(argv[j],"-wl",3))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%lf", (double*)&opt->wL) ;
-	  k+=2 ;
-	}
-      else if (!strncmp(argv[j],"-wt",3))
-	{
-	  get_num_arg(argv, j, i, numarg2,"%lf", (double*)&opt->wT) ;
-	  k+=2 ;
-	}
+		{
+		  get_num_arg(argv, j, i, numarg2,"%lf", (double*)&opt->wZ) ;
+		  k+=2 ;
+		}
+      else if (!strncmp(argv[j],"-wn",3))
+		{
+		  get_num_arg(argv, j, i, numarg2,"%lf", (double*)&opt->wN) ;
+		  k+=2 ;
+		}
+      else if (!strncmp(argv[j],"-we",3))
+		{
+		  get_num_arg(argv, j, i, numarg2,"%lf", (double*)&opt->wE) ;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-strike",7))
-	{
-	  opt->dc_flag = 1;
-	  get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+0) ;	
-	  opt->ib[opt->ip++] = 1;
-	  k+=2 ;
-	}
+		{
+		  opt->dc_flag = 1;
+		  get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+0) ;	
+		  opt->ib[opt->ip++] = 1;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-dip",4))
-	{	
-	  opt->dc_flag = 1;
-	  get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+1) ;	
-	  opt->ib[opt->ip++] = 2;
-	  k+=2 ;
-	}
+		{	
+		  opt->dc_flag = 1;
+		  get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+1) ;	
+		  opt->ib[opt->ip++] = 2;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-rake",5))
-	{
-	  opt->dc_flag = 1;
-	  get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+2) ;	
-	  opt->ib[opt->ip++] = 3;
-	  k+=2 ;
-	}
+		{
+		  opt->dc_flag = 1;
+		  get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+2) ;	
+		  opt->ib[opt->ip++] = 3;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-mom",4))
-	{
-	  opt->dc_flag = 1;
-	  get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+3) ;       
-	  opt->priorsdrM0[3] /= POW;
-	  opt->ib[opt->ip++] = 4;
-	  k+=2 ;
-	}
+		{
+		  opt->dc_flag = 1;
+		  get_num_arg(argv,j,i,numarg2,"%lf",(opt->priorsdrM0)+3) ;       
+		  opt->priorsdrM0[3] /= POW;
+		  opt->ib[opt->ip++] = 4;
+		  k+=2 ;
+		}
       else if (!strncmp(argv[j],"-dc",3))
-	{
-	  opt->dc_flag = 1 ;
-	  k++ ;
-	}
+		{
+		  opt->dc_flag = 1 ;
+		  k++ ;
+		}
       else if (!strncmp(argv[j],"-old",4))
-	{
-	  opt->op_pa   = 1. ;	
-	  k++ ;
-	}
+		{
+		  opt->op_pa   = 1. ;	
+		  k++ ;
+		}
       else if (!strncmp(argv[j],"-nont",5))
-	{
-	  opt->ntr_val = 0. ;
-	  k++ ;
-	}
+		{
+		  opt->ntr_val = 0. ;
+		  k++ ;
+		}
       else if (!strncmp(argv[j],"-noref",6))
-	{
-	  opt->ref_flag = 0 ;
-	  k++ ;
-	}
+		{
+		  opt->ref_flag = 0 ;
+		  k++ ;
+		}
       else if (!strncmp(argv[j],"-nops",5))
-	{
-	  opt->ps = 0 ;
-	  k++ ;
-	}
+		{
+		  opt->ps = 0 ;
+		  k++ ;
+		}
       else if (!strncmp(argv[j],"-h",2))
-	disphelp(argv,opt) ;
+		disphelp(argv,opt) ;
       else if (!strncmp(argv[j],"--help",6))
-	disphelp(argv,opt) ;
+		disphelp(argv,opt) ;
     }
   if (k != numarg2)
     error_syntax(argv,"") ;
@@ -736,7 +764,7 @@ void
 get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq)
 {
   int numarg1, numarg2 ;
-  int max = 55 ;
+  int max = 128 ;
 
   numarg1 = 0              ;
   numarg2 = argc-numarg1-1 ;

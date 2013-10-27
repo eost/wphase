@@ -44,7 +44,7 @@
 #include "read_i_files.h" /* read_i_files.c */
 #include "butterworth.h" 
 #include "syn_conv_sub.h"
-#include "wpinversion_ZNE.h"
+#include "wpinversion.h"
 
 /* To avoid the warning with gcc (Debian 4.3.2-1.1) */
 double round(double x);
@@ -680,8 +680,8 @@ calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
 		  double **data, double ***d, structopt *opt, FILE *o_log)
 {
   int  i, j, k, s, N = 0    ;
-  char *fZ, *fL, *fT, *file ;
-  FILE *o_dat, *o_Z, *o_N, *o_E, *ocmp=NULL;
+  char *fZ, *fN, *fE, *f1, *f2, *file ;
+  FILE *o_dat, *o_Z, *o_N, *o_E, *o_1, *o_2, *ocmp=NULL;
 
   /* Computing data */
   for(s=0;s<nsac;s++)
@@ -707,29 +707,41 @@ calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
     {
       /* Allocating memory */
       fZ = char_alloc(FSIZE) ;
-      fL = char_alloc(FSIZE) ;
-      fT = char_alloc(FSIZE) ;
+      fN = char_alloc(FSIZE) ;
+      fE = char_alloc(FSIZE) ;
+      f1 = char_alloc(FSIZE) ;
+      f2 = char_alloc(FSIZE) ;
       /* Set filenames     */
       strcpy(fZ,opt->p_data) ;
-      strcpy(fL,opt->p_data) ;
-      strcpy(fT,opt->p_data) ;
+      strcpy(fN,opt->p_data) ;
+      strcpy(fE,opt->p_data) ;
+      strcpy(f1,opt->p_data) ;
+      strcpy(f2,opt->p_data) ;
       strcat(fZ,"_LHZ") ;
-      strcat(fL,"_LHN") ;
-      strcat(fT,"_LHE") ;
+      strcat(fN,"_LHN") ;
+      strcat(fE,"_LHE") ;
+      strcat(f1,"_LH1") ;
+      strcat(f2,"_LH2") ;
       
       /* Opening files */
       o_dat = openfile_wt(opt->p_data) ;
       o_Z = openfile_wt(fZ) ;
-      o_N = openfile_wt(fL) ;
-      o_E = openfile_wt(fT) ;
+      o_N = openfile_wt(fN) ;
+      o_E = openfile_wt(fE) ;
+      o_1 = openfile_wt(f1) ;
+      o_2 = openfile_wt(f2) ;
       for(s=0;s<nsac;s++)
 		{
-		  if (hd_synt[s].kcmpnm[2] == 'Z')
+		  if      ( hd_synt[s].kcmpnm[2] == 'Z')
 			ocmp = o_Z ;
-		  else if (hd_synt[s].kcmpnm[2] == 'N' || hd_synt[s].kcmpnm[2] == '1' )
+		  else if ( hd_synt[s].kcmpnm[2] == 'N' )
 			ocmp = o_N ;
-		  else if (hd_synt[s].kcmpnm[2] == 'E' || hd_synt[s].kcmpnm[2] == '2' )
+		  else if ( hd_synt[s].kcmpnm[2] == 'E' )
 			ocmp = o_E ;
+                  else if ( hd_synt[s].kcmpnm[2] == '1' )
+			ocmp = o_1 ;
+                  else if ( hd_synt[s].kcmpnm[2] == '2' )
+			ocmp = o_2 ;
 		  N = hd_synt[s].npts ;
 		  for(i=0 ; i<N ; i++)
 			{
@@ -754,9 +766,13 @@ calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
       fclose(o_Z)   ;
       fclose(o_N)   ;
       fclose(o_E)   ;
+      fclose(o_1)   ;
+      fclose(o_2)   ;
       free((void*)fZ)   ;
-      free((void*)fL)   ;
-      free((void*)fT)   ;
+      free((void*)fN)   ;
+      free((void*)fE)   ;
+      free((void*)f1)   ;
+      free((void*)f2)   ;
     }
 }
 

@@ -63,10 +63,18 @@ print 'WPHASE_HOME is %s'%(WPHOME)
 if WPHOME[-1] != '/':
 	WPHOME += '/'
 
+GF_PATH = os.path.expandvars('$GF_PATH')
+print 'GF_PATH is %s'%(GF_PATH)
+
+#VERSION = 'Version: '
+#entfile = WPHOME+'.svn/entries'
+#if os.path.exists(entfile):
+#	VERSION += open(entfile).readlines()[3].strip()
+VERSION = 'Version: r244N'
+
 BIN = WPHOME+'bin/'
 
-
-WPINV_XY     = BIN+'wpinversion_gs_LTZ -imas i_master -ifil o_wpinversion'
+WPINV_XY     = BIN+'wpinversion_gs -imas i_master -ifil o_wpinversion'
 
   
 def grep(chaine, file):
@@ -91,6 +99,21 @@ def grep2(list, file):
 				out.append(line)
 				break
 	return(out)
+
+def parse_config(cfg_file):
+	config = {}
+	try:
+		config_lines = open(cfg_file, 'r').readlines()
+		for line in config_lines:
+			if line.find('#')==0:
+				continue
+			if line.rstrip():
+				key,value = line.strip().split(':')
+				config[key.strip()]=value.strip()
+	except:
+		sys.stderr.write('Error: format  %s\n'%cfg_file)
+		sys.exit(1)
+	return config
 
 def addrefsol(cmtref,cmtfile):
 	cmtf = open(cmtref,'r')
@@ -122,7 +145,7 @@ def addslash(direc):
 
 def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,flagts,flagxy,sdrM0={},dz=0.,
 		minz=3.5,ts_ofile='grid_search_ts_out',xy_ofile='grid_search_xy_out',stdoutput='stdout',
-		logfile='LOG/gs_o_wpinversion.log'):
+		logfile='LOG/gs_o_wpinversion.log', comments = []):
 	if stdoutput == 'stdout':
 		fid = sys.stdout
 		flag = 0
@@ -179,7 +202,10 @@ def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,f
 	if flag:
 		fid.close()
 		optpar += ' > %s '%stdoutput
+	for c in comments:
+		optpar += ' -comments "'+c+'"'
 	print 'Command_line:'+EXE+optpar
+	
 	os.system(EXE+optpar)
 	# Update eq
 	eq.rcmtfile(wcmtfile)
@@ -200,6 +226,7 @@ def disphelp():
 	print '                          the sequential version instead (parallelized version is used)'
 	print '   -i, --imas \'file\'    Set i_master file (i_master)'
 	print '   -n, --noref          Do not use the reference solution in cmtfile (ref. sol. used)'
+	print '   --nont               Full moment tensor inversion (no null trace)'	
 	print '   --dc                 Double-couple inversion'
 	print '   --strike \'strike\'    Double-couple inversion with fixed strike'
 	print '   --dip \'dip\'          Double-couple inversion with fixed dip'
@@ -212,8 +239,9 @@ def disphelp():
 if __name__ == "__main__":
 	try:
 		opts, args = getopt.gnu_getopt(sys.argv[1:],'stpSdi:nhz',["hdsafe","onlyts","onlyxy","npar",
-									  "imas=","strike=","dc","dip=","rake=",
-									  "mom=","noref","xyz","old","help"])
+									  "imas=","strike=","dc","nont","dip=",
+									  "rake=","mom=","noref","xyz","old",
+									  "help"])
 	except getopt.GetoptError, err:
 		print '*** ERROR ***'
 		print str(err)
@@ -250,6 +278,8 @@ if __name__ == "__main__":
 			flagxy = 1
 		if o == '--dc':
 			sdrM0['-dc']=''
+		if o == '--nont':
+			sdrM0['-nont']=''			
 		if o == '--strike':
 			sdrM0['-strike']=a
 		if o == '--dip':
@@ -267,10 +297,20 @@ if __name__ == "__main__":
 		if o == '--old':
 			WPINV_XY += ' -old'
 
-			
-	out    = grep2([r'^CMTFILE',r'^EVNAME'], i_master)
- 	cmtref = out[0].replace(':','').strip('\n').split()[1]
-	evname = out[1].split(':')[1].strip().replace(' ','_').replace(',','')
+	# Read i_master
+	iconfig = parse_config(i_master)
+	cmtref  = iconfig['CMTFILE']
+	evname  = iconfig['EVNAME'].replace(' ','_').replace(',','')
+	# Set comments
+	Median    = '-med '
+	if iconfig.has_key('P2P_SCREENING'):
+		if iconfig['P2P_SCREENING'] != 'YES':
+			Median = ' '
+	ths = '5.0 3.0 0.9'
+	if iconfig.has_key('RMS_SCREENING'):
+		ths = iconfig['RMS_SCREENING']
+	comments = [VERSION,'GF_PATH: '+GF_PATH,'Screening: '+Median+ths]
+	# Read CMTFILE
  	eq   = EarthQuake()
  	eq.rcmtfile(cmtref)
 	eq.title = evname.strip().replace(' ','_').replace(',','')
@@ -283,17 +323,18 @@ if __name__ == "__main__":
 
 	i_cmtfile = cmtref
 	if (flagts or flagxy) and not flagxyz: # LAT/LON Grid-search
-		grid_search(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,
-			    fastflag,flagts,flagxy,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE)
+		grid_search(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,fastflag,
+					flagts,flagxy,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments)
 	if flagxyz:                              # 3D Grid-search
-		grid_search(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XYZ_NIT,XYZ_DX,XYZ_NX,XYZ_NOPT,
-			    fastflag,flagts,flagxyz,sdrM0,dz=DDEP,minz=MINDEP,ts_ofile=TS_OFILE,xy_ofile=XYZ_OFILE)
+		grid_search(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XYZ_NIT,XYZ_DX,XYZ_NX,XYZ_NOPT,fastflag,
+					flagts,flagxyz,sdrM0,dz=DDEP,minz=MINDEP,ts_ofile=TS_OFILE,xy_ofile=XYZ_OFILE,
+					comments=comments)
 		if flagxy:
 			eq.wcmtfile('_tmp_CMTSOLUTION.xyz')
 			if flagref:
 				addrefsol(cmtref,'_tmp_CMTSOLUTION.xyz')
 			grid_search(eq,'_tmp_CMTSOLUTION.xyz',TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,
-				    0,0,1,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE)
+				    0,0,1,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments)
 			rm('_tmp_CMTSOLUTION.xyz')
 	if os.path.exists('_tmp_ts_table'):		
 		rm('_tmp_ts_table')

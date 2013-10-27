@@ -60,23 +60,20 @@ export FC
 export CFLAGS
 export LDFLAGS
 
-
 EXE = 	$(BIN)/WP_HEADER.CSH		\
 	$(BIN)/rec_dec_filt		\
 	$(BIN)/syn_conv_filt		\
 	$(BIN)/make_resp_lookup_table 	\
 	$(BIN)/trim_sac_files		\
-	$(BIN)/wpinversion_ZNE		\
-	$(BIN)/wpinversion_LTZ		\
+	$(BIN)/wpinversion		\
 	$(BIN)/synth_v6			\
 	$(BIN)/saclst                  	\
 	$(BIN)/fast_synth 		\
 	$(BIN)/fast_synth_only_Z  	\
 	$(BIN)/fast_synth_rot 		\
 	$(BIN)/prep_kernels_only_Z 	\
-	$(BIN)/prep_kernels_ZNE 	\
-	$(BIN)/prep_kernels_LTZ		\
-	$(BIN)/wpinversion_gs_ZNE 	\
+	$(BIN)/prep_kernels 		\
+	$(BIN)/wpinversion_gs 		\
 	$(BIN)/cmtascii			\
 	$(BIN)/decim_one_sac_file_to_1sps
 
@@ -114,16 +111,10 @@ $(BIN)/cmtascii:cmtascii.o proto_alloc.o rwtextfiles.o jacobi.o charplot.o read_
         read_i_files.o -o $(BIN)/cmtascii -lm
 
 # Inversion
-$(BIN)/wpinversion_ZNE:wpinversion_ZNE.o wpinversion_ZNE_sub.o jacobi.o charplot.o \
+$(BIN)/wpinversion:wpinversion.o wpinversion_sub.o jacobi.o charplot.o \
 	lsqenp2.o syn_conv_sub.o butterworth.o $(OBJS)
-	$(FC) $(LDFLAGS) wpinversion_ZNE.o wpinversion_ZNE_sub.o jacobi.o charplot.o \
-	lsqenp2.o syn_conv_sub.o butterworth.o $(OBJS) -o $(BIN)/wpinversion_ZNE -lm
-
-# Inversion
-$(BIN)/wpinversion_LTZ:wpinversion_LTZ.o wpinversion_LTZ_sub.o jacobi.o charplot.o \
-	lsqenp2.o syn_conv_sub.o butterworth.o $(OBJS)
-	$(FC) $(LDFLAGS) wpinversion_LTZ.o wpinversion_LTZ_sub.o jacobi.o charplot.o \
-	lsqenp2.o syn_conv_sub.o butterworth.o $(OBJS) -o $(BIN)/wpinversion_LTZ -lm
+	$(FC) $(LDFLAGS) wpinversion.o wpinversion_sub.o jacobi.o charplot.o \
+	lsqenp2.o syn_conv_sub.o butterworth.o $(OBJS) -o $(BIN)/wpinversion -lm
 
 # Green's functions
 $(BIN)/fast_synth: fast_synth.o $(OBJS)
@@ -138,25 +129,17 @@ $(BIN)/fast_synth_only_Z: fast_synth_only_Z.o $(OBJS)
 fast_synth.o: fast_synth.c
 	${CC} ${CFLAGS} -c fast_synth.c  -o fast_synth.o 
 
-$(BIN)/prep_kernels_ZNE: prep_kernels_ZNE.o butterworth.o sys_cmd.o syn_conv_sub.o $(OBJS)
-	$(CC) ${LDFLAGS} -o $(BIN)/prep_kernels_ZNE prep_kernels_ZNE.o butterworth.o sys_cmd.o syn_conv_sub.o $(OBJS) -lm 
-
-$(BIN)/prep_kernels_LTZ: prep_kernels_LTZ.o butterworth.o sys_cmd.o syn_conv_sub.o $(OBJS)
-	$(CC) ${LDFLAGS} -o $(BIN)/prep_kernels_LTZ prep_kernels_LTZ.o butterworth.o sys_cmd.o syn_conv_sub.o $(OBJS) -lm 
+$(BIN)/prep_kernels: prep_kernels.o butterworth.o sys_cmd.o syn_conv_sub.o $(OBJS)
+	$(CC) ${LDFLAGS} -o $(BIN)/prep_kernels prep_kernels.o butterworth.o sys_cmd.o syn_conv_sub.o $(OBJS) -lm 
 
 $(BIN)/prep_kernels_only_Z: prep_kernels_only_Z.o butterworth.o sys_cmd.o syn_conv_sub.o $(OBJS)
 	$(CC) ${LDFLAGS} -o $(BIN)/prep_kernels_only_Z prep_kernels_only_Z.o butterworth.o sys_cmd.o syn_conv_sub.o $(OBJS) -lm 
 
 
-$(BIN)/wpinversion_gs_ZNE: wpinversion_gs_ZNE.o wpinversion_ZNE_sub.o \
+$(BIN)/wpinversion_gs: wpinversion_gs.o wpinversion_sub.o \
 	jacobi.o charplot.o butterworth.o syn_conv_sub.o $(OBJS) lsqenp2.o
-	$(FC) $(LDFLAGS) wpinversion_gs_ZNE.o wpinversion_ZNE_sub.o jacobi.o \
-	charplot.o butterworth.o syn_conv_sub.o $(OBJS) lsqenp2.o -o $(BIN)/wpinversion_gs_ZNE -lm
-
-$(BIN)/wpinversion_gs_LTZ: wpinversion_gs_LTZ.o wpinversion_LTZ_sub.o \
-	jacobi.o charplot.o butterworth.o syn_conv_sub.o $(OBJS) lsqenp2.o
-	$(FC) $(LDFLAGS) wpinversion_gs_LTZ.o wpinversion_LTZ_sub.o jacobi.o \
-	charplot.o butterworth.o syn_conv_sub.o $(OBJS) lsqenp2.o -o $(BIN)/wpinversion_gs_LTZ -lm
+	$(FC) $(LDFLAGS) wpinversion_gs.o wpinversion_sub.o jacobi.o \
+	charplot.o butterworth.o syn_conv_sub.o $(OBJS) lsqenp2.o -o $(BIN)/wpinversion_gs -lm
 
 # MT rotation
 $(BIN)/rot_horiz_cmp: rot_horiz_cmp.o proto_alloc.o rwsacs.o \

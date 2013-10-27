@@ -20,8 +20,8 @@ endif
 
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract.csh
-set PREPARE = ${BIN}/prepare_wp_ZNE.csh
-set WPINVER = ${BIN}/wpinversion_ZNE
+set PREPARE = ${BIN}/prepare_wp.csh
+set WPINVER = ${BIN}/wpinversion
 set TRACES  = ${BIN}/traces_6t_global.gmt 
 
 ${RM} -rf SYNTH

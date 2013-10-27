@@ -42,7 +42,7 @@
 #include "butterworth.h"  /* butterworth_sin.c */
 #include "syn_conv_sub.h" /* syn_conv_sub.c */
 #include "travel_times.h" /* travel_times.c */
-#include "wpinversion_ZNE.h"
+#include "wpinversion.h"
 
 //void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
 //		    str_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);

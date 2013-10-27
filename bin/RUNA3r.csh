@@ -1,6 +1,6 @@
 #!/bin/csh -f
 #
-# W phase package - RUNA3r for L, T, Z components
+# W phase package - RUNA3r (mediane, rms and amplitude ratio screening)
 #
 # Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 #
@@ -15,8 +15,8 @@ endif
 set my_argv = ($ARGV)
 set BIN     = $WPHASE_HOME/bin
 set EXTRACT = ${BIN}/extract.csh
-set PREPARE = ${BIN}/prepare_wp_LTZ.csh
-set WPINVER = ${BIN}/wpinversion_LTZ
+set PREPARE = ${BIN}/prepare_wp.csh
+set WPINVER = ${BIN}/wpinversion
 
 ${MKDIR} -p SYNTH; ${RM} -rf SYNTH/*
 $EXTRACT
@@ -57,4 +57,4 @@ ${CP} p_wpinversion.r_${nr} p_wpinversion
 ${CP} LOG/wpinversion.r_${nr}.log LOG/wpinversion.log
 
 ${ECHO} -e "\nOutput files: o_wpinversion WCMTSOLUTION p_wpinversion"
-${ECHO} "              fort.15 fort.15_LHZ fort.15_LHL fort.15_LHT"
+${ECHO} "              fort.15 fort.15_LHZ fort.15_LHN fort.15_LHE"

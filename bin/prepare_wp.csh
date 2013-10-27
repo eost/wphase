@@ -55,7 +55,7 @@ $REC_DEC_FILT coeffs_rec_lut i_master scr_dat_fil_list dec_bp_dat_fil_list >! ${
 ################################################
 # Synthetics preparatio:convolution and filter #
 ${ECHO} "Synthetics convolution and filter...  "
-${PREP_KERNELS_ZNE} scr_dat_fil_list l
+${PREP_KERNELS} scr_dat_fil_list l
 if $status exit(1)
 
 ################################################

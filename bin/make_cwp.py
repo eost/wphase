@@ -69,7 +69,7 @@ class Sac:
 			sys.exit(1)
         
 def usage(cmd):
-	print 'usage: %s [chan1 chan2 (default: LHZ LHN LHE)] [option] (for help see %s -h)'%(cmd,cmd)
+	print 'usage: %s [chan1 chan2 (default: LHZ LHN LHE LH1 LH2)] [option] (for help see %s -h)'%(cmd,cmd)
 
 def disphelp(cmd):
 	print 'Make CWP traces\n'
@@ -91,7 +91,7 @@ if __name__=='__main__':
     o_wpfile = 'o_wpinversion'
     predfile = ''
     isref    = 1
-    CHAN     = ['LHZ','LHN','LHE']
+    CHAN     = ['LHZ', 'LHN', 'LHE', 'LH1', 'LH2']
     for o, a in opts:
         if o == '-h' or o == '--help':
             disphelp(sys.argv[0])
