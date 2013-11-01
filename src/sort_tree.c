@@ -198,6 +198,7 @@ build (struct tree * root, struct tree *mod, int flag)
 	    {
 	      if (beg->npts < new->npts)
 		{
+                  beg->cmpaz = new->cmpaz ;
 		  beg->npts = new->npts       ;
 		  strcpy(beg->file,new->file) ;
 		  if (flag > 0)
@@ -210,6 +211,8 @@ build (struct tree * root, struct tree *mod, int flag)
 		{
 		  beg->npts = new->npts       ;
 		  strcpy(beg->file,new->file) ;
+                  strcpy(beg->cmp, new->cmp) ;
+                  beg->cmpaz = new->cmpaz ;
 		  if (flag > 0)
 		    strcpy(beg->net,new->net) ;	 
 		}
@@ -228,6 +231,8 @@ build (struct tree * root, struct tree *mod, int flag)
 		  strcpy(beg->file,new->file)   ;
 		  strcpy(beg->locid,new->locid) ;
 		  beg->npts = new->npts         ;
+                  strcpy(beg->cmp, new->cmp) ;
+                  beg->cmpaz = new->cmpaz ;
 		  beg->occur = 1                ;
 		  if (flag > 0)
 		    strcpy(beg->net,new->net) ;
@@ -242,6 +247,8 @@ build (struct tree * root, struct tree *mod, int flag)
 		  beg->occur = 1;
 		  strcpy(beg->file,new->file)   ;
 		  strcpy(beg->locid,new->locid) ;
+                  strcpy(beg->cmp, new->cmp) ;
+                  beg->cmpaz = new->cmpaz ;
 		  if (flag > 0)
 		    strcpy(beg->net,new->net)   ;
 		}
@@ -258,6 +265,8 @@ build (struct tree * root, struct tree *mod, int flag)
 		  beg->occur = 1               ;
 		  strcpy(beg->file,new->file)  ;
 		  strcpy(beg->locid,new->locid);
+                  strcpy(beg->cmp, new->cmp) ;
+                  beg->cmpaz = new->cmpaz ;
 		  if ( flag > 0)
 		    strcpy(beg->net,new->net)  ;
 		}
@@ -267,6 +276,8 @@ build (struct tree * root, struct tree *mod, int flag)
 		  beg->npts  = new->npts        ; 	      
 		  strcpy(beg->file,new->file)   ;
 		  strcpy(beg->locid,new->locid) ;
+                  strcpy(beg->cmp, new->cmp) ;
+                  beg->cmpaz = new->cmpaz ;
 		  if ( flag > 0)
 		    strcpy(beg->net,new->net)   ;
 		}
