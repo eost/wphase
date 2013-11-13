@@ -269,6 +269,9 @@ rhdrsac(char *file, sachdr *hdr, int *ierror)
   fgets(hdr->knetwk,9,f);
   fgets(hdr->kdatrd,9, f);
   fgets(hdr->kinst,9,f);
+  /* If khole is not set, change it to -- */
+  if (!strcmp(hdr->khole,"-12345  "))
+    strcpy(hdr->khole,  "--      ");
   /* e */
   hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
   fclose(f);
