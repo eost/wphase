@@ -358,7 +358,7 @@ if __name__ == '__main__':
 			ofic = 'page_W_%02d.pdf'%(pages)
 			print ofic
 			#fig.set_rasterized(True)
-			pp.savefig(orientation='landscape',format='pdf')
+			pp.savefig(orientation='landscape')
 			pyl.close()
 			pages += 1
 			count = 1
@@ -417,6 +417,6 @@ if __name__ == '__main__':
 	print ofic
 	#fig.set_rasterized(True)
 	pyl.suptitle(title + ',    p %d/%d'%(pages,npages), fontsize=16, y=0.95)
-	pp.savefig(orientation='landscape',format='pdf')
+	pp.savefig(orientation='landscape')
 	pyl.close()
 	pp.close()
