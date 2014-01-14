@@ -57,7 +57,7 @@ char* try_update_name_LH(char *name)
     if (name[k] == '.' && name[k+4] == '.')
       if (name[k+1] == 'H' || name[k+1] == 'B')
 	if (name[k+2] == 'H' || name[k+2] == 'L')
-	  if (name[k+3] == 'Z' || name[k+3] == 'N' || name[k+3] == 'E')
+	  if (name[k+3] == 'Z' || name[k+3] == 'N' || name[k+3] == 'E' || name[k+3] == '1' || name[k+3] == '2')
 	    name[k+1] = 'L';
   return name;
 }
