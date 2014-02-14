@@ -115,7 +115,7 @@ def parse_config(cfg_file):
 def unpack_c(chararray):
 	S = ''
 	for c in chararray:
-		if c == ' ':
+		if c == ' ' or c=='':
 			break
 		S+=c
 	return S
