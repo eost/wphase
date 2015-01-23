@@ -107,7 +107,7 @@ main(int argc, char *argv[])
 	  a2 = -2.*(a1+h*w0)/g        ;
 	  a3 = (a1+2*h*w0+w0*w0*dt)/g ; 
 	  a1 = a1/g                   ;
-	  if (finite(a1) && finite(a2) && finite(a3))
+	  if (isfinite(a1) && isfinite(a2) && isfinite(a3))
 	    fprintf (out, "%-14s%18.9e%18.9e%18.9e\n", id, a1, a2, a3) ; 
 	  else {
 	    fprintf(stderr,"WARNING (make_resp_lookup_table): Non-Finite coefficient detected\n")  ;
@@ -525,7 +525,7 @@ plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf , do
   compresp (nf, f, nz, zr, np, pl, sg, &y, &yl) ;
   /* first approximation of gain_factor, fc and h */
   firstparams(fref, fl, nz, zr, np, pl, sg, gain_factor, fc, h) ;
-  if (finite(*gain_factor) && finite(*fc) && finite(*h))
+  if (isfinite(*gain_factor) && isfinite(*fc) && isfinite(*h))
     printf(" 1st approx. GF, fc and h =    %.7e  %.7e  %.7f\n",*gain_factor, *fc, *h) ;
   else
     {
