@@ -137,10 +137,15 @@ if ! $?WHICH then
         exit 1
 endif
 
+
 foreach com ($coms)
     unset compath
     set COM        = `echo $com | tr "[:lower:]" "[:upper:]"` 
     set compath    = `$WHICH $com`
-    echo "set $COM = $compath" >> ${o_file}
-    if ( ! -e $compath ) echo "WARNING: Command $com not found in $PATH"
+    if ( $status ) then
+         echo "ERROR: Command $com not found in "'$PATH'
+         exit;
+    else
+         echo "set $COM = $compath" >> ${o_file}
+    endif
 end
