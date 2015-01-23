@@ -38,7 +38,8 @@ import matplotlib
 matplotlib.use('PDF')
 import os,sys,re
 import getopt as go
-import pylab as pyl
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Environment variables
 WPHOME = os.path.expandvars('$WPHASE_HOME')
@@ -56,13 +57,13 @@ class Sac:
 	def __init__(self):
                 self.kstnm  = '-12345'
 		self.kcmpnm = '-12345'
-	def rsac(self,FILE,np=-1):
+	def rsac(self,FILE):
 		try:
 			fid     = open(FILE,'rb')
 			fid.seek(440,0);
-			self.kstnm   = unpack_c(pyl.fromfile(fid,'c',   8))
+			self.kstnm   = unpack_c(np.fromfile(fid,'c',   8))
 			fid.seek(600,0);
-			self.kcmpnm  = unpack_c(pyl.fromfile(fid,'c',   8))
+			self.kcmpnm  = unpack_c(np.fromfile(fid,'c',   8))
 			fid.close()
 		except IOError:
 			sys.stderr.write('ERROR: Reading file '+FILE+'\n')
@@ -181,39 +182,39 @@ if __name__=='__main__':
 				    sys.stderr.write('ERROR: error reading %s\n'%(ifile))
 				    sys.exit(1)
 			    Wref.append(items[2]*1000.0)
-	    t = pyl.arange(0,len(Wdat),dtype='float')
+	    t = np.arange(0,len(Wdat),dtype='float')
 	    # Display
-	    fig=pyl.figure(figsize=FIGSIZE) 
+	    fig=plt.figure(figsize=FIGSIZE) 
 	    fig.subplots_adjust(left=0.08,bottom=0.12,right=0.96,top=0.88,wspace=0.2,hspace=0.2)
-	    pyl.plot(t,Wdat,'k')
-	    pyl.plot(t,Wsyn,'r')
+	    plt.plot(t,Wdat,'k')
+	    plt.plot(t,Wsyn,'r')
 	    ymin = 1.1*min(Wdat)
 	    ymax = 1.1*max(Wdat)
 	    for stnm,x in zip(stat_label,stat_posit):
-		    pyl.text(x,ymax*0.6,stnm,rotation=90,fontsize=16,fontstyle='italic')
-	    pyl.ylim([ymin,ymax])
-	    pyl.xlim([0,t[-1]])
-	    pyl.xlabel('time, sec')
-	    pyl.ylabel('displacement, mm')
-	    pyl.title('Data fit, W Phase solution, %s'%chan[2])
+		    plt.text(x,ymax*0.6,stnm,rotation=90,fontsize=16,fontstyle='italic')
+	    plt.ylim([ymin,ymax])
+	    plt.xlim([0,t[-1]])
+	    plt.xlabel('time, sec')
+	    plt.ylabel('displacement, mm')
+	    plt.title('Data fit, W Phase solution, %s'%chan[2])
 	    ppW.savefig(papertype='a4',orientation='landscape')
-	    pyl.close()
+	    plt.close()
 	    if isref:
-		    fig = pyl.figure(figsize=FIGSIZE) 
+		    fig = plt.figure(figsize=FIGSIZE) 
 		    fig.subplots_adjust(left=0.08,bottom=0.12,right=0.96,top=0.88,wspace=0.2,hspace=0.2)
-		    pyl.plot(t,Wdat,'k')
-		    pyl.plot(t,Wref,'r')
+		    plt.plot(t,Wdat,'k')
+		    plt.plot(t,Wref,'r')
 		    ymin = 1.1*min(Wdat)
 		    ymax = 1.1*max(Wdat)
 		    for stnm,x in zip(stat_label,stat_posit):
-			    pyl.text(x,ymax*0.6,stnm,rotation=90,fontsize=16,fontstyle='italic')
-		    pyl.ylim([ymin,ymax])
-		    pyl.xlim([0,t[-1]])
-		    pyl.xlabel('time, sec')
-		    pyl.ylabel('displacement, mm')
-		    pyl.title('Data fit, Reference solution, %s'%chan[2])
+			    plt.text(x,ymax*0.6,stnm,rotation=90,fontsize=16,fontstyle='italic')
+		    plt.ylim([ymin,ymax])
+		    plt.xlim([0,t[-1]])
+		    plt.xlabel('time, sec')
+		    plt.ylabel('displacement, mm')
+		    plt.title('Data fit, Reference solution, %s'%chan[2])
 		    ppR.savefig(papertype='a4',orientation='landscape')
-		    pyl.close()
+		    plt.close()
 	    sys.stdout.write('\n')
     ppW.close()
     if isref:

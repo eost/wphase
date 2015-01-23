@@ -38,7 +38,8 @@ matplotlib.use('AGG')
 
 import sys
 import getopt as go
-import pylab as pyl
+import numpy as np
+import matplotlib.pyplot as plt
 
 def wraplons(lons):
 	for i in xrange(len(lons)):
@@ -82,10 +83,10 @@ def r_xyz_gfile(ifile):
 		lons.append(float(items[5]))
 		deps.append(dep)
 		rms.append(err)
-	lats=pyl.array(lats); lons=pyl.array(lons); deps=pyl.array(deps)
-	rms=pyl.array(rms)	
-	depths = pyl.array(depths); rmsdepths = pyl.array(rmsdepths)	
-	idepths   = pyl.argsort(depths)
+	lats=np.array(lats); lons=np.array(lons); deps=np.array(deps)
+	rms=np.array(rms)	
+	depths = np.array(depths); rmsdepths = np.array(rmsdepths)	
+	idepths   = np.argsort(depths)
 	depths    = depths[idepths]
 	rmsdepths = rmsdepths[idepths]
 	return [latopt,lonopt,depopt,rmsopt,latpde,lonpde,deppde,rmspde,lats,lons,deps,rms,depths,rmsdepths]
@@ -102,9 +103,9 @@ def r_xy_gfile(ifile):
             lat.append(float(tmp[4]))
             lon.append(float(tmp[5]))
             rms.append(float(tmp[7]))
-	lat = pyl.array(lat)
-	lon = pyl.array(lon)
-	rms = pyl.array(rms)		    
+	lat = np.array(lat)
+	lon = np.array(lon)
+	rms = np.array(rms)		    
 	return [latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms]
 
 def plot_xyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,mksmin=1.,mksmax=300.):
@@ -114,21 +115,21 @@ def plot_xyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,
 		except:
 			flag = 1
 	latopt,lonopt,depopt,rmsopt,latpde,lonpde,deppde,rmspde,lats,lons,deps,rmss,depths,rmsdep = r_xyz_gfile(ifilexyz) 
-	fig = pyl.figure(figsize=(7.6875, 6.125))
+	fig = plt.figure(figsize=(7.6875, 6.125))
 	if flag:
 		ofile='grid_search_z.pdf'
 		minrms = rmsopt
 		maxrms = rmss.max()
 		nrmsdep = rmsdep/minrms*100.0
 		nrmsopt = 100.0
-		rmsmax  = pyl.ceil((max(nrmsdep)+1.0)/10.)*10.
-		pyl.plot(depths,nrmsdep,'bo-',ms=4)
-		pyl.plot([deppde],[rmspde/minrms*100.],'k+',ms=14,mew=2.5,alpha=0.7)
-		pyl.plot([depopt],[nrmsopt],'rv',ms=14,alpha=0.7)
-		pyl.xlabel('Centroid depth, km')
-		pyl.ylabel('Normalized RMS misfit')
-		pyl.ylim([99.,rmsmax])
-		pyl.grid()
+		rmsmax  = np.ceil((max(nrmsdep)+1.0)/10.)*10.
+		plt.plot(depths,nrmsdep,'bo-',ms=4)
+		plt.plot([deppde],[rmspde/minrms*100.],'k+',ms=14,mew=2.5,alpha=0.7)
+		plt.plot([depopt],[nrmsopt],'rv',ms=14,alpha=0.7)
+		plt.xlabel('Centroid depth, km')
+		plt.ylabel('Normalized RMS misfit')
+		plt.ylim([99.,rmsmax])
+		plt.grid()
 	else:
 		ofile='grid_search_xyz.pdf'
 		latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms = r_xy_gfile(ifilexy)
@@ -141,30 +142,30 @@ def plot_xyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,
 		nrms    = rms/rmsopt*100.		
 		minrms  = 100.
 		maxrms  = maxrms/rmsopt * 100.		
-		ax2 = pyl.axes([0.825,0.2,0.1,0.6])
-		cm = pyl.get_cmap('jet')
+		ax2 = plt.axes([0.825,0.2,0.1,0.6])
+		cm = plt.get_cmap('jet')
 		print minrms,maxrms
 		for i in xrange(8):
 			Bpos   = interp(i,8,0.,1.)
 			Brms=interp(i,8,minrms,maxrms)
 			mksize = ((Brms-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin
-			pyl.scatter(0.5,Bpos,c=cm((Brms-minrms)/(maxrms-minrms)),marker='o',s=mksize)
-			pyl.text(0.9,Bpos-0.02,'%7.1f'%Brms)
+			plt.scatter(0.5,Bpos,c=cm((Brms-minrms)/(maxrms-minrms)),marker='o',s=mksize)
+			plt.text(0.9,Bpos-0.02,'%7.1f'%Brms)
 		ax2.set_axis_off()
-		mksize = ((pyl.array(nrmss)-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin
-		pyl.ylim(-0.1,1.1)
-		pyl.xlim(0,1.6)
-		pyl.title('Normalized RMS')
-		ax1 = pyl.axes([0.05,0.1,0.7,0.8], projection='3d',azim=-53.,elev=13.)
+		mksize = ((np.array(nrmss)-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin
+		plt.ylim(-0.1,1.1)
+		plt.xlim(0,1.6)
+		plt.title('Normalized RMS')
+		ax1 = plt.axes([0.05,0.1,0.7,0.8], projection='3d',azim=-53.,elev=13.)
 
-		cstla = 6371.*pyl.pi/180.
-		cstlo = cstla*pyl.cos(latpde*pyl.pi/180.)
+		cstla = 6371.*np.pi/180.
+		cstlo = cstla*np.cos(latpde*np.pi/180.)
 		for la,lo,z,err,siz in zip(lats,lons,deps,nrmss,mksize):
 			x = (lo - lonpde)*cstlo
 			y = (la - latpde)*cstla
 			col = cm((err-minrms)/(maxrms-minrms))			
 			ax1.scatter(x,y,z,c=col,marker='o',s=siz)
-		mksize = ((pyl.array(nrms)-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin
+		mksize = ((np.array(nrms)-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin
  		for la,lo,err,siz in zip(lat,lon,nrms,mksize):
  			x = (lo - lonpde)*cstlo
  			y = (la - latpde)*cstla
@@ -177,37 +178,37 @@ def plot_xyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,
 		ax1.set_xlabel('East, km')
 		ax1.set_ylabel('North, km')
 		ax1.set_zlabel('Depth, km')
-	pyl.savefig(ofile)
+	plt.savefig(ofile)
 
 def prep_colorbar(minz,maxz,Lref):
 	if -minz>=maxz:
 		Laxo = Lref
 		Laxc = -Lref/minz * maxz
-		tico = pyl.linspace(minz,0.,4)
-		ticc = pyl.arange(0.,maxz,tico[1]-tico[0])
+		tico = np.linspace(minz,0.,4)
+		ticc = np.arange(0.,maxz,tico[1]-tico[0])
 		if len(ticc)<=1:
 			if Laxc >= 0.04:
-				ticc = pyl.array([maxz])
+				ticc = np.array([maxz])
 			else:
 				Laxc = 0.
 		else:
 			ticc = list(ticc[1:])
 			ticc.reverse()
-			ticc = pyl.array(ticc)		
+			ticc = np.array(ticc)		
 	else:
 		Laxc = Lref
 		Laxo = -Lref/maxz * minz
-		ticc = pyl.linspace(0.,maxz,4)
-		tico = -pyl.arange(0.,-minz,ticc[1]-ticc[0])
+		ticc = np.linspace(0.,maxz,4)
+		tico = -np.arange(0.,-minz,ticc[1]-ticc[0])
 		if len(tico)<=1:
 			if Laxo >= 0.04:
-				tico = pyl.array([minz])
+				tico = np.array([minz])
 			else:
 				Laxo = 0.
 		else:
 			tico = list(tico[1:])
 			tico.reverse()
-			tico = pyl.array(tico)
+			tico = np.array(tico)
 
 	return Laxo,Laxc,tico,ticc
 
@@ -218,7 +219,7 @@ def concat_cmap(cmaps,offs,cuts,prop):
 	cmprop = 0.
 	for k in xrange(Nc):
 		nps.append(len(cmaps[k]._segmentdata['blue']) - offs[k] - cuts[k])
-		tmp = pyl.linspace(cmprop,cmprop+prop[k],nps[-1])
+		tmp = np.linspace(cmprop,cmprop+prop[k],nps[-1])
 		idx.extend(list(tmp))
 		cmprop += prop[k]		
 	cdict = {} # RGB dictionary
@@ -231,7 +232,7 @@ def concat_cmap(cmaps,offs,cuts,prop):
 				cur = cmaps[k]._segmentdata[key][i+offs[k]]
 				cdict[key].append((float(int(idx[i+anp]*1000))/1000.,cur[1],cur[2]))
 		anp += nps[k]
-	colmap = pyl.mpl.colors.LinearSegmentedColormap('colormap',cdict,1024)
+	colmap = matplotlib.colors.LinearSegmentedColormap('colormap',cdict,1024)
 	return colmap
 
 def plot_etopo(file,m,ax):
@@ -257,47 +258,47 @@ def plot_etopo(file,m,ax):
 	for i in xrange(len(lons)):
 		if lons[i] >= lonll and lons[i] <=lonur:
 			ilo.append(i)
-	ila = pyl.array(ila) ; ilo = pyl.array(ilo)
-	inds = pyl.argsort(lons[ilo]) ; ilo = ilo[inds] ;
+	ila = np.array(ila) ; ilo = np.array(ilo)
+	inds = np.argsort(lons[ilo]) ; ilo = ilo[inds] ;
 	la  = lats[ila] ; lo  = lons[ilo] ;
 	z = data.variables['z'][ila[0]:ila[-1]+1,ilo]
-	lon, lat = pyl.meshgrid(lo, la)
+	lon, lat = np.meshgrid(lo, la)
 	x, y = m(lon, lat)
 	# Colormaps
 	Lref = 0.35 ; # Colorbar half length
 	minz = z.min() ; maxz = z.max() ;
 	Laxo,Laxc,ticko,tickc= prep_colorbar(minz,maxz,Lref)
 	H = float(Laxo+Laxc)/2.0
-	oceancmap = pyl.cm.Blues_r # Ocean depth colormap
+	oceancmap = plt.cm.Blues_r # Ocean depth colormap
 	if Laxc > 0.:              # Elevation colormap
-		cmaps  = [pyl.cm.YlGn,pyl.cm.BrBG]
+		cmaps  = [plt.cm.YlGn,plt.cm.BrBG]
 		offs   = [0  ,  0]
 		cuts   = [0  ,  5]
 		prop   = [0.5,0.5]
 		elevcmap = concat_cmap(cmaps,offs,cuts,prop)
 	else:
-		elevcmap = pyl.cm.YlGn	
+		elevcmap = plt.cm.YlGn	
 	# Ocean contour
 	if minz < 0.:
-		pyl.axes(ax)
-		zo = pyl.ma.masked_where(z >= 0.,z)
+		plt.axes(ax)
+		zo = np.ma.masked_where(z >= 0.,z)
 		co = m.contourf(x,y,zo,30,cmap=oceancmap)
 		if Laxo>0.:   # Ocean depth colorbar
-			caxo = pyl.axes([0.45-H,0.04,Laxo,0.02])		
-			pyl.title('Ocean Depth, m',fontsize='medium')
-			cbo = pyl.colorbar(mappable=co,cax=caxo,ticks=ticko,format='%.0f',
+			caxo = plt.axes([0.45-H,0.04,Laxo,0.02])		
+			plt.title('Ocean Depth, m',fontsize='medium')
+			cbo = plt.colorbar(mappable=co,cax=caxo,ticks=ticko,format='%.0f',
 					   orientation='horizontal')
 	# Land contour
 	if maxz >= 0.:
-		pyl.axes(ax)
-		zc = pyl.ma.masked_where(z <  0.,z)
+		plt.axes(ax)
+		zc = np.ma.masked_where(z <  0.,z)
 		cc = m.contourf(x,y,zc,30,cmap=elevcmap)
 		if Laxc > 0.: # Elevation colorbar
-			caxc = pyl.axes([0.45-H+Laxo,0.04,Laxc,0.02])
-			pyl.title('Elevation, m',fontsize='medium')
-			cbc = pyl.colorbar(mappable=cc,cax=caxc,ticks=tickc,format='%.0f',
+			caxc = plt.axes([0.45-H+Laxo,0.04,Laxc,0.02])
+			plt.title('Elevation, m',fontsize='medium')
+			cbc = plt.colorbar(mappable=cc,cax=caxc,ticks=tickc,format='%.0f',
 					   orientation='horizontal')
-		pyl.axes(ax)
+		plt.axes(ax)
 
 def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,mksmin=1.,
 	    mksmax=30.,delta=1.0,resolution = 'h'):
@@ -313,23 +314,23 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,
 	nrms = rms/minrms*100.
 	maxrms = max(rms)/minrms*100.
 	minrms = 100.
-	pyl.figure(figsize=(9.6125,  8.1))
-	ax1 = pyl.axes([0.04,0.13,0.8,0.85])
- 	ax2 = pyl.axes([0.85,0.2,0.1,0.6])
-	cm = pyl.get_cmap('jet')
+	plt.figure(figsize=(9.6125,  8.1))
+	ax1 = plt.axes([0.04,0.13,0.8,0.85])
+ 	ax2 = plt.axes([0.85,0.2,0.1,0.6])
+	cm = plt.get_cmap('jet')
 	for i in xrange(8):
 		Bpos   = interp(i,8,0.,1.)
 		Brms=interp(i,8,minrms,maxrms)
 		mksize = ((Brms-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin
-		pyl.plot([0.5],[Bpos],'ko',ms=mksize,markerfacecolor=cm((Brms-minrms)/(maxrms-minrms)))
-		pyl.text(0.9,Bpos-0.02,'%7.1f'%Brms)
+		plt.plot([0.5],[Bpos],'ko',ms=mksize,markerfacecolor=cm((Brms-minrms)/(maxrms-minrms)))
+		plt.text(0.9,Bpos-0.02,'%7.1f'%Brms)
 	ax2.set_axis_off()
-	mksize = ((pyl.array(nrms)-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin	
-	pyl.ylim(-0.1,1.1)
-	pyl.xlim(0,1.6)
-	pyl.title('Normalized RMS')
+	mksize = ((np.array(nrms)-minrms)/(maxrms-minrms))*(mksmax-mksmin)+mksmin	
+	plt.ylim(-0.1,1.1)
+	plt.xlim(0,1.6)
+	plt.title('Normalized RMS')
 	# DISPLAY MAP
-	pyl.axes(ax1)		
+	plt.axes(ax1)		
 	if basemapflag:
 		try:
 			from mpl_toolkits.basemap import Basemap
@@ -341,7 +342,7 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,
 	if basemapflag:
 		from os.path import expandvars,exists		
 		wraplons(lon)
-		deltalon = delta/pyl.cos(pyl.pi*latpde/180.0)
+		deltalon = delta/np.cos(np.pi*latpde/180.0)
 		latll = lat.min() - delta ; latur = lat.max() + delta ;
 		lonll = lon.min() - deltalon ; lonur = lon.max() + deltalon ;		
 		# Basemap instance
@@ -362,11 +363,11 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,
 				print 'WARNING: ETOPOFILE=%s does not exists'%(ETOPO_file)
 			print '         Will not display topography/bathymetry'
 		# Coastlines/meridians/paralells
-		pyl.axes(ax1)
+		plt.axes(ax1)
 		m.drawcoastlines(linewidth=0.3)
-		m.drawmeridians(pyl.arange(float(int(lonll)),lonur+delta,delta),labels=[0,0,0,1],
+		m.drawmeridians(np.arange(float(int(lonll)),lonur+delta,delta),labels=[0,0,0,1],
 				dashes=[1,0],linewidth=0.5,color='k')
-		m.drawparallels(pyl.arange(float(int(latll)),latur+delta,delta),labels=[1,0,0,0],
+		m.drawparallels(np.arange(float(int(latll)),latur+delta,delta),labels=[1,0,0,0],
 				dashes=[1,0],linewidth=0.5,color='k')
 		# RMS misfit
 		for la,lo,err,siz in zip(lat,lon,nrms,mksize):
@@ -380,17 +381,17 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,
 		m.plot([xpde],[ypde],'k+',ms=14,mew=2.5,alpha=0.7)
 		m.plot([xopt],[yopt],'rv',ms=14,alpha=0.7)
 	else:
-		deltalon = delta/pyl.cos(pyl.pi*latpde/180.0)
+		deltalon = delta/np.cos(np.pi*latpde/180.0)
 		latll = lat.min() - delta ; latur = lat.max() + delta ;
 		lonll = lon.min() - deltalon ; lonur = lon.max() + deltalon ;
 		for la,lo,err,siz in zip(lat,lon,nrms,mksize):
 			col = cm((err-minrms)/(maxrms-minrms))		
-			pyl.plot([lo],[la],c=col,marker='o',ms=siz)
-		pyl.plot([lonpde],[latpde],'k+',ms=14,mew=2.5,alpha=0.7)
-		pyl.plot([lonopt],[latopt],'rv',ms=14,alpha=0.7)
-		pyl.xlim([lonll,lonur])
-		pyl.ylim([latll,latur])
-	pyl.savefig(ofile)
+			plt.plot([lo],[la],c=col,marker='o',ms=siz)
+		plt.plot([lonpde],[latpde],'k+',ms=14,mew=2.5,alpha=0.7)
+		plt.plot([lonopt],[latopt],'rv',ms=14,alpha=0.7)
+		plt.xlim([lonll,lonur])
+		plt.ylim([latll,latur])
+	plt.savefig(ofile)
 	
 
 def plot_ts(ifile='grid_search_ts_out',ofile='grid_search_ts.pdf'):
@@ -405,19 +406,19 @@ def plot_ts(ifile='grid_search_ts_out',ofile='grid_search_ts.pdf'):
 		tmp = l.strip('\n').split()
 		ts.append(float(tmp[2]))
 		rms.append(float(tmp[7]))
-	rms = pyl.array(rms)
+	rms = np.array(rms)
 	nrms = rms/rmsopt*100.
 	rmsini = rmsini/rmsopt*100.
 	rmsopt = 100.
-	rmsmax  = pyl.ceil((max(nrms)+1.0)/10.)*10.
-	pyl.plot(ts,nrms,'bo',ms=4)
-	pyl.plot([tsini],[rmsini],'k+',ms=14,mew=2.5,alpha=0.7)
-	pyl.plot([tsopt],[rmsopt],'rv',ms=14,alpha=0.7)
-	pyl.grid('on')
-	pyl.ylim([90.,rmsmax])
-	pyl.xlabel('Centroid time shift, ts (sec.)')
-	pyl.ylabel('Normalized RMS')
-	pyl.savefig(ofile)
+	rmsmax  = np.ceil((max(nrms)+1.0)/10.)*10.
+	plt.plot(ts,nrms,'bo',ms=4)
+	plt.plot([tsini],[rmsini],'k+',ms=14,mew=2.5,alpha=0.7)
+	plt.plot([tsopt],[rmsopt],'rv',ms=14,alpha=0.7)
+	plt.grid('on')
+	plt.ylim([90.,rmsmax])
+	plt.xlabel('Centroid time shift, ts (sec.)')
+	plt.ylabel('Normalized RMS')
+	plt.savefig(ofile)
 
 def usage(cmd):
 	print 'usage: %s [option] (for help see %s -h)'%(cmd,cmd)
