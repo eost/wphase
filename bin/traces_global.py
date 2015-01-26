@@ -107,6 +107,7 @@ def parse_config(cfg_file):
     except:
         sys.stderr.write('Error: format  %s\n'%cfg_file)
         sys.exit(1)
+    # All done
     return config
 
 def unpack_c(chararray):
@@ -116,6 +117,7 @@ def unpack_c(chararray):
         if c == ' ' or c=='':
             break
         S+=c
+    # All done
     return S
 
 class Sac:
@@ -146,6 +148,9 @@ class Sac:
         self.khole  = '-12345'
         self.id     = self.knetwk+'_'+self.kstnm+'_'+self.khole+'_'+self.kcmpnm
         self.depvar =  []
+        # All done        
+        return;
+
     def rsac(self,FILE,nsamp=-1,datflag=1):
         try:
             fid     = open(FILE,'rb')
@@ -201,6 +206,8 @@ class Sac:
         except IOError:
             sys.stderr.write('error reading file '+FILE+'!!!\n')
             sys.exit(1)
+        # All done
+        return;
 
 def rm(fd):
         if os.path.islink(fd) or os.path.isfile(fd):
@@ -209,11 +216,14 @@ def rm(fd):
         elif os.path.isdir(fd):
                 sh.rmtree(fd)
                 return 0
+        # All done
         return 1
 
 def change_label_size(ax,size=10.0):
     for l in ax.get_xticklabels() + ax.get_yticklabels():
         l.set_fontsize(size)
+    # All done
+    return;
 
 def show_basemap(ax,evla,evlo,stla,stlo,coords,m=None):    
     if not m:
@@ -233,6 +243,7 @@ def show_basemap(ax,evla,evlo,stla,stlo,coords,m=None):
     m.plot(xs,ys,'o',color=(1.00000,  0.74706,  0.00000),ms=4.0,alpha=1.0,zorder=1000)
     m.plot([xr],[yr],'o',color=(1,.27,0),ms=8,alpha=1.0,zorder=1001)
     m.scatter([xc],[yc],c='b',marker=(5,1,0),s=120,zorder=1002)    
+    # All done
     return m
 
 def show_polarmap(ax,az,dist,coords):
@@ -245,9 +256,13 @@ def show_polarmap(ax,az,dist,coords):
     ax2.scatter([0.0],[0.0],c='r',marker=(5,1,0),s=70,zorder=1002)
     ax2.set_thetagrids([])
     ax2.set_rgrids(distlabel,labels='')
+    # All done
+    return;
 
 def usage(cmd):
     print('usage: %s [option] (for help see %s -h)'%(cmd,cmd))
+    # All done
+    return;
 
 def disphelp(cmd,solfile,syndir):
     print('Display W phase traces\n')
@@ -257,6 +272,8 @@ def disphelp(cmd,solfile,syndir):
     print('   -d, --osyndir        output synthetic directory (default: %s)'%(syndir))
     print('\n   -h, --help         display this help and exit')
     print('\nReport bugs to: <zacharie.duputel@unistra.fr>')
+    # All done
+    return;
 
 if __name__ == '__main__':
     # Input parameters
