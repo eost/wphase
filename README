@@ -5,28 +5,19 @@
        Z.Duputel, L.Rivera and H.Kanamori
 
 
+For a more complete documentation, please refer to http://wphase.unistra.fr/wiki/doku.php/wphase
 
 #########################
 ## Dependencies
 
-> gcc, gfortran (v4.2 or later)
+> gcc, gfortran
 > rdseed 
-> python (v2.4 or later)
+> python 
 > for MacOS users, it is necessary to install Coreutils
-  which provide GNU Core Utilities. This can be done:
-     - using fink (recommended): Package coreutils-default
-     - from the GNU website: http://www.gnu.org/software/coreutils
-> (optional; for graphical output) ghostscript (gs)
-> (optional; for graphical output) python modules: Numpy, Matplotlib and basemap
-     - Matplotlib is a plotting library for python and the python
-       module Numpy A complete documentation and install instructions
-       of Matplotlib can be found at:
-       http://matplotlib.sourceforge.net 
-     - Basemap is a Matplotlib toolkit (i.e. a collection of
-       application-specific functions that extend matplolib) for
-       plotting 2D data on maps.  The installation instructions of
-       Basemap can be found at:
-       http://matplotlib.sourceforge.net/basemap/doc/html/index.html
+  which provide GNU Core Utilities. This can be done using 
+  fink,macports or homebrew 
+> (optional; for graphical output) python modules: Numpy, Matplotlib, Basemap.
+> (optional; for graphical output) GMT4
 
 
 #########################
@@ -60,6 +51,7 @@ should then build the whole package.
 
 OPTIONAL; to include the topography/bathymetry in the grid-search
 graphical output.
+
 #########################
 ## Using ETOPO01 Global Relief Model
 
