@@ -4,7 +4,6 @@ A simple class that deals with sac files
 Written by Z. Duputel, December 2013
 '''
 
-# Function - Class definitions
 
 import os,sys
 import numpy  as np
@@ -12,16 +11,20 @@ import shutil as sh
 from copy     import deepcopy
 from datetime import datetime, timedelta
 
+
 NVHDR = 6
 ITIME = 1
-def unpack_c(chararray):
+
+
+def unpack_c(chararray,rm_spaces=True):
     S = ''
     for c in chararray:
         c = c.decode('utf-8')
-        if c == ' ' or c == '':
+        if rm_spaces and (c == ' ' or c == ''):
             break
         S+=c
     return S
+
 
 def pack_c(char,size):
     S = deepcopy(char)
@@ -29,6 +32,14 @@ def pack_c(char,size):
     for i in range(size-c_size):
         S = S+' '
     return np.array(S,dtype='c')
+
+
+class SacError(Exception):
+    """
+    Raised if the SAC file is corrupted
+    """
+    pass
+
 
 class sac(object):
     def __init__(self):
@@ -124,92 +135,109 @@ class sac(object):
            * npts: number of data points to be read
            * datflag: True: read data, False: read header only
         '''
-        # Read header
+        # Open file
         fid     = open(FILE,'rb')
-        self.delta     = np.fromfile(fid,'float32',   1)[0]
-        self.depmin    = np.fromfile(fid,'float32',   1)[0]
-        self.depmax    = np.fromfile(fid,'float32',   1)[0]
-        self.scale     = np.fromfile(fid,'float32',   1)[0]
-        self.odelta    = np.fromfile(fid,'float32',   1)[0]
-        self.b         = np.fromfile(fid,'float32',   1)[0]
-        self.e         = np.fromfile(fid,'float32',   1)[0]
-        self.o         = np.fromfile(fid,'float32',   1)[0]
-        self.a         = np.fromfile(fid,'float32',   1)[0]
-        self.internal1 = np.fromfile(fid,'float32', 1)[0]
-        self.t         = np.fromfile(fid,'float32',  10)
-        self.f         = np.fromfile(fid,'float32',   1)[0]
-        self.resp      = np.fromfile(fid,'float32',  10)
-        self.stla      = np.fromfile(fid,'float32',   1)[0]
-        self.stlo      = np.fromfile(fid,'float32',   1)[0]
-        self.stel      = np.fromfile(fid,'float32',   1)[0]
-        self.stdp      = np.fromfile(fid,'float32',   1)[0]
-        self.evla      = np.fromfile(fid,'float32',   1)[0]
-        self.evlo      = np.fromfile(fid,'float32',   1)[0]
-        self.evel      = np.fromfile(fid,'float32',   1)[0]
-        self.evdp      = np.fromfile(fid,'float32',   1)[0]
-        self.mag       = np.fromfile(fid,'float32',   1)[0]
-        self.user      = np.fromfile(fid,'float32',  10)
-        self.dist      = np.fromfile(fid,'float32',   1)[0]
-        self.az        = np.fromfile(fid,'float32',   1)[0]
-        self.baz       = np.fromfile(fid,'float32',   1)[0]
-        self.gcarc     = np.fromfile(fid,'float32',   1)[0]
-        self.internal2 = np.fromfile(fid,'float32',   1)[0]
-        self.internal3 = np.fromfile(fid,'float32',   1)[0]
-        self.depmen    = np.fromfile(fid,'float32',   1)[0]
-        self.cmpaz     = np.fromfile(fid,'float32',   1)[0]
-        self.cmpinc    = np.fromfile(fid,'float32',   1)[0]
-        self.xminimum  = np.fromfile(fid,'float32',   1)[0]
-        self.xmaximum  = np.fromfile(fid,'float32',   1)[0]
-        self.yminimum  = np.fromfile(fid,'float32',   1)[0]
-        self.ymaximum  = np.fromfile(fid,'float32',   1)[0]
+        
+        # Check endianness
+        fid.seek(316,0)
+        npts = np.fromfile(fid,'<i4',1)[0]
+        fid.seek(0,2)
+        fsize = fid.tell()
+        if fsize==632+4*npts:
+            ftype='<f4'
+            itype='<i4'
+        elif fsize==632+4*npts.byteswap():
+            ftype='>f4'
+            itype='>i4'
+        else:
+            raise SacError("Number of points in header and length of trace inconsistent !")
+        
+        # Read header
+        fid.seek(0,0)
+        self.delta     = np.fromfile(fid,ftype,1)[0]
+        self.depmin    = np.fromfile(fid,ftype,1)[0]
+        self.depmax    = np.fromfile(fid,ftype,1)[0]
+        self.scale     = np.fromfile(fid,ftype,1)[0]
+        self.odelta    = np.fromfile(fid,ftype,1)[0]
+        self.b         = np.fromfile(fid,ftype,1)[0]
+        self.e         = np.fromfile(fid,ftype,1)[0]
+        self.o         = np.fromfile(fid,ftype,1)[0]
+        self.a         = np.fromfile(fid,ftype,1)[0]
+        self.internal1 = np.fromfile(fid,ftype, 1)[0]
+        self.t         = np.fromfile(fid,ftype,10)
+        self.f         = np.fromfile(fid,ftype,1)[0]
+        self.resp      = np.fromfile(fid,ftype,10)
+        self.stla      = np.fromfile(fid,ftype,1)[0]
+        self.stlo      = np.fromfile(fid,ftype,1)[0]
+        self.stel      = np.fromfile(fid,ftype,1)[0]
+        self.stdp      = np.fromfile(fid,ftype,1)[0]
+        self.evla      = np.fromfile(fid,ftype,1)[0]
+        self.evlo      = np.fromfile(fid,ftype,1)[0]
+        self.evel      = np.fromfile(fid,ftype,1)[0]
+        self.evdp      = np.fromfile(fid,ftype,1)[0]
+        self.mag       = np.fromfile(fid,ftype,1)[0]
+        self.user      = np.fromfile(fid,ftype,  10)
+        self.dist      = np.fromfile(fid,ftype,1)[0]
+        self.az        = np.fromfile(fid,ftype,1)[0]
+        self.baz       = np.fromfile(fid,ftype,1)[0]
+        self.gcarc     = np.fromfile(fid,ftype,1)[0]
+        self.internal2 = np.fromfile(fid,ftype,1)[0]
+        self.internal3 = np.fromfile(fid,ftype,1)[0]
+        self.depmen    = np.fromfile(fid,ftype,1)[0]
+        self.cmpaz     = np.fromfile(fid,ftype,1)[0]
+        self.cmpinc    = np.fromfile(fid,ftype,1)[0]
+        self.xminimum  = np.fromfile(fid,ftype,1)[0]
+        self.xmaximum  = np.fromfile(fid,ftype,1)[0]
+        self.yminimum  = np.fromfile(fid,ftype,1)[0]
+        self.ymaximum  = np.fromfile(fid,ftype,1)[0]
         fid.seek(7*4,1)
-        self.nzyear    = np.fromfile(fid,  'int32',   1)[0]
-        self.nzjday    = np.fromfile(fid,  'int32',   1)[0]
-        self.nzhour    = np.fromfile(fid,  'int32',   1)[0]
-        self.nzmin     = np.fromfile(fid,  'int32',   1)[0]
-        self.nzsec     = np.fromfile(fid,  'int32',   1)[0]
-        self.nzmsec    = np.fromfile(fid,  'int32',   1)[0]
-        self.nvhdr     = np.fromfile(fid,  'int32',   1)[0]
-        self.norid     = np.fromfile(fid,  'int32',   1)[0]
-        self.nevid     = np.fromfile(fid,  'int32',   1)[0]
-        self.npts      = np.fromfile(fid,  'int32',   1)[0]
-        self.internal4 = np.fromfile(fid,  'int32',   1)[0]
-        self.nwfid     = np.fromfile(fid,  'int32',   1)[0]
-        self.nxsize    = np.fromfile(fid,  'int32',   1)[0]
-        self.nysize    = np.fromfile(fid,  'int32',   1)[0]
+        self.nzyear    = np.fromfile(fid,itype,1)[0]
+        self.nzjday    = np.fromfile(fid,itype,1)[0]
+        self.nzhour    = np.fromfile(fid,itype,1)[0]
+        self.nzmin     = np.fromfile(fid,itype,1)[0]
+        self.nzsec     = np.fromfile(fid,itype,1)[0]
+        self.nzmsec    = np.fromfile(fid,itype,1)[0]
+        self.nvhdr     = np.fromfile(fid,itype,1)[0]
+        self.norid     = np.fromfile(fid,itype,1)[0]
+        self.nevid     = np.fromfile(fid,itype,1)[0]
+        self.npts      = np.fromfile(fid,itype,1)[0]
+        self.internal4 = np.fromfile(fid,itype,1)[0]
+        self.nwfid     = np.fromfile(fid,itype,1)[0]
+        self.nxsize    = np.fromfile(fid,itype,1)[0]
+        self.nysize    = np.fromfile(fid,itype,1)[0]
         fid.seek(4,1);
-        self.iftype    = np.fromfile(fid,  'int32',   1)[0]
-        self.idep      = np.fromfile(fid,  'int32',   1)[0]
-        self.iztype    = np.fromfile(fid,  'int32',   1)[0]
+        self.iftype    = np.fromfile(fid,itype,1)[0]
+        self.idep      = np.fromfile(fid,itype,1)[0]
+        self.iztype    = np.fromfile(fid,itype,1)[0]
         fid.seek(4,1);
-        self.iinst     = np.fromfile(fid,  'int32',   1)[0]
-        self.istreg    = np.fromfile(fid,  'int32',   1)[0]
-        self.ievreg    = np.fromfile(fid,  'int32',   1)[0]
-        self.ievtyp    = np.fromfile(fid,  'int32',   1)[0]
-        self.iqual     = np.fromfile(fid,  'int32',   1)[0]
-        self.isynth    = np.fromfile(fid,  'int32',   1)[0]
-        self.imagtyp   = np.fromfile(fid,  'int32',   1)[0]
-        self.imagsrc   = np.fromfile(fid,  'int32',   1)[0]
+        self.iinst     = np.fromfile(fid,itype,1)[0]
+        self.istreg    = np.fromfile(fid,itype,1)[0]
+        self.ievreg    = np.fromfile(fid,itype,1)[0]
+        self.ievtyp    = np.fromfile(fid,itype,1)[0]
+        self.iqual     = np.fromfile(fid,itype,1)[0]
+        self.isynth    = np.fromfile(fid,itype,1)[0]
+        self.imagtyp   = np.fromfile(fid,itype,1)[0]
+        self.imagsrc   = np.fromfile(fid,itype,1)[0]
         fid.seek(8*4,1);
-        self.leven     = np.fromfile(fid,  'int32',   1)[0]
-        self.lpspol    = np.fromfile(fid,  'int32',   1)[0]
-        self.lovrok    = np.fromfile(fid,  'int32',   1)[0]
-        self.lcalda    = np.fromfile(fid,  'int32',   1)[0]
+        self.leven     = np.fromfile(fid,itype,1)[0]
+        self.lpspol    = np.fromfile(fid,itype,1)[0]
+        self.lovrok    = np.fromfile(fid,itype,1)[0]
+        self.lcalda    = np.fromfile(fid,itype,1)[0]
         fid.seek(4,1);
-        self.kstnm     = unpack_c(np.fromfile(fid,'c',   8))
-        self.kevnm     = unpack_c(np.fromfile(fid,'c',  16))
-        self.khole     = unpack_c(np.fromfile(fid,'c',   8))
-        self.ko        = unpack_c(np.fromfile(fid,'c',   8))
-        self.ka        = unpack_c(np.fromfile(fid,'c',   8))
+        self.kstnm     = unpack_c(np.fromfile(fid,'c',8))
+        self.kevnm     = unpack_c(np.fromfile(fid,'c',16),False)
+        self.khole     = unpack_c(np.fromfile(fid,'c',8))
+        self.ko        = unpack_c(np.fromfile(fid,'c',8))
+        self.ka        = unpack_c(np.fromfile(fid,'c',8))
         for i in range(10):
-            self.kt[i] = unpack_c(np.fromfile(fid,'c',   8))
-        self.kf = unpack_c(np.fromfile(fid,'c',   8))
+            self.kt[i] = unpack_c(np.fromfile(fid,'c',8))
+        self.kf = unpack_c(np.fromfile(fid,'c',8))
         for i in range(3):
             self.kuser[i] = unpack_c(np.fromfile(fid,'c',8))
-        self.kcmpnm = unpack_c(np.fromfile(fid,'c',   8))
-        self.knetwk = unpack_c(np.fromfile(fid,'c',   8))
-        self.kdatrd = unpack_c(np.fromfile(fid,'c',   8))
-        self.kinst  = unpack_c(np.fromfile(fid,'c',   8))
+        self.kcmpnm = unpack_c(np.fromfile(fid,'c',8))
+        self.knetwk = unpack_c(np.fromfile(fid,'c',8))
+        self.kdatrd = unpack_c(np.fromfile(fid,'c',8))
+        self.kinst  = unpack_c(np.fromfile(fid,'c',8))
         self.e = self.b + float(self.npts-1) * self.delta
         if self.khole=='' or self.khole=='-12345':
             self.khole = '--'
@@ -225,7 +253,7 @@ class sac(object):
         else:
             self.npts = int(npts)            
         if self.npts > 0:
-            self.depvar = np.array(np.fromfile(fid,'float32',self.npts),dtype='d')
+            self.depvar = np.array(np.fromfile(fid,ftype,self.npts),dtype='d')
         fid.close()
 
         # All done
