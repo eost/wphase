@@ -34,6 +34,7 @@
 
 FIGSIZE   = [11.69,8.27]
 
+# Import external modules
 import matplotlib
 matplotlib.use('PDF')
 import os,sys,re
@@ -41,41 +42,14 @@ import getopt as go
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Import internal modules
+import sacpy
+
 # Environment variables
 WPHOME = os.path.expandvars('$WPHASE_HOME')
 print('WPHASE_HOME is %s'%(WPHOME))
 
-def unpack_c(chararray):
-    S = ''
-    for c in chararray:
-        c = c.decode('utf-8')
-        if c == ' ':
-            break
-        S+=c
-    # All done
-    return S
-
-class Sac:
-    def __init__(self):
-        self.kstnm  = '-12345'
-        self.kcmpnm = '-12345'
-        # All done
-        return;      
-
-    def rsac(self,FILE):
-        try:
-            fid     = open(FILE,'rb')
-            fid.seek(440,0);
-            self.kstnm   = unpack_c(np.fromfile(fid,'c',   8))
-            fid.seek(600,0);
-            self.kcmpnm  = unpack_c(np.fromfile(fid,'c',   8))
-            fid.close()
-        except IOError:
-            sys.stderr.write('ERROR: Reading file '+FILE+'\n')
-            sys.exit(1)
-        # All done
-        return;
-        
+# Internal functions
 def usage(cmd):
     print('usage: %s [chan1 chan2 (default: LHZ LHN LHE LH1 LH2)] [option] (for help see %s -h)'%(cmd,cmd))
     # All done
@@ -147,7 +121,7 @@ if __name__=='__main__':
     sys.stdout.write('\nRead %s ...\n%s pages:\n'%(o_wpfile,count))
 
     # Main loop
-    sac = Sac()
+    sac = sacpy.sac()
     L = open(o_wpfile).readlines()
     ppW = matplotlib.backends.backend_pdf.PdfPages('CWP_W.pdf')
     sys.stdout.write('CWP_W.pdf\n')

@@ -74,7 +74,7 @@ plotparams = {'backend': 'pdf',
               'figure.figsize': FIGSIZE}
 
 
-# Import modules
+# Import external modules
 import matplotlib
 matplotlib.use('PDF')
 matplotlib.rcParams.update(plotparams)
@@ -85,6 +85,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from subprocess import call
 
+# Import internal modules
+import sacpy
+
 # Environment variables
 WPHOME = os.path.expandvars('$WPHASE_HOME')
 print('WPHASE_HOME is %s'%(WPHOME))
@@ -94,9 +97,12 @@ if LOGDIR[-1] != '/':
     LOGDIR += '/'
 SYNTHS = WPHOME+'bin/synth_v6'
 
-# Function - Class definitions
 
+# Internal functions
 def parse_config(cfg_file):
+    '''
+    Parse the configuration file
+    '''
     config = {}
     try:
         config_lines = open(cfg_file, 'r').readlines()
@@ -112,104 +118,6 @@ def parse_config(cfg_file):
     # All done
     return config
 
-def unpack_c(chararray):
-    S = ''
-    for c in chararray:
-        c = c.decode('utf-8')
-        if c == ' ' or c=='':
-            break
-        S+=c
-    # All done
-    return S
-
-class Sac:
-    def __init__(self):
-        self.delta  =  -12345.
-        self.b      =  -12345.
-        self.o      =  -12345.
-        self.stla   =  -12345.
-        self.stlo   =  -12345.
-        self.evla   =  -12345.
-        self.evlo   =  -12345.
-        self.cmpaz  =  -12345.
-        self.cmpinc =  -12345.
-        self.az     =  -12345.
-        self.baz    =  -12345.
-        self.gcarc  =  -12345.
-        self.dist   =  -12345.
-        self.nzyear =  -12345
-        self.nzjday =  -12345
-        self.nzhour =  -12345
-        self.nzmin  =  -12345
-        self.nzsec  =  -12345
-        self.nzmsec =  -12345
-        self.npts   =  -12345
-        self.kstnm  = '-12345'
-        self.kcmpnm = '-12345'
-        self.knetwk = '-12345'
-        self.khole  = '-12345'
-        self.id     = self.knetwk+'_'+self.kstnm+'_'+self.khole+'_'+self.kcmpnm
-        self.depvar =  []
-        # All done        
-        return;
-
-    def rsac(self,FILE,nsamp=-1,datflag=1):
-        try:
-            fid     = open(FILE,'rb')
-            self.delta   = np.fromfile(fid,'float32',   1)[0]
-            fid.seek(20,0)
-            self.b       = np.fromfile(fid,'float32',   1)[0]
-            fid.seek(28,0)
-            self.o       = np.fromfile(fid,'float32',   1)[0]
-            fid.seek(124,0)
-            self.stla    = np.fromfile(fid,'float32',   1)[0]
-            self.stlo    = np.fromfile(fid,'float32',   1)[0]
-            fid.seek(140,0)
-            self.evla    = np.fromfile(fid,'float32',   1)[0]
-            self.evlo    = np.fromfile(fid,'float32',   1)[0]
-            fid.seek(200,0)
-            self.dist    = np.fromfile(fid,'float32',   1)[0]
-            self.az      = np.fromfile(fid,'float32',   1)[0]
-            self.baz     = np.fromfile(fid,'float32',   1)[0]
-            self.gcarc   = np.fromfile(fid,'float32',   1)[0]
-            fid.seek(228,0)
-            self.cmpaz   = np.fromfile(fid,'float32',   1)[0]
-            self.cmpinc  = np.fromfile(fid,'float32',   1)[0]
-            fid.seek(280,0);
-            self.nzyear  = np.fromfile(fid,  'int32',   1)[0]
-            self.nzjday  = np.fromfile(fid,  'int32',   1)[0]
-            self.nzhour  = np.fromfile(fid,  'int32',   1)[0]
-            self.nzmin   = np.fromfile(fid,  'int32',   1)[0]
-            self.nzsec   = np.fromfile(fid,  'int32',   1)[0]
-            self.nzmsec  = np.fromfile(fid,  'int32',   1)[0]
-            fid.seek(316,0)
-            self.npts    = np.fromfile(fid,  'int32',   1)[0]
-            fid.seek(440,0);
-            self.kstnm   = unpack_c(np.fromfile(fid,'c',   8))
-            fid.seek(464,0);
-            self.khole   = unpack_c(np.fromfile(fid,'c',   8))
-            fid.seek(600,0);
-            self.kcmpnm  = unpack_c(np.fromfile(fid,'c',   8))
-            self.knetwk  = unpack_c(np.fromfile(fid,'c',   8))
-            fid.seek(632,0);
-            if self.khole == '':
-                self.khole = '--'
-            self.id    = self.knetwk+'_'+self.kstnm+'_'+self.khole+'_'+self.kcmpnm
-            if not datflag:
-                fid.close()
-                return
-            nsamp = int(nsamp)
-            if nsamp < 0 or nsamp > self.npts:
-                nsamp = self.npts
-            if nsamp > 0:
-                self.depvar = np.array(np.fromfile(fid,'float32',nsamp),dtype='d')
-            fid.close()
-            
-        except IOError:
-            sys.stderr.write('error reading file '+FILE+'!!!\n')
-            sys.exit(1)
-        # All done
-        return;
 
 def rm(fd):
         if os.path.islink(fd) or os.path.isfile(fd):
@@ -221,11 +129,13 @@ def rm(fd):
         # All done
         return 1
 
+    
 def change_label_size(ax,size=10.0):
     for l in ax.get_xticklabels() + ax.get_yticklabels():
         l.set_fontsize(size)
     # All done
     return;
+
 
 def show_basemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):    
     if not m:
@@ -258,6 +168,7 @@ def show_basemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):
     # All done
     return m
 
+
 def show_polarmap(ax,az,dist,coords):
     distlabel  = 6371.0*np.arange(30.0,120.0,30.0)*np.pi/180.0
     pos  = ax.get_position().get_points()
@@ -271,10 +182,12 @@ def show_polarmap(ax,az,dist,coords):
     # All done
     return;
 
+
 def usage(cmd):
     print('usage: %s [option] (for help see %s -h)'%(cmd,cmd))
     # All done
     return;
+
 
 def disphelp(cmd,solfile,syndir):
     print('Display W phase traces\n')
@@ -286,6 +199,7 @@ def disphelp(cmd,solfile,syndir):
     print('\nReport bugs to: <zacharie.duputel@unistra.fr>')
     # All done
     return;
+
 
 if __name__ == '__main__':
     # Input parameters
@@ -350,8 +264,8 @@ if __name__ == '__main__':
         print('Error while running '+SYNTHS)
         sys.exit(1)
     # Sac Objects
-    sacdata = Sac()
-    sacsynt = Sac()
+    sacdata = sacpy.sac()
+    sacsynt = sacpy.sac()
     coords = []
     L = open(o_wpinversion).readlines()
     for l in L:
