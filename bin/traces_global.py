@@ -36,8 +36,8 @@
 IMASTER       = 'i_master'      # IMASTER FILENAME
 O_WPINVERSION = 'o_wpinversion' # o_wpinversion filename
 LOGDIR        = 'LOG'
-LENGTH_GLOBAL   = 3000 ;        # Traces lenght
-LENGTH_REGIONAL = 3000 ;        # Traces lenght
+LENGTH_GLOBAL   = 3000 ;        # Traces lenght (teleseismic data)
+LENGTH_REGIONAL = 1500 ;        # Traces lenght (regional data)
 DLAT,DLON       = 20.,20.
 OPDFFILE        = 'wp_pages.pdf'
 
@@ -313,7 +313,7 @@ if __name__ == '__main__':
             disphelp(sys.argv[0],solfile,syndir)
             sys.exit(0)
         if o == '-r' or o == '--regional':
-            length  = LENGTH_GLOBAL
+            length  = LENGTH_REGIONAL
             flagreg = True
         if o == '-i' or o=='--icmtf':
             solfile = a
