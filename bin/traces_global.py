@@ -36,8 +36,10 @@
 IMASTER       = 'i_master'      # IMASTER FILENAME
 O_WPINVERSION = 'o_wpinversion' # o_wpinversion filename
 LOGDIR        = 'LOG'
-LENGTH        = 3000 ;          # Traces lenght  
-OPDFFILE      = 'wp_pages.pdf'
+LENGTH_GLOBAL   = 3000 ;        # Traces lenght
+LENGTH_REGIONAL = 3000 ;        # Traces lenght
+DLAT,DLON       = 20.,20.
+OPDFFILE        = 'wp_pages.pdf'
 
 FIGSIZE   = [11.69,8.270]
 #FIGSIZE   = [5.84,4.135]
@@ -225,17 +227,27 @@ def change_label_size(ax,size=10.0):
     # All done
     return;
 
-def show_basemap(ax,evla,evlo,stla,stlo,coords,m=None):    
+def show_basemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):    
     if not m:
         from mpl_toolkits.basemap import Basemap
-        m = Basemap(projection='ortho',lat_0=evla,lon_0=evlo,resolution='c')
+        if flagreg:
+            m = Basemap(llcrnrlon=evlo-DLON, llcrnrlat=evla-DLAT,
+                        urcrnrlon=evlo+DLON, urcrnrlat=evla+DLAT,
+                        projection='lcc',lat_1=evla-DLAT/2.,lat_2=evla+DLAT/2.,
+                        lon_0=evlo, resolution ='c',area_thresh=50. )
+        else:
+            m = Basemap(projection='ortho',lat_0=evla,lon_0=evlo,resolution='c')
     pos  = ax.get_position().get_points()
     W  = pos[1][0]-pos[0][0] ; H  = pos[1][1]-pos[0][1] ;        
     ax2 = plt.axes([pos[1][0]-W*0.38,pos[0][1]+H*0.01,H*1.08,H*1.00])
     m.drawcoastlines(linewidth=0.5,zorder=900)
     m.fillcontinents(color='0.75',lake_color=None)
-    m.drawparallels(np.arange(-60,90,30.0),linewidth=0.2)
-    m.drawmeridians(np.arange(0,420,60.0),linewidth=0.2)
+    if flagreg:
+        m.drawparallels(np.arange(evla-DLAT,evla+DLAT,5.0),linewidth=0.2)
+        m.drawmeridians(np.arange(evlo-DLON,evlo+DLON,5.0),linewidth=0.2)
+    else:
+        m.drawparallels(np.arange(-60,90,30.0),linewidth=0.2)
+        m.drawmeridians(np.arange(0,420,60.0),linewidth=0.2)
     m.drawmapboundary(fill_color='w')
     xs,ys = m(coords[:,1],coords[:,0])
     xr,yr = m(stlo,stla)
@@ -278,7 +290,7 @@ def disphelp(cmd,solfile,syndir):
 if __name__ == '__main__':
     # Input parameters
     imaster = IMASTER
-    length  = LENGTH;
+    length  = LENGTH_GLOBAL
     syndir  = 'SYNTH_traces'
     o_wpinversion = O_WPINVERSION
     nc = NC
@@ -286,11 +298,12 @@ if __name__ == '__main__':
     solfile = None
 
     # Title
+    flagreg = False
     conf  = parse_config(imaster)
     title = '_'.join(conf['EVNAME'].split())
     title += ',  filter = (%s, %s, %s, %s)'%(conf['filt_cf1'],conf['filt_cf2'],conf['filt_order'],conf['filt_pass']) 
     try:
-        opts, args = go.gnu_getopt(sys.argv[1:],'i:d:h',["icmtf=","osydir=","help"])
+        opts, args = go.gnu_getopt(sys.argv[1:],'i:d:rh',["icmtf=","osydir=","regional","help"])
     except go.GetoptError as err:
         sys.stderr.write('*** ERROR ***\n')
         usage(sys.argv[0])
@@ -299,6 +312,9 @@ if __name__ == '__main__':
         if o == '-h' or o == '--help':
             disphelp(sys.argv[0],solfile,syndir)
             sys.exit(0)
+        if o == '-r' or o == '--regional':
+            length  = LENGTH_GLOBAL
+            flagreg = True
         if o == '-i' or o=='--icmtf':
             solfile = a
             if not os.path.exists(solfile):
@@ -421,7 +437,7 @@ if __name__ == '__main__':
             plt.xlabel('time, sec',fontsize=10) 
         plt.grid()
         try:
-            m = show_basemap(ax,sacdata.evla,sacdata.evlo,sacdata.stla,sacdata.stlo,coords,m)
+            m = show_basemap(ax,sacdata.evla,sacdata.evlo,sacdata.stla,sacdata.stlo,coords,flagreg,m)
             pass
         except:
             show_polarmap(ax,sacdata.az,sacdata.dist,coords)
