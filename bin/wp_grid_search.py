@@ -70,7 +70,7 @@ print('GF_PATH is %s'%(GF_PATH))
 #entfile = WPHOME+'.svn/entries'
 #if os.path.exists(entfile):
 #    VERSION += open(entfile).readlines()[3].strip()
-VERSION = 'Version: r249'
+VERSION = 'Version: r250'
 
 BIN = WPHOME+'bin/'
 
