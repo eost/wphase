@@ -2,6 +2,7 @@
 A simple class that deals with sac files
 
 Written by Z. Duputel, December 2013
+        available on GitHub: https://github.com/eost/sacpy.git
 '''
 
 
