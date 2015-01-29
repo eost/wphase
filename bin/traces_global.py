@@ -33,51 +33,12 @@
 
 # W PHASE TRACES
 
-IMASTER       = 'i_master'      # IMASTER FILENAME
-O_WPINVERSION = 'o_wpinversion' # o_wpinversion filename
-LOGDIR        = 'LOG'
-LENGTH_GLOBAL   = 3000 ;        # Traces lenght (teleseismic data)
-LENGTH_REGIONAL = 1500 ;        # Traces lenght (regional data)
-DLAT,DLON       = 20.,20.
-OPDFFILE        = 'wp_pages.pdf'
-
-FIGSIZE   = [11.69,8.270]
-#FIGSIZE   = [5.84,4.135]
-YLIM_AUTO = True
-YLIMFIXED = [-9,12] # Y lim if YLIM_AUTO = False
-NC = 3 # Number of columns
-NL = 5 # Number of lines
-
-plotparams = {'backend': 'pdf',
-              'axes.labelsize': 10,
-              'font.size': 10,
-              'xtick.labelsize': 10,
-              'ytick.labelsize': 10,
-              'legend.fontsize': 10,
-              'lines.markersize': 6,
-              'font.size': 10,
-              'savefig.dpi': 200,
-              'keymap.all_axes': 'a',
-              'keymap.back': ['left', 'c', 'backspace'],
-              'keymap.forward': ['right', 'v'],
-              'keymap.fullscreen': 'f',
-              'keymap.grid': 'g',
-              'keymap.home': ['h', 'r', 'home'],
-              'keymap.pan': 'p',
-              'keymap.save': 's',
-              'keymap.xscale': ['k', 'L'],
-              'keymap.yscale': 'l',
-              'keymap.zoom': 'o',                  
-              'path.snap': True,
-              'savefig.format': 'pdf',
-              'pdf.compression': 9,
-              'figure.figsize': FIGSIZE}
 
 
 # Import external modules
 import matplotlib
 matplotlib.use('PDF')
-matplotlib.rcParams.update(plotparams)
+matplotlib.rcParams.update(PLOTPARAMS)
 import os,sys,re
 import getopt as go
 import shutil as sh
@@ -87,18 +48,11 @@ from subprocess import call
 
 
 # Import internal modules
+from wpArguments import *
 import sacpy
 import utils
 
 
-# Environment variables
-WPHOME = os.path.expandvars('$WPHASE_HOME')
-print('WPHASE_HOME is %s'%(WPHOME))
-if WPHOME[-1] != '/':
-    WPHOME += '/'
-if LOGDIR[-1] != '/':
-    LOGDIR += '/'
-SYNTHS = WPHOME+'bin/synth_v6'
 
 
 # Internal functions
@@ -228,7 +182,7 @@ if __name__ == '__main__':
     cmd    = SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir
     print(cmd)
     #status = call(cmd, shell=True, stdin=sys.stdin, stdout=sys.stdout);
-    status = os.system(SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir+' > %s_tmp_synths'%(LOGDIR))
+    status = os.system(SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir+' > '+join(LOGDIR,'_tmp_synths'))
     if status:        
         print('Error while running '+SYNTHS)
         sys.exit(1)

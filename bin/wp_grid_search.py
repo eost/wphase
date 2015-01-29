@@ -33,56 +33,21 @@
 
 # GRID SEARCH FOR WPHASE INVERSION
 
-# Time-shift grid-search parameters
-TS_NIT   = 3  # Nb of iterations
-TS_DT    = 4. # Initial time step
-TSBOUNDS = [] # Bounds (empty=automatically determined from mb or Ms in the PDE line)
-TS_OFILE = 'grid_search_ts_out'
-
-# Centroid Lat/Lon grid-search parameters
-XY_NIT   = 3   # Nb of iterations
-XY_DX    = 0.4 # Intial samp. period
-XY_NX    = 3   # Half_width = XY_NX*XY_DX
-XY_NOPT  = 5   # Nb of optimal-points
-XY_OFILE = 'grid_search_xy_out'
-
-# Centroid Depth grid-search parameters
-XYZ_NIT   = 1    # Nb of iterations
-XYZ_DX    = 0.6  # Intial samp. period
-XYZ_NX    = 1    # Half_width = XYZ_NX*XYZ_DX (if XYZ_NX=0: no Lat/Lon grid-seach is performed)
-XYZ_NOPT  = 4    # Nb of optimal-points
-DDEP      = 50.  # Delta depth ( Z_SEARCH within Z_INITIAL +/- DDEP )
-MINDEP    = 11.5 
-XYZ_OFILE = 'grid_search_xyz_out'
 
 # Import external modules
 import os,shutil,sys,time,getopt
 
+
 # Import internal modules
+from wpArguments import *
 from EQ import *
 import utils
 
-WPHOME = os.path.expandvars('$WPHASE_HOME')
-print('WPHASE_HOME is %s'%(WPHOME))
-if WPHOME[-1] != '/':
-    WPHOME += '/'
-
-GF_PATH = os.path.expandvars('$GF_PATH')
-print('GF_PATH is %s'%(GF_PATH))
-
-#VERSION = 'Version: '
-#entfile = WPHOME+'.svn/entries'
-#if os.path.exists(entfile):
-#    VERSION += open(entfile).readlines()[3].strip()
-VERSION = 'Version: r250'
-
-BIN = WPHOME+'bin/'
-
-WPINV_XY     = BIN+'wpinversion_gs -imas i_master -ifil o_wpinversion'
-
-
 
 def addrefsol(cmtref,cmtfile):
+    '''
+    Adding reference moment tensor included in file cmtref to cmtfile
+    '''
     cmtf = open(cmtref,'r')
     L=cmtf.readlines()
     cmtf.close()
@@ -96,22 +61,37 @@ def addrefsol(cmtref,cmtfile):
     return;
 
 
-def addslash(direc):
-    if len(direc) > 0:
-        if direc[-1] != '/':
-            direc += '/'
-    return direc
-
-
 def gridsearch(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,flagts,flagxy,sdrM0={},dz=0.,
         minz=3.5,ts_ofile='grid_search_ts_out',xy_ofile='grid_search_xy_out',stdoutput='stdout',
         logfile='LOG/gs_o_wpinversion.log', comments = []):
+    '''
+    Grid search
+    Args:
+        * eq: eq object
+        * cmtref: reference CMTSOLUTION file
+        * ts_Nit: number of iteration for time-shift grid-search
+        * ts_dt: initial sampling step for time-shift grid-search
+        * tsb: bounds of time-shift grid search
+        * xy_Nit: number of iteration of lat/lon grid-search
+        * xy_dx: sampling step for lat/lon grid-search 
+        * xy_Nopt: Number of optimum neighbor regions to re-sample
+        * fastflag: perform time-shift grid-search ? (True or False)
+        * flagxy: perform lat/lon grid-search? 
+        * sdrM0: input dictionary for double-couple inversions
+        * dz: sampling step for depth grid-search
+        * minz: minimum depth for depth grid-search
+        * ts_ofile: time-shift grid search output file
+        * xy_ofile: lat/lon grid search output file
+        * stdoutput: standard output
+        * logfile: log filename
+        * comments: comments to be added to the output ps file
+    '''
     if stdoutput == 'stdout':
         fid = sys.stdout
-        flag = 0
+        flag = False
     else:
         fid = open(stdoutput,'a+')
-        flag = 1
+        flag = True
     EXE = WPINV_XY        
     fid.write('CENTROID GRID SEARCH\n')
     # Setting parameters ########
@@ -204,43 +184,44 @@ def disphelp():
     return;
 
 
-##### MAIN #####    
-if __name__ == "__main__":
+def main(argv)
+    # Extract command line options
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:],'stpSdi:nhz',["hdsafe","onlyts","onlyxy","npar",
+        opts, args = getopt.gnu_getopt(argv[1:],'stpSdi:nhz',["hdsafe","onlyts","onlyxy","npar",
                                       "imas=","strike=","dc","nont","dip=",
                                       "rake=","mom=","noref","xyz","old",
                                       "help"])
     except getopt.GetoptError as err:
         usage()
         raise
-    
-    i_master = 'i_master' 
-    fastflag = 1    
-    flagts   = 1
-    flagxy   = 1
-    flagxyz  = 0
-    flagref  = 1
+
+    # Parse command line options
+    i_master = IMASTER
+    fastflag = True
+    flagts   = True
+    flagxy   = True
+    flagxyz  = False
+    flagref  = True
     sdrM0    = {}
     for o, a in opts:
         if o == '-h' or o == '--help':
             disphelp()
             sys.exit(0)
         if o == '-s' or o == '--hdsafe':
-            fastflag = 0
+            fastflag = False
         if o == '-t' or o == '--onlyts':
-            if flagts == 0:
+            if not flagts:
                 usage()
                 raise getopt.GetoptError('options -t and -p cannot be used simultaneously')
-            flagxy = 0
-            flagts = 1
+            flagxy = False
+            flagts = True
         if o == '-p' or o == '--onlyxy':
-            if flagxy == 0:
+            if not flagxy:
                 usage()
                 raise getopt.GetoptError('options -t and -p cannot be used simultaneously')                
-            flagts   = 0
-            fastflag = 0
-            flagxy = 1
+            flagts   = False
+            fastflag = False
+            flagxy = True
         if o == '--dc':
             sdrM0['-dc']=''
         if o == '--nont':
@@ -256,9 +237,9 @@ if __name__ == "__main__":
         if o == '-i' or o == '--imas':
             i_master = a
         if o == '-n' or o == '--noref':
-            flagref = 0
+            flagref = False
         if o == '-z' or o == '--xyz':
-            flagxyz = 1
+            flagxyz = True
         if o == '--old':
             WPINV_XY += ' -old'
 
@@ -267,7 +248,7 @@ if __name__ == "__main__":
     cmtref  = iconfig['CMTFILE']
     evname  = iconfig['EVNAME'].replace(' ','_').replace(',','')
 
-    # Set comments
+    # Set comments in output ps file
     Median    = '-med '
     if 'P2P_SCREENING' in iconfig:
         if iconfig['P2P_SCREENING'] != 'YES':
@@ -277,7 +258,7 @@ if __name__ == "__main__":
         ths = iconfig['RMS_SCREENING']
     comments = [VERSION,'GF_PATH: '+GF_PATH,'Screening: '+Median+ths]
 
-    # Read CMTFILE
+    # Read reference CMTFILE
     eq   = EarthQuake()
     eq.rcmtfile(cmtref)
     eq.title = evname.strip().replace(' ','_').replace(',','')
@@ -286,15 +267,16 @@ if __name__ == "__main__":
     cmtf.close()
     if len(L) < 13:
         print('*** WARNING : no reference solution in %s'%(cmtref))
-        flagref = 0
+        flagref = False
 
-    # Grid search
-    i_cmtfile = cmtref
-    if (flagts or flagxy) and not flagxyz: # LAT/LON Grid-search
-        gridsearch(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,fastflag,
+    # TS and/or LAT/LON Grid-search
+    if (flagts or flagxy) and not flagxyz:
+        gridsearch(eq,cmtref,TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,fastflag,
                     flagts,flagxy,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments)
-    if flagxyz:                              # 3D Grid-search
-        gridsearch(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XYZ_NIT,XYZ_DX,XYZ_NX,XYZ_NOPT,fastflag,
+
+    # TS and LAT/LON/DEP Grid-search
+    if flagxyz:
+        gridsearch(eq,cmtref,TS_NIT,TS_DT,TSBOUNDS,XYZ_NIT,XYZ_DX,XYZ_NX,XYZ_NOPT,fastflag,
                     flagts,flagxyz,sdrM0,dz=DDEP,minz=MINDEP,ts_ofile=TS_OFILE,xy_ofile=XYZ_OFILE,
                     comments=comments)
         if flagxy:
@@ -304,7 +286,13 @@ if __name__ == "__main__":
             gridsearch(eq,'_tmp_CMTSOLUTION.xyz',TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,
                     0,0,1,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments)
             utils.rm('_tmp_CMTSOLUTION.xyz')
+    
+    # Cleaning up
     if os.path.exists('_tmp_ts_table'):        
         utils.rm('_tmp_ts_table')
     if os.path.exists('_tmp_xy_table'):        
         utils.rm('_tmp_xy_table')
+
+
+if __name__ == "__main__":
+    main(sys.argv)
