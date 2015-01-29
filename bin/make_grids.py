@@ -56,7 +56,7 @@ def interp (j, n, a, b):
     # All done
     return v
 
-def find_cdep(depth,depths):
+def findcdep(depth,depths):
     N = len(depths)
     for i,dep in zip(range(N),depths):
         if int(depth*100) == int(dep*100):
@@ -64,7 +64,7 @@ def find_cdep(depth,depths):
     # All done
     return -1
 
-def r_xyz_gfile(ifile):
+def rxyzgfile(ifile):
     fid= open(ifile,'r')
     L=fid.readlines()
     fid.close()
@@ -76,7 +76,7 @@ def r_xyz_gfile(ifile):
         items = l.strip().split()
         dep = float(items[6])
         err = float(items[7])
-        i   = find_cdep(dep,depths)
+        i   = findcdep(dep,depths)
         if i>=0:
             if err < rmsdepths[i]:
                 rmsdepths[i] = err
@@ -114,13 +114,13 @@ def r_xy_gfile(ifile):
     # All done
     return [latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms]
 
-def plot_xyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,mksmin=1.,mksmax=300.):
+def plotxyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,mksmin=1.,mksmax=300.):
     if not flag:
         try:            
             from mpl_toolkits.mplot3d import Axes3D
         except:
             flag = 1
-    latopt,lonopt,depopt,rmsopt,latpde,lonpde,deppde,rmspde,lats,lons,deps,rmss,depths,rmsdep = r_xyz_gfile(ifilexyz) 
+    latopt,lonopt,depopt,rmsopt,latpde,lonpde,deppde,rmspde,lats,lons,deps,rmss,depths,rmsdep = rxyzgfile(ifilexyz) 
     fig = plt.figure(figsize=(7.6875, 6.125))
     if flag:
         ofile='grid_search_z.pdf'
@@ -188,7 +188,7 @@ def plot_xyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,
     # All done
     return;
 
-def prep_colorbar(minz,maxz,Lref):
+def prepColorbar(minz,maxz,Lref):
     if -minz>=maxz:
         Laxo = Lref
         Laxc = -Lref/minz * maxz
@@ -220,7 +220,7 @@ def prep_colorbar(minz,maxz,Lref):
     # All done
     return Laxo,Laxc,tico,ticc
 
-def concat_cmap(cmaps,offs,cuts,prop): 
+def concatCmap(cmaps,offs,cuts,prop): 
     nps = []
     idx = []
     Nc  = len(cmaps)    
@@ -276,7 +276,7 @@ def plot_etopo(file,m,ax):
     # Colormaps
     Lref = 0.35 ; # Colorbar half length
     minz = z.min() ; maxz = z.max() ;
-    Laxo,Laxc,ticko,tickc= prep_colorbar(minz,maxz,Lref)
+    Laxo,Laxc,ticko,tickc= prepColorbar(minz,maxz,Lref)
     H = float(Laxo+Laxc)/2.0
     oceancmap = plt.cm.Blues_r # Ocean depth colormap
     if Laxc > 0.:              # Elevation colormap
@@ -284,7 +284,7 @@ def plot_etopo(file,m,ax):
         offs   = [0  ,  0]
         cuts   = [0  ,  5]
         prop   = [0.5,0.5]
-        elevcmap = concat_cmap(cmaps,offs,cuts,prop)
+        elevcmap = concatCmap(cmaps,offs,cuts,prop)
     else:
         elevcmap = plt.cm.YlGn    
     # Ocean contour
@@ -309,7 +309,7 @@ def plot_etopo(file,m,ax):
                        orientation='horizontal')
         plt.axes(ax)
 
-def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,mksmin=1.,
+def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,mksmin=1.,
         mksmax=30.,delta=1.0,resolution = 'h'):
     # Initialize variables
     rms  = []
@@ -326,7 +326,7 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,
     plt.figure(figsize=(9.6125,  8.1))
     ax1 = plt.axes([0.04,0.13,0.8,0.85])
     ax2 = plt.axes([0.85,0.2,0.1,0.6])
-    cm = plt.get_cmap('jet')
+    cm = plt.getcmap('jet')
     for i in range(8):
         Bpos   = interp(i,8,0.,1.)
         Brms=interp(i,8,minrms,maxrms)
@@ -405,7 +405,7 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,
     return;
     
 
-def plot_ts(ifile='grid_search_ts_out',ofile='grid_search_ts.pdf'):
+def plotts(ifile='grid_search_ts_out',ofile='grid_search_ts.pdf'):
     fid= open(ifile,'r')
     L=fid.readlines()
     fid.close()
@@ -500,10 +500,10 @@ if __name__ == "__main__":
             flagxyz = 1
 
     if flagts:
-        plot_ts(ts_ifile,ts_ofile)
+        plotts(ts_ifile,ts_ofile)
     if flagxy:
-        plot_xy(xy_ifile,xy_ofile,basemapflag=basemap)
+        plotxy(xy_ifile,xy_ofile,basemapflag=basemap)
     if flagxyz:
-        #plot_xyz(flag=0)
-        plot_xyz(flag=1)
+        #plotxyz(flag=0)
+        plotxyz(flag=1)
 
