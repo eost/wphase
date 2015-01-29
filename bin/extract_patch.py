@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -- coding: iso-8859-1 --
 
+
 from sys        import stdin, stdout, stderr
 from os.path    import exists, isdir
 from shutil     import rmtree
 from os         import mkdir, unlink, environ, chdir, rename
 from glob       import glob
 from subprocess import call
+
 
 def RM(name):
     if exists(name):
@@ -17,12 +19,14 @@ def RM(name):
     # All done
     return;
 
+
 def mkdir_new(name):
     if exists(name):
         RM(name)
     mkdir(name)
     # All done
     return;
+
 
 def get_sac_header(file, var):
     tmpfile = '_tmp_'
@@ -35,11 +39,11 @@ def get_sac_header(file, var):
     # All done
     return val
     
+
 def ch_sac_header(file, var, value):
     cmd = 'sac<<FIN\nrh %s\nch %s %s\nwh\nq\nFIN\n'%(file,var,value)
     call(cmd, shell=True, stdin=stdin, stdout=stdout, stderr=stderr)
 
-#######################
 
 def main():
     TOL       = 5.   # degrees (cmpaz tolerance)
