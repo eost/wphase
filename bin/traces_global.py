@@ -87,6 +87,7 @@ from subprocess import call
 
 # Import internal modules
 import sacpy
+import utils
 
 # Environment variables
 WPHOME = os.path.expandvars('$WPHASE_HOME')
@@ -99,36 +100,6 @@ SYNTHS = WPHOME+'bin/synth_v6'
 
 
 # Internal functions
-def parse_config(cfg_file):
-    '''
-    Parse the configuration file
-    '''
-    config = {}
-    try:
-        config_lines = open(cfg_file, 'r').readlines()
-        for line in config_lines:
-            if line.find('#')==0:
-                continue
-            if line.rstrip():
-                key,value = line.strip().split(':')
-                config[key.strip()]=value.strip()
-    except:
-        sys.stderr.write('Error: format  %s\n'%cfg_file)
-        sys.exit(1)
-    # All done
-    return config
-
-
-def rm(fd):
-        if os.path.islink(fd) or os.path.isfile(fd):
-                os.remove(fd)
-                return 0
-        elif os.path.isdir(fd):
-                sh.rmtree(fd)
-                return 0
-        # All done
-        return 1
-
     
 def change_label_size(ax,size=10.0):
     for l in ax.get_xticklabels() + ax.get_yticklabels():
@@ -213,7 +184,7 @@ if __name__ == '__main__':
 
     # Title
     flagreg = False
-    conf  = parse_config(imaster)
+    conf  = utils.parseConfig(imaster)
     title = '_'.join(conf['EVNAME'].split())
     title += ',  filter = (%s, %s, %s, %s)'%(conf['filt_cf1'],conf['filt_cf2'],conf['filt_order'],conf['filt_pass']) 
     try:
@@ -247,14 +218,14 @@ if __name__ == '__main__':
             usage(sys.argv[0])
             sys.exit(1)
     if os.path.exists(syndir) and syndir != '.' and syndir != './':
-        rm(syndir)
+        utils.rm(syndir)
     if syndir != '.' and syndir != './':
         os.mkdir(syndir)
     if not os.path.exists(LOGDIR):
         os.mkdir(LOGDIR)
     for l in os.listdir('.'):
         if l[:4]=='page' and l[-4:]=='.pdf':
-            rm(l)
+            utils.rm(l)
     # Compute synthetics
     cmd    = SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir
     print(cmd)

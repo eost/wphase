@@ -55,8 +55,12 @@ DDEP      = 50.  # Delta depth ( Z_SEARCH within Z_INITIAL +/- DDEP )
 MINDEP    = 11.5 
 XYZ_OFILE = 'grid_search_xyz_out'
 
-import os,re,shutil,sys,time,getopt
+# Import external modules
+import os,shutil,sys,time,getopt
+
+# Import internal modules
 from EQ import *
+import utils
 
 WPHOME = os.path.expandvars('$WPHASE_HOME')
 print('WPHASE_HOME is %s'%(WPHOME))
@@ -76,47 +80,7 @@ BIN = WPHOME+'bin/'
 
 WPINV_XY     = BIN+'wpinversion_gs -imas i_master -ifil o_wpinversion'
 
-  
-def grep(chaine, file):
-    out = [];
-    rms = re.compile(chaine)
-    ps  = open(file, 'r')
-    for line in ps:
-        if rms.match(line):
-            out.append(line)
-    ps.close()
-    # All done
-    return(out)
 
-def grep2(list, file):
-    out   = [];
-    ps    = open(file, 'r')
-    lines = ps.readlines()
-    ps.close()
-    for chaine in list:
-        rexp = re.compile(chaine)
-        for line in lines:
-            if rexp.match(line):
-                out.append(line)
-                break
-    # All done                        
-    return(out)
-
-def parse_config(cfg_file):
-    config = {}
-    try:
-        config_lines = open(cfg_file, 'r').readlines()
-        for line in config_lines:
-            if line.find('#')==0:
-                continue
-            if line.rstrip():
-                key,value = line.strip().split(':')
-                config[key.strip()]=value.strip()
-    except:
-        sys.stderr.write('Error: format  %s\n'%cfg_file)
-        sys.exit(1)
-    # All done                
-    return config
 
 def addrefsol(cmtref,cmtfile):
     cmtf = open(cmtref,'r')
@@ -133,21 +97,13 @@ def addrefsol(cmtref,cmtfile):
     # All done
     return;
 
-def rm(fd):
-    if os.path.islink(fd) or os.path.isfile(fd):
-        os.remove(fd)
-        return 0
-    elif os.path.isdir(fd):
-        shutil.rmtree(fd)
-        return 0
-    # All done
-    return 1;
 
 def addslash(direc):
     if len(direc) > 0:
         if direc[-1] != '/':
             direc += '/'
     return direc
+
 
 def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,flagts,flagxy,sdrM0={},dz=0.,
         minz=3.5,ts_ofile='grid_search_ts_out',xy_ofile='grid_search_xy_out',stdoutput='stdout',
@@ -215,15 +171,17 @@ def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,f
     os.system(EXE+optpar)
     # Update eq
     eq.rcmtfile(wcmtfile)
-    out = grep(r'^Wmag:',logfile)
+    out = utils.grep(r'^Wmag:',logfile)
     eq.mag = float(out[-1].split()[1]) ;
     # All done
     return;
+
 
 def usage():
     print('usage: wp_grid_search [-s] [-t] [-p] [-i] ... [--help]')
     # All done
     return;
+
 
 def disphelp():
     print('Centroid time-shift and centroid position grid search\n')
@@ -246,6 +204,7 @@ def disphelp():
     print('\nReport bugs to: <zacharie.duputel@eost.u-strasbg.fr>')
     # All done
     return;
+
 
 ##### MAIN #####    
 if __name__ == "__main__":
@@ -310,7 +269,7 @@ if __name__ == "__main__":
             WPINV_XY += ' -old'
 
     # Read i_master
-    iconfig = parse_config(i_master)
+    iconfig = utils.parseConfig(i_master)
     cmtref  = iconfig['CMTFILE']
     evname  = iconfig['EVNAME'].replace(' ','_').replace(',','')
     # Set comments
@@ -347,8 +306,8 @@ if __name__ == "__main__":
                 addrefsol(cmtref,'_tmp_CMTSOLUTION.xyz')
             grid_search(eq,'_tmp_CMTSOLUTION.xyz',TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,
                     0,0,1,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments)
-            rm('_tmp_CMTSOLUTION.xyz')
+            utils.rm('_tmp_CMTSOLUTION.xyz')
     if os.path.exists('_tmp_ts_table'):        
-        rm('_tmp_ts_table')
+        utils.rm('_tmp_ts_table')
     if os.path.exists('_tmp_xy_table'):        
-        rm('_tmp_xy_table')
+        utils.rm('_tmp_xy_table')
