@@ -77,13 +77,16 @@ class parseConfigError(Exception):
 
 def parseConfig(cfg_file):
     '''
-    Parse my config files
+    Parse my config files and returns a config dictionary
     Args:
          cfg_file: configuration filename
     '''
 
-    config = {}
+    # Check if cfg_file exists
     assert exists(cfg_file), 'Cannot read %s: No such file'%(cfg_file)
+
+    # Fill the config dictionary
+    config = {}
     try:
         config_lines = open(cfg_file, 'r').readlines()
         for line in config_lines:
@@ -98,7 +101,7 @@ def parseConfig(cfg_file):
                 else:
                     config[key]=value
     except:
-        raise parseConfigError('Error: format  %s\n'%cfg_file)
+        raise parseConfigError('Incorrect format in %s!\n'%cfg_file)
 
     # All done
     return config

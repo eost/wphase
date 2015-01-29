@@ -440,7 +440,7 @@ def usage(cmd):
 
 
 def disphelp(cmd):
-    print('Display grid search results\n')
+    print('Displays grid search results\n')
     usage(cmd)
     print('\nAll parameters are optional:')
     print('   -t, --onlyts         centroid time-shift grid search (ts) only')
@@ -460,10 +460,8 @@ if __name__ == "__main__":
     try:
         opts, args = go.gnu_getopt(sys.argv[1:],'tphzb',["onlyts","onlyxy","basemap","its=","ixy=","ots=","oxy=","help"])
     except go.GetoptError as err:
-        print('*** ERROR ***')
-        print(str(err))
         usage(sys.argv[0])
-        sys.exit(1)
+        raise
     flagts  = 1
     flagxy  = 1
     flagxyz = 0
@@ -478,16 +476,14 @@ if __name__ == "__main__":
             sys.exit(0)
         if o == '-t' or o == '--onlyts':
             if flagts == 0:
-                print('** ERROR (options -t and -p cannot be used simultaneously) **')
                 usage(sys.argv[0])
-                sys.exit(1)
+                raise go.GetoptError('Options -t and -p cannot be used simultaneously')
             flagxy = 0
             flagts = 1
         if o == '-p' or o == '--onlyxy':
             if flagxy == 0:
-                print('** ERROR (options -t and -p cannot be used simultaneously) **')
                 usage(sys.argv[0])
-                sys.exit(1)
+                raise go.GetoptError('Options -t and -p cannot be used simultaneously')                
             flagts = 0
             flagxy = 1
         if o == '--its':

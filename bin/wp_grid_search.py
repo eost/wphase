@@ -88,9 +88,7 @@ def addrefsol(cmtref,cmtfile):
     cmtf.close()
     cmtf = open(cmtfile,'a')
     if len(L) < 13:
-        print('*** ERROR (reading reference solution) ***')
-        print('incomplete cmtfile: %s'%(cmtref))
-        sys.exit(1)
+        raise EOFError('incomplete cmtfile: %s'%(cmtref))
     for l in L[7:]:
         cmtf.write(l)
     cmtf.close()
@@ -214,10 +212,8 @@ if __name__ == "__main__":
                                       "rake=","mom=","noref","xyz","old",
                                       "help"])
     except getopt.GetoptError as err:
-        print('*** ERROR ***')
-        print(str(err))
         usage()
-        sys.exit(1)
+        raise
     
     i_master = 'i_master' 
     fastflag = 1    
@@ -234,16 +230,14 @@ if __name__ == "__main__":
             fastflag = 0
         if o == '-t' or o == '--onlyts':
             if flagts == 0:
-                print('** ERROR (options -t and -p cannot be used simultaneously) **')
                 usage()
-                sys.exit(1)
+                raise getopt.GetoptError('options -t and -p cannot be used simultaneously')
             flagxy = 0
             flagts = 1
         if o == '-p' or o == '--onlyxy':
             if flagxy == 0:
-                print('** ERROR (options -t and -p cannot be used simultaneously) **')
                 usage()
-                sys.exit(1)
+                raise getopt.GetoptError('options -t and -p cannot be used simultaneously')                
             flagts   = 0
             fastflag = 0
             flagxy = 1
@@ -272,6 +266,7 @@ if __name__ == "__main__":
     iconfig = utils.parseConfig(i_master)
     cmtref  = iconfig['CMTFILE']
     evname  = iconfig['EVNAME'].replace(' ','_').replace(',','')
+
     # Set comments
     Median    = '-med '
     if 'P2P_SCREENING' in iconfig:
@@ -281,6 +276,7 @@ if __name__ == "__main__":
     if 'RMS_SCREENING' in iconfig:
         ths = iconfig['RMS_SCREENING']
     comments = [VERSION,'GF_PATH: '+GF_PATH,'Screening: '+Median+ths]
+
     # Read CMTFILE
     eq   = EarthQuake()
     eq.rcmtfile(cmtref)
@@ -292,6 +288,7 @@ if __name__ == "__main__":
         print('*** WARNING : no reference solution in %s'%(cmtref))
         flagref = 0
 
+    # Grid search
     i_cmtfile = cmtref
     if (flagts or flagxy) and not flagxyz: # LAT/LON Grid-search
         grid_search(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,fastflag,

@@ -70,10 +70,8 @@ if __name__=='__main__':
     # Input parameters
     try:
         opts, args = go.gnu_getopt(sys.argv[1:],'i:nh',["ifort15=","noref","help"])
-    except:
-        sys.stderr.write('*** ERROR ***\n')
-        usage(sys.argv[0])
-        sys.exit(1)
+    except getopt.GetoptError as err:
+        raise
     o_wpfile = 'o_wpinversion'
     predfile = ''
     isref    = 1
@@ -91,8 +89,7 @@ if __name__=='__main__':
     if not os.path.exists(o_wpfile):
         sys.stderr.write('Error: file %s not available\n'%(o_wpfile))
     if len(predfile) and not os.path.exists(predfile):
-        sys.stderr.write('Error: No fort.15 file named %s\n'%predfile)
-        sys.exit(1)
+        raise IOError('No fort.15 file named %s\n'%(predfile))
     if not len(predfile):
         predfile = 'xy_fort.15'
         if not os.path.exists(predfile):
@@ -100,8 +97,7 @@ if __name__=='__main__':
             if not os.path.exists(predfile):
                 predfile = 'fort.15'
                 if not os.path.exists(predfile):
-                    sys.stderr.write('Error: No fort.15 file found\n')
-                    sys.exit(1)        
+                    raise IOError('No fort.15 file found\n')
     sys.stdout.write('Input fort.15 file: %s\n'%predfile)
     count = 0
     sys.stdout.write('Input channels are: ')
@@ -112,12 +108,10 @@ if __name__=='__main__':
             count += 1
         sys.stdout.write('%5s'%chan)
     if not count:
-        sys.stdout.write('\n')
-        sys.stderr.write('\nError: No fort.15_ file for')
+        ErrMsg = 'Error: No fort.15_ file for'
         for chan in CHAN:
-            sys.stderr.write('%5s'%chan)
-        sys.stderr.write('\n')
-        sys.exit(1)
+            ErrMsg += '%5s'%(chan)
+        raise IOError(ErrMsg)
     sys.stdout.write('\nRead %s ...\n%s pages:\n'%(o_wpfile,count))
 
     # Main loop
@@ -164,8 +158,7 @@ if __name__=='__main__':
             Wsyn.append(float(items[1])*1000.0)
             if isref:
                 if len(items)<3:
-                    sys.stderr.write('ERROR: error reading %s\n'%(ifile))
-                    sys.exit(1)
+                    raise IOError('ERROR: error reading %s\n'%(ifile))
                 Wref.append(float(items[2])*1000.0)
         t = np.arange(0,len(Wdat),dtype='float')
         # Display

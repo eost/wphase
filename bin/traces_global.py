@@ -85,9 +85,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from subprocess import call
 
+
 # Import internal modules
 import sacpy
 import utils
+
 
 # Environment variables
 WPHOME = os.path.expandvars('$WPHASE_HOME')
@@ -154,15 +156,9 @@ def show_polarmap(ax,az,dist,coords):
     return;
 
 
-def usage(cmd):
-    print('usage: %s [option] (for help see %s -h)'%(cmd,cmd))
-    # All done
-    return;
-
-
 def disphelp(cmd,solfile,syndir):
-    print('Display W phase traces\n')
-    usage(cmd)
+    print('Displays W phase traces\n')
+    print('usage: %s [option] (for help see %s -h)'%(cmd,cmd))
     print('\nAll parameters are optional:')
     print('   -i, --icmtf          (w)cmt file name (default: %s)'%(solfile))
     print('   -d, --osyndir        output synthetic directory (default: %s)'%(syndir))
@@ -170,6 +166,13 @@ def disphelp(cmd,solfile,syndir):
     print('\nReport bugs to: <zacharie.duputel@unistra.fr>')
     # All done
     return;
+
+
+class InvalidOption(Exception):
+    """
+    Raised if invalid option
+    """
+    pass
 
 
 if __name__ == '__main__':
@@ -187,12 +190,14 @@ if __name__ == '__main__':
     conf  = utils.parseConfig(imaster)
     title = '_'.join(conf['EVNAME'].split())
     title += ',  filter = (%s, %s, %s, %s)'%(conf['filt_cf1'],conf['filt_cf2'],conf['filt_order'],conf['filt_pass']) 
+
+    # Parse options
     try:
         opts, args = go.gnu_getopt(sys.argv[1:],'i:d:rh',["icmtf=","osydir=","regional","help"])
     except go.GetoptError as err:
-        sys.stderr.write('*** ERROR ***\n')
-        usage(sys.argv[0])
-        sys.exit(1)    
+        sys.stderr.write('usage: %s [option] (for help see %s -h)\n'%(sys.argv[0],sys.argv[0]))            
+        raise
+
     for o, a in opts:
         if o == '-h' or o == '--help':
             disphelp(sys.argv[0],solfile,syndir)
@@ -202,10 +207,8 @@ if __name__ == '__main__':
             flagreg = True
         if o == '-i' or o=='--icmtf':
             solfile = a
-            if not os.path.exists(solfile):
-                print('ERROR: no wcmtfile named %s'%(solfile))
-                usage(sys.argv[0])
-                sys.exit(1)
+            if not os.path.exists(solfile):                
+                raise IOError('No wcmtfile named %s'%(solfile))
         if o == '-d' or o == '--osyndir':
             syndir = a
     if not solfile:
@@ -214,9 +217,9 @@ if __name__ == '__main__':
                 solfile = f
                 break
         if not solfile:
-            print('ERROR: no available wcmtfile')
-            usage(sys.argv[0])
-            sys.exit(1)
+            raise IOError('No wcmtfile available, can be specified with --icmtf')
+
+    # Cleanup run dir
     if os.path.exists(syndir) and syndir != '.' and syndir != './':
         utils.rm(syndir)
     if syndir != '.' and syndir != './':
@@ -226,15 +229,17 @@ if __name__ == '__main__':
     for l in os.listdir('.'):
         if l[:4]=='page' and l[-4:]=='.pdf':
             utils.rm(l)
+            
     # Compute synthetics
     cmd    = SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir
     print(cmd)
     #status = call(cmd, shell=True, stdin=sys.stdin, stdout=sys.stdout);
     status = os.system(SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir+' > %s_tmp_synths'%(LOGDIR))
-    if status:
+    if status:        
         print('Error while running '+SYNTHS)
         sys.exit(1)
-    # Sac Objects
+        
+    # Create Sac Objects
     sacdata = sacpy.sac()
     sacsynt = sacpy.sac()
     coords = []
@@ -244,7 +249,8 @@ if __name__ == '__main__':
         sacdata.rsac(sacf,datflag=0)
         coords.append([sacdata.stla,sacdata.stlo,sacdata.az,sacdata.dist])
     coords = np.array(coords)
-    # Display    
+    
+    # Main loop
     print('Input (W)CMTSOLUTION file is: %s'%(solfile))
     print('Output synthetic directory is: %s'%(syndir))
     perpage = nl*nc
