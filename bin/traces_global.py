@@ -103,14 +103,8 @@ SYNTHS = WPHOME+'bin/synth_v6'
 
 # Internal functions
     
-def change_label_size(ax,size=10.0):
-    for l in ax.get_xticklabels() + ax.get_yticklabels():
-        l.set_fontsize(size)
-    # All done
-    return;
 
-
-def show_basemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):    
+def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):    
     if not m:
         from mpl_toolkits.basemap import Basemap
         if flagreg:
@@ -142,7 +136,7 @@ def show_basemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):
     return m
 
 
-def show_polarmap(ax,az,dist,coords):
+def showPolarmap(ax,az,dist,coords):
     distlabel  = 6371.0*np.arange(30.0,120.0,30.0)*np.pi/180.0
     pos  = ax.get_position().get_points()
     W  = pos[1][0]-pos[0][0] ; H  = pos[1][1]-pos[0][1] ;        
@@ -328,10 +322,10 @@ if __name__ == '__main__':
             plt.xlabel('time, sec',fontsize=10) 
         plt.grid()
         try:
-            m = show_basemap(ax,sacdata.evla,sacdata.evlo,sacdata.stla,sacdata.stlo,coords,flagreg,m)
+            m = showBasemap(ax,sacdata.evla,sacdata.evlo,sacdata.stla,sacdata.stlo,coords,flagreg,m)
             pass
         except:
-            show_polarmap(ax,sacdata.az,sacdata.dist,coords)
+            showPolarmap(ax,sacdata.az,sacdata.dist,coords)
             print('No basemap module')
         count += 1
         nchan += 1
