@@ -74,7 +74,7 @@ print('GF_PATH is %s'%(GF_PATH))
 #entfile = WPHOME+'.svn/entries'
 #if os.path.exists(entfile):
 #    VERSION += open(entfile).readlines()[3].strip()
-VERSION = 'Version: r249'
+VERSION = 'Version: r250'
 
 BIN = WPHOME+'bin/'
 
@@ -103,7 +103,7 @@ def addslash(direc):
     return direc
 
 
-def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,flagts,flagxy,sdrM0={},dz=0.,
+def gridsearch(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,flagts,flagxy,sdrM0={},dz=0.,
         minz=3.5,ts_ofile='grid_search_ts_out',xy_ofile='grid_search_xy_out',stdoutput='stdout',
         logfile='LOG/gs_o_wpinversion.log', comments = []):
     if stdoutput == 'stdout':
@@ -291,17 +291,17 @@ if __name__ == "__main__":
     # Grid search
     i_cmtfile = cmtref
     if (flagts or flagxy) and not flagxyz: # LAT/LON Grid-search
-        grid_search(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,fastflag,
+        gridsearch(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,fastflag,
                     flagts,flagxy,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments)
     if flagxyz:                              # 3D Grid-search
-        grid_search(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XYZ_NIT,XYZ_DX,XYZ_NX,XYZ_NOPT,fastflag,
+        gridsearch(eq,i_cmtfile,TS_NIT,TS_DT,TSBOUNDS,XYZ_NIT,XYZ_DX,XYZ_NX,XYZ_NOPT,fastflag,
                     flagts,flagxyz,sdrM0,dz=DDEP,minz=MINDEP,ts_ofile=TS_OFILE,xy_ofile=XYZ_OFILE,
                     comments=comments)
         if flagxy:
             eq.wcmtfile('_tmp_CMTSOLUTION.xyz')
             if flagref:
                 addrefsol(cmtref,'_tmp_CMTSOLUTION.xyz')
-            grid_search(eq,'_tmp_CMTSOLUTION.xyz',TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,
+            gridsearch(eq,'_tmp_CMTSOLUTION.xyz',TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,
                     0,0,1,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments)
             utils.rm('_tmp_CMTSOLUTION.xyz')
     if os.path.exists('_tmp_ts_table'):        
