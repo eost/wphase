@@ -33,13 +33,16 @@
 
 # GRID SEARCH PLOTS
 
+# Customizing matplotlib
 import matplotlib
 matplotlib.use('AGG')
 
+# External modules
 import sys
 import getopt as go
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 def wraplons(lons):
     for i in range(len(lons)):
@@ -114,12 +117,12 @@ def r_xy_gfile(ifile):
     # All done
     return [latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms]
 
-def plotxyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,mksmin=1.,mksmax=300.):
+def plotxyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=False,mksmin=1.,mksmax=300.):
     if not flag:
         try:            
             from mpl_toolkits.mplot3d import Axes3D
         except:
-            flag = 1
+            flag = True
     latopt,lonopt,depopt,rmsopt,latpde,lonpde,deppde,rmspde,lats,lons,deps,rmss,depths,rmsdep = rxyzgfile(ifilexyz) 
     fig = plt.figure(figsize=(7.6875, 6.125))
     if flag:
@@ -309,13 +312,13 @@ def plot_etopo(file,m,ax):
                        orientation='horizontal')
         plt.axes(ax)
 
-def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,mksmin=1.,
+def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=False,mksmin=1.,
         mksmax=30.,delta=1.0,resolution = 'h'):
     # Initialize variables
     rms  = []
     lon  = []
     lat  = []
-    flag = 0
+    flag = False
     # Read file
     latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms = r_xy_gfile(ifile)    
     # RMS Scale
@@ -326,7 +329,7 @@ def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,m
     plt.figure(figsize=(9.6125,  8.1))
     ax1 = plt.axes([0.04,0.13,0.8,0.85])
     ax2 = plt.axes([0.85,0.2,0.1,0.6])
-    cm = plt.getcmap('jet')
+    cm = plt.get_cmap('jet')
     for i in range(8):
         Bpos   = interp(i,8,0.,1.)
         Brms=interp(i,8,minrms,maxrms)
@@ -347,7 +350,7 @@ def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,m
             print('WARNING: No module named basemap')
             print('   The mpl_toolkits.basemap module is necessary')
             print('   if you want to plot bathymetry and coastlines')
-            basemapflag = 0    
+            basemapflag = False
     if basemapflag:
         from os.path import expandvars,exists        
         wraplons(lon)
@@ -455,17 +458,17 @@ def disphelp(cmd):
     # All done
     return;
         
-##### MAIN #####    
-if __name__ == "__main__":
+
+def main(argv):
     try:
-        opts, args = go.gnu_getopt(sys.argv[1:],'tphzb',["onlyts","onlyxy","basemap","its=","ixy=","ots=","oxy=","help"])
+        opts, args = go.gnu_getopt(argv[1:],'tphzb',["onlyts","onlyxy","basemap","its=","ixy=","ots=","oxy=","help"])
     except go.GetoptError as err:
         usage(sys.argv[0])
         raise
-    flagts  = 1
-    flagxy  = 1
-    flagxyz = 0
-    basemap = 0
+    flagts  = True
+    flagxy  = True
+    flagxyz = False
+    basemap = False
     ts_ifile='grid_search_ts_out'
     ts_ofile='grid_search_ts.pdf'
     xy_ifile='grid_search_xy_out'
@@ -475,17 +478,17 @@ if __name__ == "__main__":
             disphelp(sys.argv[0])
             sys.exit(0)
         if o == '-t' or o == '--onlyts':
-            if flagts == 0:
+            if not flagts:
                 usage(sys.argv[0])
                 raise go.GetoptError('Options -t and -p cannot be used simultaneously')
-            flagxy = 0
-            flagts = 1
+            flagxy = False
+            flagts = True
         if o == '-p' or o == '--onlyxy':
-            if flagxy == 0:
+            if not flagxy:
                 usage(sys.argv[0])
                 raise go.GetoptError('Options -t and -p cannot be used simultaneously')                
-            flagts = 0
-            flagxy = 1
+            flagts = False
+            flagxy = True
         if o == '--its':
             ts_ifile = a
         if o == '--ixy':
@@ -497,13 +500,16 @@ if __name__ == "__main__":
         if o == '-b' or o=='--basemap':
             basemap = 1
         if o == '-z':
-            flagxyz = 1
+            flagxyz = True
 
     if flagts:
         plotts(ts_ifile,ts_ofile)
     if flagxy:
         plotxy(xy_ifile,xy_ofile,basemapflag=basemap)
     if flagxyz:
-        #plotxyz(flag=0)
-        plotxyz(flag=1)
+        #plotxyz(flag=False)
+        plotxyz(flag=True)
 
+
+if __name__=='__main__':
+    main(sys.argv)

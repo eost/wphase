@@ -31,29 +31,32 @@
 #
 ############################################################################
 
+# CONCATENATED W PHASE TRACES
+from Arguments import *
 
-FIGSIZE   = [11.69,8.27]
 
-# Import external modules
+#Customizing matplotlib
 import matplotlib
 matplotlib.use('PDF')
+
+
+# Import external modules
 import os,sys,re
 import getopt as go
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # Import internal modules
 import sacpy
 
-# Environment variables
-WPHOME = os.path.expandvars('$WPHASE_HOME')
-print('WPHASE_HOME is %s'%(WPHOME))
 
 # Internal functions
 def usage(cmd):
     print('usage: %s [chan1 chan2 (default: LHZ LHN LHE LH1 LH2)] [option] (for help see %s -h)'%(cmd,cmd))
     # All done
     return;
+
 
 def disphelp(cmd):
     print('Make CWP traces\n')
@@ -66,13 +69,14 @@ def disphelp(cmd):
     # All done
     return;
 
-if __name__=='__main__':
+
+def main(argv):
     # Input parameters
     try:
-        opts, args = go.gnu_getopt(sys.argv[1:],'i:nh',["ifort15=","noref","help"])
+        opts, args = go.gnu_getopt(argv[1:],'i:nh',["ifort15=","noref","help"])
     except getopt.GetoptError as err:
         raise
-    o_wpfile = 'o_wpinversion'
+    o_wpfile = O_WPINVERSION
     predfile = ''
     isref    = 1
     CHAN     = ['LHZ', 'LHN', 'LHE', 'LH1', 'LH2']
@@ -162,7 +166,7 @@ if __name__=='__main__':
                 Wref.append(float(items[2])*1000.0)
         t = np.arange(0,len(Wdat),dtype='float')
         # Display
-        fig=plt.figure(figsize=FIGSIZE) 
+        fig=plt.figure(figsize=CWP_FIGSIZE) 
         fig.subplots_adjust(left=0.08,bottom=0.12,right=0.96,top=0.88,wspace=0.2,hspace=0.2)
         plt.plot(t,Wdat,'k')
         plt.plot(t,Wsyn,'r')
@@ -178,7 +182,7 @@ if __name__=='__main__':
         ppW.savefig(papertype='a4',orientation='landscape')
         plt.close()
         if isref:
-            fig = plt.figure(figsize=FIGSIZE) 
+            fig = plt.figure(figsize=CWP_FIGSIZE) 
             fig.subplots_adjust(left=0.08,bottom=0.12,right=0.96,top=0.88,wspace=0.2,hspace=0.2)
             plt.plot(t,Wdat,'k')
             plt.plot(t,Wref,'r')
@@ -198,3 +202,7 @@ if __name__=='__main__':
     if isref:
         ppR.close()
         
+
+if __name__=='__main__':
+    main(sys.argv)
+            

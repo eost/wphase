@@ -32,6 +32,7 @@
 ############################################################################
 
 # GRID SEARCH FOR WPHASE INVERSION
+from Arguments import *
 
 
 # Import external modules
@@ -39,7 +40,6 @@ import os,shutil,sys,time,getopt
 
 
 # Import internal modules
-from wpArguments import *
 from EQ import *
 import utils
 
@@ -86,15 +86,17 @@ def gridsearch(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,fl
         * logfile: log filename
         * comments: comments to be added to the output ps file
     '''
+
+    # Standard output
     if stdoutput == 'stdout':
         fid = sys.stdout
         flag = False
     else:
         fid = open(stdoutput,'a+')
         flag = True
-    EXE = WPINV_XY        
     fid.write('CENTROID GRID SEARCH\n')
-    # Setting parameters ########
+
+    # Setting parameters
     cmttmp = cmtref
     optpar = ' -log %s -osyndir gs_SYNTH -icmtf %s '%(logfile,cmtref)
     for o,a in sdrM0.items():
@@ -104,8 +106,10 @@ def gridsearch(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,fl
             optpar += ' %s '%(o)
     if not os.access('gs_SYNTH',os.F_OK):
         os.mkdir('gs_SYNTH')    
-    # time-shift
-    if flagts:
+
+    # Prepare command line
+    EXE = WPINV_XY        
+    if flagts: # time-shift
         if len(tsb) == 2:
             ts1 = tsb[0]
             ts2 = tsb[1]
@@ -144,13 +148,18 @@ def gridsearch(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,fl
         optpar += ' > %s '%stdoutput
     for c in comments:
         optpar += ' -comments "'+c+'"'
-    print('Command_line:'+EXE+optpar)
-    
+
+    # Run grid-search
+    fid.write('Command_line:'+EXE+optpar+'\n')
+    fid.flush()
     os.system(EXE+optpar)
-    # Update eq
+    fid.flush()
+
+    # Update eq after grid-search
     eq.rcmtfile(wcmtfile)
     out = utils.grep(r'^Wmag:',logfile)
     eq.mag = float(out[-1].split()[1]) ;
+
     # All done
     return;
 
@@ -184,7 +193,7 @@ def disphelp():
     return;
 
 
-def main(argv)
+def main(argv):
     # Extract command line options
     try:
         opts, args = getopt.gnu_getopt(argv[1:],'stpSdi:nhz',["hdsafe","onlyts","onlyxy","npar",

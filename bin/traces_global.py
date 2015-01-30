@@ -32,13 +32,15 @@
 ############################################################################
 
 # W PHASE TRACES
+from Arguments import *
 
-
-
-# Import external modules
+# Customizing matplotlib
 import matplotlib
 matplotlib.use('PDF')
 matplotlib.rcParams.update(PLOTPARAMS)
+
+
+# Import external modules
 import os,sys,re
 import getopt as go
 import shutil as sh
@@ -48,7 +50,6 @@ from subprocess import call
 
 
 # Import internal modules
-from wpArguments import *
 import sacpy
 import utils
 
@@ -56,7 +57,6 @@ import utils
 
 
 # Internal functions
-    
 
 def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):    
     if not m:
@@ -110,6 +110,7 @@ def disphelp(cmd,solfile,syndir):
     print('\nAll parameters are optional:')
     print('   -i, --icmtf          (w)cmt file name (default: %s)'%(solfile))
     print('   -d, --osyndir        output synthetic directory (default: %s)'%(syndir))
+    print('   -r, --regional       plot traces for a regional network')
     print('\n   -h, --help         display this help and exit')
     print('\nReport bugs to: <zacharie.duputel@unistra.fr>')
     # All done
@@ -123,7 +124,7 @@ class InvalidOption(Exception):
     pass
 
 
-if __name__ == '__main__':
+def main(argv):
     # Input parameters
     imaster = IMASTER
     length  = LENGTH_GLOBAL
@@ -141,7 +142,7 @@ if __name__ == '__main__':
 
     # Parse options
     try:
-        opts, args = go.gnu_getopt(sys.argv[1:],'i:d:rh',["icmtf=","osydir=","regional","help"])
+        opts, args = go.gnu_getopt(argv[1:],'i:d:rh',["icmtf=","osydir=","regional","help"])
     except go.GetoptError as err:
         sys.stderr.write('usage: %s [option] (for help see %s -h)\n'%(sys.argv[0],sys.argv[0]))            
         raise
@@ -182,7 +183,7 @@ if __name__ == '__main__':
     cmd    = SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir
     print(cmd)
     #status = call(cmd, shell=True, stdin=sys.stdin, stdout=sys.stdout);
-    status = os.system(SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir+' > '+join(LOGDIR,'_tmp_synths'))
+    status = os.system(SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir+' > '+os.path.join(LOGDIR,'_tmp_synths'))
     if status:        
         print('Error while running '+SYNTHS)
         sys.exit(1)
@@ -290,3 +291,7 @@ if __name__ == '__main__':
     pp.savefig(orientation='landscape')
     plt.close()
     pp.close()
+
+
+if __name__=='__main__':
+    main(sys.argv)
