@@ -33,13 +33,16 @@
 
 # GRID SEARCH PLOTS
 
+# Customizing matplotlib
 import matplotlib
 matplotlib.use('AGG')
 
+# External modules
 import sys
 import getopt as go
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 def wraplons(lons):
     for i in range(len(lons)):
@@ -56,7 +59,7 @@ def interp (j, n, a, b):
     # All done
     return v
 
-def find_cdep(depth,depths):
+def findcdep(depth,depths):
     N = len(depths)
     for i,dep in zip(range(N),depths):
         if int(depth*100) == int(dep*100):
@@ -64,7 +67,7 @@ def find_cdep(depth,depths):
     # All done
     return -1
 
-def r_xyz_gfile(ifile):
+def rxyzgfile(ifile):
     fid= open(ifile,'r')
     L=fid.readlines()
     fid.close()
@@ -76,7 +79,7 @@ def r_xyz_gfile(ifile):
         items = l.strip().split()
         dep = float(items[6])
         err = float(items[7])
-        i   = find_cdep(dep,depths)
+        i   = findcdep(dep,depths)
         if i>=0:
             if err < rmsdepths[i]:
                 rmsdepths[i] = err
@@ -114,13 +117,13 @@ def r_xy_gfile(ifile):
     # All done
     return [latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms]
 
-def plot_xyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,mksmin=1.,mksmax=300.):
+def plotxyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=False,mksmin=1.,mksmax=300.):
     if not flag:
         try:            
             from mpl_toolkits.mplot3d import Axes3D
         except:
-            flag = 1
-    latopt,lonopt,depopt,rmsopt,latpde,lonpde,deppde,rmspde,lats,lons,deps,rmss,depths,rmsdep = r_xyz_gfile(ifilexyz) 
+            flag = True
+    latopt,lonopt,depopt,rmsopt,latpde,lonpde,deppde,rmspde,lats,lons,deps,rmss,depths,rmsdep = rxyzgfile(ifilexyz) 
     fig = plt.figure(figsize=(7.6875, 6.125))
     if flag:
         ofile='grid_search_z.pdf'
@@ -188,7 +191,7 @@ def plot_xyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=0,
     # All done
     return;
 
-def prep_colorbar(minz,maxz,Lref):
+def prepColorbar(minz,maxz,Lref):
     if -minz>=maxz:
         Laxo = Lref
         Laxc = -Lref/minz * maxz
@@ -220,7 +223,7 @@ def prep_colorbar(minz,maxz,Lref):
     # All done
     return Laxo,Laxc,tico,ticc
 
-def concat_cmap(cmaps,offs,cuts,prop): 
+def concatCmap(cmaps,offs,cuts,prop): 
     nps = []
     idx = []
     Nc  = len(cmaps)    
@@ -276,7 +279,7 @@ def plot_etopo(file,m,ax):
     # Colormaps
     Lref = 0.35 ; # Colorbar half length
     minz = z.min() ; maxz = z.max() ;
-    Laxo,Laxc,ticko,tickc= prep_colorbar(minz,maxz,Lref)
+    Laxo,Laxc,ticko,tickc= prepColorbar(minz,maxz,Lref)
     H = float(Laxo+Laxc)/2.0
     oceancmap = plt.cm.Blues_r # Ocean depth colormap
     if Laxc > 0.:              # Elevation colormap
@@ -284,7 +287,7 @@ def plot_etopo(file,m,ax):
         offs   = [0  ,  0]
         cuts   = [0  ,  5]
         prop   = [0.5,0.5]
-        elevcmap = concat_cmap(cmaps,offs,cuts,prop)
+        elevcmap = concatCmap(cmaps,offs,cuts,prop)
     else:
         elevcmap = plt.cm.YlGn    
     # Ocean contour
@@ -309,13 +312,13 @@ def plot_etopo(file,m,ax):
                        orientation='horizontal')
         plt.axes(ax)
 
-def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,mksmin=1.,
+def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=False,mksmin=1.,
         mksmax=30.,delta=1.0,resolution = 'h'):
     # Initialize variables
     rms  = []
     lon  = []
     lat  = []
-    flag = 0
+    flag = False
     # Read file
     latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms = r_xy_gfile(ifile)    
     # RMS Scale
@@ -347,7 +350,7 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,
             print('WARNING: No module named basemap')
             print('   The mpl_toolkits.basemap module is necessary')
             print('   if you want to plot bathymetry and coastlines')
-            basemapflag = 0    
+            basemapflag = False
     if basemapflag:
         from os.path import expandvars,exists        
         wraplons(lon)
@@ -405,7 +408,7 @@ def plot_xy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=0,
     return;
     
 
-def plot_ts(ifile='grid_search_ts_out',ofile='grid_search_ts.pdf'):
+def plotts(ifile='grid_search_ts_out',ofile='grid_search_ts.pdf'):
     fid= open(ifile,'r')
     L=fid.readlines()
     fid.close()
@@ -440,7 +443,7 @@ def usage(cmd):
 
 
 def disphelp(cmd):
-    print('Display grid search results\n')
+    print('Displays grid search results\n')
     usage(cmd)
     print('\nAll parameters are optional:')
     print('   -t, --onlyts         centroid time-shift grid search (ts) only')
@@ -455,19 +458,17 @@ def disphelp(cmd):
     # All done
     return;
         
-##### MAIN #####    
-if __name__ == "__main__":
+
+def main(argv):
     try:
-        opts, args = go.gnu_getopt(sys.argv[1:],'tphzb',["onlyts","onlyxy","basemap","its=","ixy=","ots=","oxy=","help"])
+        opts, args = go.gnu_getopt(argv[1:],'tphzb',["onlyts","onlyxy","basemap","its=","ixy=","ots=","oxy=","help"])
     except go.GetoptError as err:
-        print('*** ERROR ***')
-        print(str(err))
         usage(sys.argv[0])
-        sys.exit(1)
-    flagts  = 1
-    flagxy  = 1
-    flagxyz = 0
-    basemap = 0
+        raise
+    flagts  = True
+    flagxy  = True
+    flagxyz = False
+    basemap = False
     ts_ifile='grid_search_ts_out'
     ts_ofile='grid_search_ts.pdf'
     xy_ifile='grid_search_xy_out'
@@ -477,19 +478,17 @@ if __name__ == "__main__":
             disphelp(sys.argv[0])
             sys.exit(0)
         if o == '-t' or o == '--onlyts':
-            if flagts == 0:
-                print('** ERROR (options -t and -p cannot be used simultaneously) **')
+            if not flagts:
                 usage(sys.argv[0])
-                sys.exit(1)
-            flagxy = 0
-            flagts = 1
+                raise go.GetoptError('Options -t and -p cannot be used simultaneously')
+            flagxy = False
+            flagts = True
         if o == '-p' or o == '--onlyxy':
-            if flagxy == 0:
-                print('** ERROR (options -t and -p cannot be used simultaneously) **')
+            if not flagxy:
                 usage(sys.argv[0])
-                sys.exit(1)
-            flagts = 0
-            flagxy = 1
+                raise go.GetoptError('Options -t and -p cannot be used simultaneously')                
+            flagts = False
+            flagxy = True
         if o == '--its':
             ts_ifile = a
         if o == '--ixy':
@@ -501,13 +500,16 @@ if __name__ == "__main__":
         if o == '-b' or o=='--basemap':
             basemap = 1
         if o == '-z':
-            flagxyz = 1
+            flagxyz = True
 
     if flagts:
-        plot_ts(ts_ifile,ts_ofile)
+        plotts(ts_ifile,ts_ofile)
     if flagxy:
-        plot_xy(xy_ifile,xy_ofile,basemapflag=basemap)
+        plotxy(xy_ifile,xy_ofile,basemapflag=basemap)
     if flagxyz:
-        #plot_xyz(flag=0)
-        plot_xyz(flag=1)
+        #plotxyz(flag=False)
+        plotxyz(flag=True)
 
+
+if __name__=='__main__':
+    main(sys.argv)

@@ -32,52 +32,15 @@
 ############################################################################
 
 # W PHASE TRACES
+from Arguments import *
 
-IMASTER       = 'i_master'      # IMASTER FILENAME
-O_WPINVERSION = 'o_wpinversion' # o_wpinversion filename
-LOGDIR        = 'LOG'
-LENGTH_GLOBAL   = 3000 ;        # Traces lenght (teleseismic data)
-LENGTH_REGIONAL = 1500 ;        # Traces lenght (regional data)
-DLAT,DLON       = 20.,20.
-OPDFFILE        = 'wp_pages.pdf'
-
-FIGSIZE   = [11.69,8.270]
-#FIGSIZE   = [5.84,4.135]
-YLIM_AUTO = True
-YLIMFIXED = [-9,12] # Y lim if YLIM_AUTO = False
-NC = 3 # Number of columns
-NL = 5 # Number of lines
-
-plotparams = {'backend': 'pdf',
-              'axes.labelsize': 10,
-              'font.size': 10,
-              'xtick.labelsize': 10,
-              'ytick.labelsize': 10,
-              'legend.fontsize': 10,
-              'lines.markersize': 6,
-              'font.size': 10,
-              'savefig.dpi': 200,
-              'keymap.all_axes': 'a',
-              'keymap.back': ['left', 'c', 'backspace'],
-              'keymap.forward': ['right', 'v'],
-              'keymap.fullscreen': 'f',
-              'keymap.grid': 'g',
-              'keymap.home': ['h', 'r', 'home'],
-              'keymap.pan': 'p',
-              'keymap.save': 's',
-              'keymap.xscale': ['k', 'L'],
-              'keymap.yscale': 'l',
-              'keymap.zoom': 'o',                  
-              'path.snap': True,
-              'savefig.format': 'pdf',
-              'pdf.compression': 9,
-              'figure.figsize': FIGSIZE}
+# Customizing matplotlib
+import matplotlib
+matplotlib.use('PDF')
+matplotlib.rcParams.update(TRACES_PLOTPARAMS)
 
 
 # Import external modules
-import matplotlib
-matplotlib.use('PDF')
-matplotlib.rcParams.update(plotparams)
 import os,sys,re
 import getopt as go
 import shutil as sh
@@ -85,59 +48,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from subprocess import call
 
+
 # Import internal modules
 import sacpy
+import utils
 
-# Environment variables
-WPHOME = os.path.expandvars('$WPHASE_HOME')
-print('WPHASE_HOME is %s'%(WPHOME))
-if WPHOME[-1] != '/':
-    WPHOME += '/'
-if LOGDIR[-1] != '/':
-    LOGDIR += '/'
-SYNTHS = WPHOME+'bin/synth_v6'
+
 
 
 # Internal functions
-def parse_config(cfg_file):
-    '''
-    Parse the configuration file
-    '''
-    config = {}
-    try:
-        config_lines = open(cfg_file, 'r').readlines()
-        for line in config_lines:
-            if line.find('#')==0:
-                continue
-            if line.rstrip():
-                key,value = line.strip().split(':')
-                config[key.strip()]=value.strip()
-    except:
-        sys.stderr.write('Error: format  %s\n'%cfg_file)
-        sys.exit(1)
-    # All done
-    return config
 
-
-def rm(fd):
-        if os.path.islink(fd) or os.path.isfile(fd):
-                os.remove(fd)
-                return 0
-        elif os.path.isdir(fd):
-                sh.rmtree(fd)
-                return 0
-        # All done
-        return 1
-
-    
-def change_label_size(ax,size=10.0):
-    for l in ax.get_xticklabels() + ax.get_yticklabels():
-        l.set_fontsize(size)
-    # All done
-    return;
-
-
-def show_basemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):    
+def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):    
     if not m:
         from mpl_toolkits.basemap import Basemap
         if flagreg:
@@ -169,7 +90,7 @@ def show_basemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):
     return m
 
 
-def show_polarmap(ax,az,dist,coords):
+def showPolarmap(ax,az,dist,coords):
     distlabel  = 6371.0*np.arange(30.0,120.0,30.0)*np.pi/180.0
     pos  = ax.get_position().get_points()
     W  = pos[1][0]-pos[0][0] ; H  = pos[1][1]-pos[0][1] ;        
@@ -183,25 +104,27 @@ def show_polarmap(ax,az,dist,coords):
     return;
 
 
-def usage(cmd):
-    print('usage: %s [option] (for help see %s -h)'%(cmd,cmd))
-    # All done
-    return;
-
-
 def disphelp(cmd,solfile,syndir):
-    print('Display W phase traces\n')
-    usage(cmd)
+    print('Displays W phase traces\n')
+    print('usage: %s [option] (for help see %s -h)'%(cmd,cmd))
     print('\nAll parameters are optional:')
     print('   -i, --icmtf          (w)cmt file name (default: %s)'%(solfile))
     print('   -d, --osyndir        output synthetic directory (default: %s)'%(syndir))
+    print('   -r, --regional       plot traces for a regional network')
     print('\n   -h, --help         display this help and exit')
     print('\nReport bugs to: <zacharie.duputel@unistra.fr>')
     # All done
     return;
 
 
-if __name__ == '__main__':
+class InvalidOption(Exception):
+    """
+    Raised if invalid option
+    """
+    pass
+
+
+def main(argv):
     # Input parameters
     imaster = IMASTER
     length  = LENGTH_GLOBAL
@@ -213,15 +136,17 @@ if __name__ == '__main__':
 
     # Title
     flagreg = False
-    conf  = parse_config(imaster)
+    conf  = utils.parseConfig(imaster)
     title = '_'.join(conf['EVNAME'].split())
     title += ',  filter = (%s, %s, %s, %s)'%(conf['filt_cf1'],conf['filt_cf2'],conf['filt_order'],conf['filt_pass']) 
+
+    # Parse options
     try:
-        opts, args = go.gnu_getopt(sys.argv[1:],'i:d:rh',["icmtf=","osydir=","regional","help"])
+        opts, args = go.gnu_getopt(argv[1:],'i:d:rh',["icmtf=","osydir=","regional","help"])
     except go.GetoptError as err:
-        sys.stderr.write('*** ERROR ***\n')
-        usage(sys.argv[0])
-        sys.exit(1)    
+        sys.stderr.write('usage: %s [option] (for help see %s -h)\n'%(sys.argv[0],sys.argv[0]))            
+        raise
+
     for o, a in opts:
         if o == '-h' or o == '--help':
             disphelp(sys.argv[0],solfile,syndir)
@@ -231,10 +156,8 @@ if __name__ == '__main__':
             flagreg = True
         if o == '-i' or o=='--icmtf':
             solfile = a
-            if not os.path.exists(solfile):
-                print('ERROR: no wcmtfile named %s'%(solfile))
-                usage(sys.argv[0])
-                sys.exit(1)
+            if not os.path.exists(solfile):                
+                raise IOError('No wcmtfile named %s'%(solfile))
         if o == '-d' or o == '--osyndir':
             syndir = a
     if not solfile:
@@ -243,27 +166,29 @@ if __name__ == '__main__':
                 solfile = f
                 break
         if not solfile:
-            print('ERROR: no available wcmtfile')
-            usage(sys.argv[0])
-            sys.exit(1)
+            raise IOError('No wcmtfile available, can be specified with --icmtf')
+
+    # Cleanup run dir
     if os.path.exists(syndir) and syndir != '.' and syndir != './':
-        rm(syndir)
+        utils.rm(syndir)
     if syndir != '.' and syndir != './':
         os.mkdir(syndir)
     if not os.path.exists(LOGDIR):
         os.mkdir(LOGDIR)
     for l in os.listdir('.'):
         if l[:4]=='page' and l[-4:]=='.pdf':
-            rm(l)
+            utils.rm(l)
+            
     # Compute synthetics
     cmd    = SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir
     print(cmd)
     #status = call(cmd, shell=True, stdin=sys.stdin, stdout=sys.stdout);
-    status = os.system(SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir+' > %s_tmp_synths'%(LOGDIR))
-    if status:
+    status = os.system(SYNTHS+' '+imaster+' '+solfile+' '+o_wpinversion+' '+syndir+' > '+os.path.join(LOGDIR,'_tmp_synths'))
+    if status:        
         print('Error while running '+SYNTHS)
         sys.exit(1)
-    # Sac Objects
+        
+    # Create Sac Objects
     sacdata = sacpy.sac()
     sacsynt = sacpy.sac()
     coords = []
@@ -273,7 +198,8 @@ if __name__ == '__main__':
         sacdata.rsac(sacf,datflag=0)
         coords.append([sacdata.stla,sacdata.stlo,sacdata.az,sacdata.dist])
     coords = np.array(coords)
-    # Display    
+    
+    # Main loop
     print('Input (W)CMTSOLUTION file is: %s'%(solfile))
     print('Output synthetic directory is: %s'%(syndir))
     perpage = nl*nc
@@ -351,10 +277,10 @@ if __name__ == '__main__':
             plt.xlabel('time, sec',fontsize=10) 
         plt.grid()
         try:
-            m = show_basemap(ax,sacdata.evla,sacdata.evlo,sacdata.stla,sacdata.stlo,coords,flagreg,m)
+            m = showBasemap(ax,sacdata.evla,sacdata.evlo,sacdata.stla,sacdata.stlo,coords,flagreg,m)
             pass
         except:
-            show_polarmap(ax,sacdata.az,sacdata.dist,coords)
+            showPolarmap(ax,sacdata.az,sacdata.dist,coords)
             print('No basemap module')
         count += 1
         nchan += 1
@@ -365,3 +291,7 @@ if __name__ == '__main__':
     pp.savefig(orientation='landscape')
     plt.close()
     pp.close()
+
+
+if __name__=='__main__':
+    main(sys.argv)

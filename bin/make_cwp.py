@@ -31,29 +31,32 @@
 #
 ############################################################################
 
+# CONCATENATED W PHASE TRACES
+from Arguments import *
 
-FIGSIZE   = [11.69,8.27]
 
-# Import external modules
+#Customizing matplotlib
 import matplotlib
 matplotlib.use('PDF')
+
+
+# Import external modules
 import os,sys,re
 import getopt as go
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # Import internal modules
 import sacpy
 
-# Environment variables
-WPHOME = os.path.expandvars('$WPHASE_HOME')
-print('WPHASE_HOME is %s'%(WPHOME))
 
 # Internal functions
 def usage(cmd):
     print('usage: %s [chan1 chan2 (default: LHZ LHN LHE LH1 LH2)] [option] (for help see %s -h)'%(cmd,cmd))
     # All done
     return;
+
 
 def disphelp(cmd):
     print('Make CWP traces\n')
@@ -66,15 +69,14 @@ def disphelp(cmd):
     # All done
     return;
 
-if __name__=='__main__':
+
+def main(argv):
     # Input parameters
     try:
-        opts, args = go.gnu_getopt(sys.argv[1:],'i:nh',["ifort15=","noref","help"])
-    except:
-        sys.stderr.write('*** ERROR ***\n')
-        usage(sys.argv[0])
-        sys.exit(1)
-    o_wpfile = 'o_wpinversion'
+        opts, args = go.gnu_getopt(argv[1:],'i:nh',["ifort15=","noref","help"])
+    except getopt.GetoptError as err:
+        raise
+    o_wpfile = O_WPINVERSION
     predfile = ''
     isref    = 1
     CHAN     = ['LHZ', 'LHN', 'LHE', 'LH1', 'LH2']
@@ -91,8 +93,7 @@ if __name__=='__main__':
     if not os.path.exists(o_wpfile):
         sys.stderr.write('Error: file %s not available\n'%(o_wpfile))
     if len(predfile) and not os.path.exists(predfile):
-        sys.stderr.write('Error: No fort.15 file named %s\n'%predfile)
-        sys.exit(1)
+        raise IOError('No fort.15 file named %s\n'%(predfile))
     if not len(predfile):
         predfile = 'xy_fort.15'
         if not os.path.exists(predfile):
@@ -100,8 +101,7 @@ if __name__=='__main__':
             if not os.path.exists(predfile):
                 predfile = 'fort.15'
                 if not os.path.exists(predfile):
-                    sys.stderr.write('Error: No fort.15 file found\n')
-                    sys.exit(1)        
+                    raise IOError('No fort.15 file found\n')
     sys.stdout.write('Input fort.15 file: %s\n'%predfile)
     count = 0
     sys.stdout.write('Input channels are: ')
@@ -112,12 +112,10 @@ if __name__=='__main__':
             count += 1
         sys.stdout.write('%5s'%chan)
     if not count:
-        sys.stdout.write('\n')
-        sys.stderr.write('\nError: No fort.15_ file for')
+        ErrMsg = 'Error: No fort.15_ file for'
         for chan in CHAN:
-            sys.stderr.write('%5s'%chan)
-        sys.stderr.write('\n')
-        sys.exit(1)
+            ErrMsg += '%5s'%(chan)
+        raise IOError(ErrMsg)
     sys.stdout.write('\nRead %s ...\n%s pages:\n'%(o_wpfile,count))
 
     # Main loop
@@ -164,12 +162,11 @@ if __name__=='__main__':
             Wsyn.append(float(items[1])*1000.0)
             if isref:
                 if len(items)<3:
-                    sys.stderr.write('ERROR: error reading %s\n'%(ifile))
-                    sys.exit(1)
+                    raise IOError('ERROR: error reading %s\n'%(ifile))
                 Wref.append(float(items[2])*1000.0)
         t = np.arange(0,len(Wdat),dtype='float')
         # Display
-        fig=plt.figure(figsize=FIGSIZE) 
+        fig=plt.figure(figsize=CWP_FIGSIZE) 
         fig.subplots_adjust(left=0.08,bottom=0.12,right=0.96,top=0.88,wspace=0.2,hspace=0.2)
         plt.plot(t,Wdat,'k')
         plt.plot(t,Wsyn,'r')
@@ -185,7 +182,7 @@ if __name__=='__main__':
         ppW.savefig(papertype='a4',orientation='landscape')
         plt.close()
         if isref:
-            fig = plt.figure(figsize=FIGSIZE) 
+            fig = plt.figure(figsize=CWP_FIGSIZE) 
             fig.subplots_adjust(left=0.08,bottom=0.12,right=0.96,top=0.88,wspace=0.2,hspace=0.2)
             plt.plot(t,Wdat,'k')
             plt.plot(t,Wref,'r')
@@ -205,3 +202,7 @@ if __name__=='__main__':
     if isref:
         ppR.close()
         
+
+if __name__=='__main__':
+    main(sys.argv)
+            
