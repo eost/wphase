@@ -37,7 +37,7 @@ from Arguments import *
 # Customizing matplotlib
 import matplotlib
 matplotlib.use('PDF')
-matplotlib.rcParams.update(PLOTPARAMS)
+matplotlib.rcParams.update(TRACES_PLOTPARAMS)
 
 
 # Import external modules
