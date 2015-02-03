@@ -110,7 +110,7 @@ GF_PATH = os.path.expandvars('$GF_PATH')
 print('GF_PATH is %s'%(GF_PATH))
 
 # Code version
-VERSION = 'Version: r250'
+VERSION = 'Version: r251'
 
 # Path to binaries
 BIN = WPHOME+'bin/'
