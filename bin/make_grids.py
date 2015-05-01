@@ -249,7 +249,10 @@ def concatCmap(cmaps,offs,cuts,prop):
 
 def plot_etopo(file,m,ax):
     from copy import deepcopy
-    from mpl_toolkits.basemap import NetCDFFile
+    try:
+        from mpl_toolkits.basemap import NetCDFFile
+    except:
+        from netCDF4 import Dataset as NetCDFFile
     latll = m.llcrnrlat
     latur = m.urcrnrlat
     lonll = m.llcrnrlon
