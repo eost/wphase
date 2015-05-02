@@ -133,12 +133,7 @@ def main(argv):
     nc = NC
     nl = NL
     solfile = None
-
-    # Title
     flagreg = False
-    conf  = utils.parseConfig(imaster)
-    title = '_'.join(conf['EVNAME'].split())
-    title += ',  filter = (%s, %s, %s, %s)'%(conf['filt_cf1'],conf['filt_cf2'],conf['filt_order'],conf['filt_pass']) 
 
     # Parse options
     try:
@@ -167,6 +162,11 @@ def main(argv):
                 break
         if not solfile:
             raise IOError('No wcmtfile available, can be specified with --icmtf')
+
+    # Title
+    conf  = utils.parseConfig(imaster)
+    title = '_'.join(conf['EVNAME'].split())
+    title += ',  filter = (%s, %s, %s, %s)'%(conf['filt_cf1'],conf['filt_cf2'],conf['filt_order'],conf['filt_pass']) 
 
     # Cleanup run dir
     if os.path.exists(syndir) and syndir != '.' and syndir != './':
