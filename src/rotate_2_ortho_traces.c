@@ -1,6 +1,6 @@
 /***************************************************************************
 *
-*	              W phase source inversion package 	            
+*                     W phase source inversion package              
 *                               -------------
 *
 *        Main authors: Zacharie Duputel, Luis Rivera and Hiroo Kanamori
@@ -31,17 +31,16 @@
 #include <math.h>
 #include <stdlib.h>
 
-void 
-rotate_2_ortho_traces(double *T, double *P, float baz, int npts, double *N, double *E)
+void rotate_2_ortho_traces(double *T, double *P, float baz, int npts, double *N, double *E)
 {
-  double co, si;
-  int j;
+    double co, si;
+    int j;
 
-  co = cos(M_PI*(double)baz/180.);
-  si = sin(M_PI*(double)baz/180.);
-  for(j=0; j<npts; j++)
-	{
-	  N[j] = -co*T[j] - si*P[j];
-	  E[j] = -si*T[j] + co*P[j];
-	}
+    co = cos(M_PI*(double)baz/180.);
+    si = sin(M_PI*(double)baz/180.);
+    for(j=0; j<npts; j++)
+    {
+        N[j] = -co*T[j] - si*P[j];
+        E[j] = -si*T[j] + co*P[j];
+    }
 }

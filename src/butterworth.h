@@ -90,7 +90,6 @@ int bpbu2sos(double fl, double fh, double dt, int n, double *g, double *b1, doub
 /*     n           : number of rows in the sos      */
 /*     sig         : input/output signal            */
 /*      npts        : number of sample in sig       */
-void filter_with_sos(double g, double *b1, double *b2, double *a1, double *a2, int nsects, 
-		    double *sig, int npts);
+void filter_with_sos(double g, double *b1, double *b2, double *a1, double *a2, int nsects, double *sig, int npts);
 
 

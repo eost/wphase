@@ -1,6 +1,6 @@
 /***************************************************************************
 *
-*	              W phase source inversion package 	            
+*                     W phase source inversion package              
 *                               -------------
 *
 *        Main authors: Zacharie Duputel, Luis Rivera and Hiroo Kanamori
@@ -37,35 +37,31 @@
 #include "rwtextfiles.h"
 
 
-int
-nb_blank(char *line)
+int nb_blank(char *line)
 {
-  int i,N;
+    int i,N; 
+    N = strlen(line);
   
-  N = strlen(line);
-  for (i=0; i<=N; i++)
+    for (i=0; i<=N; i++)
     {
-      if (line[i] != ' ')
-	return i ;
+        if (line[i] != ' ')
+            return i ;
     }
-  return N;
+    return N;
 }
 
 
-
-int
-nbchar(char *in)
+int nbchar(char *in)
 {
-  int i,N;
+    int i,N;
+    N = strlen(in);
 
-  N = strlen(in);
-
-  for (i=1; i<=N; i++)
+    for (i=1; i<=N; i++)
     {
-      if (in[N-i] != ' ')
-	return (N-i+1);
+        if (in[N-i] != ' ')
+            return (N-i+1);
     }
-  return 0;
+    return 0;
 }
 
 
@@ -74,21 +70,18 @@ nbchar(char *in)
 /*          count_lines(stream)           */
 /******************************************/
 /* Count nb of lines in a file            */
-int
-count_lines(FILE *f)
+int count_lines(FILE *f)
 {
-  char *line;
-  int  nl;
+    char *line;
+    int  nl = 0;
+    line = char_alloc(LSIZE);
 
-  line = char_alloc(LSIZE);
-
-  nl = 0 ;
-  while( fgets(line,LSIZE,f) != NULL )
-    ++nl;
+    while( fgets(line,LSIZE,f) != NULL )
+        ++nl;
   
-  rewind(f);
-  free(line);
-  return nl;
+    rewind(f);
+    free(line);
+    return nl;
 }
 
 
@@ -99,19 +92,16 @@ count_lines(FILE *f)
 /* if flag != nv then an error message      */
 /* is written on stderr and the file stream */
 /* is "file" is closed                      */
-void
-check_scan(int nv, int flag, char *file, FILE *fstream)
+void check_scan(int nv, int flag, char *file, FILE *fstream)
 {
-  if (flag != nv)
+    if (flag != nv)
     { 
-      fprintf(stderr, "ERROR: reading %s\n",file); 
-      fclose(fstream);
-      fflush(stderr);
-      exit(1); 
+        fprintf(stderr, "ERROR: reading %s\n",file); 
+        fclose(fstream);
+        fflush(stderr);
+        exit(1); 
     } 
 }
-
-
 
 
 
@@ -121,26 +111,25 @@ check_scan(int nv, int flag, char *file, FILE *fstream)
 /* Open a file "filename" to read text.     */
 /* Return the file stream "fstream" and the */
 /* number of lines nl                       */
-FILE *
-openfile_rt(char *filename, int *nl)
+FILE *openfile_rt(char *filename, int *nl)
 {
-  int nc;
-  FILE *stream;
-  if ((stream = fopen (filename,"rt"))==NULL)
+    int nc;
+    FILE *stream;
+    if ((stream = fopen (filename,"rt"))==NULL)
     {
-      fprintf (stderr, "ERROR (read) : opening file: %s \n", filename) ;
-      exit (1) ;
+        fprintf (stderr, "ERROR (read) : opening file: %s \n", filename) ;
+        exit (1) ;
     }
   
-  nc = count_lines(stream);
-  if(nc < 1) /* error if less than 1 line */
+    nc = count_lines(stream);
+    if(nc < 1) /* error if less than 1 line */
     {
-      fprintf(stderr,"No sacfiles found in file: %s\n",filename) ;
-      fclose(stream);
-      exit(1);
+        fprintf(stderr,"No sacfiles found in file: %s\n",filename) ;
+        fclose(stream);
+        exit(1);
     }
-  *nl = nc ;
-  return stream;
+    *nl = nc ;
+    return stream;
 }
 
 
@@ -148,17 +137,16 @@ openfile_rt(char *filename, int *nl)
 /*     openfile_wt(filename)             */
 /*****************************************/
 /* Open "filename" to write a text file  */
-FILE *
-openfile_wt(char *filename)
+FILE *openfile_wt(char *filename)
 {
-  FILE *stream;
+    FILE *stream;
  
-  if ((stream = fopen (filename,"wt"))==NULL)
+    if ((stream = fopen (filename,"wt"))==NULL)
     {
-      fprintf (stderr, "ERROR (write) : opening file: %s \n", filename) ;
-      exit (1) ;
+        fprintf (stderr, "ERROR (write) : opening file: %s \n", filename) ;
+        exit (1) ;
     }
-  return stream ;
+    return stream ;
 }
   
 
@@ -171,45 +159,44 @@ openfile_wt(char *filename)
 /*                     -> net  : network                 */
 /*                     -> chan : channel                 */
 /*                     -> ext  : extention               */
-char *
-get_gf_filename(char *dir, char *stnm, char *netwk, char *cmpnm, char *loc, char *ext)
+char *get_gf_filename(char *dir, char *stnm, char *netwk, char *cmpnm, char *loc, char *ext)
 {
-  int n,m ;
-  char *sac_filename ;
-
-  sac_filename = char_alloc(FSIZE);
+    int n,m ;
+    char *sac_filename ;
+    sac_filename = char_alloc(FSIZE);
   
-  n = strlen(dir);
-  m = nbchar(stnm);
-  if (n!=0) 
+    n = strlen(dir);
+    m = nbchar(stnm);
+    if (n!=0) 
     {
-    if (dir[n-1] != '/')
-      {
-	strcpy(sac_filename, dir);
-	strcat(sac_filename, "/");
-      }
+        if (dir[n-1] != '/')
+        {
+            strcpy(sac_filename, dir);
+            strcat(sac_filename, "/");
+        }
+        else
+        strcpy(sac_filename, dir);
+        strncat(sac_filename, stnm,m);  
+    }
     else
-      strcpy(sac_filename, dir);
-    strncat(sac_filename, stnm,m);  
-    }
-  else
     {
-      strcpy(sac_filename, dir);
-      strncat(sac_filename, stnm,m);
+        strcpy(sac_filename, dir);
+        strncat(sac_filename, stnm,m);
     }
-  // If loc is empty  (more precisely "  "; it is set to "--")
-  if ( strncmp(loc, "  ", 2 ) == 0 )  strncpy(loc, "--", 2);
-  strcat(sac_filename, "."); n = nbchar(netwk); strncat(sac_filename, netwk,n);
-  strcat(sac_filename, "."); n = nbchar(cmpnm); strncat(sac_filename, cmpnm,n);
-  strcat(sac_filename, "."); n = nbchar(loc);   strncat(sac_filename, loc,2);
-  strcat(sac_filename, "."); n = nbchar(ext);
-  if (ext[0] == '.')
-    m=1;
-  else 
-    m=0;
-  strncat(sac_filename, &ext[m],n);
-  strcat(sac_filename, "");
-  return sac_filename ;
+    // If loc is empty  (more precisely "  "; it is set to "--")
+    if ( strncmp(loc, "  ", 2 ) == 0 )  
+        strncpy(loc, "--", 2);
+    strcat(sac_filename, "."); n = nbchar(netwk); strncat(sac_filename, netwk,n);
+    strcat(sac_filename, "."); n = nbchar(cmpnm); strncat(sac_filename, cmpnm,n);
+    strcat(sac_filename, "."); n = nbchar(loc);   strncat(sac_filename, loc,2);
+    strcat(sac_filename, "."); n = nbchar(ext);
+    if (ext[0] == '.')
+        m=1;
+    else 
+        m=0;
+    strncat(sac_filename, &ext[m],n);
+    strcat(sac_filename, "");
+    return sac_filename ;
 }
 
 
