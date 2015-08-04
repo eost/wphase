@@ -1,5 +1,8 @@
 # Wphase 
 
+[![GPL](https://www.gnu.org/graphics/gplv3-88x31.png)](https://www.gnu.org/licenses/gpl.html)
+[![Build Status](https://travis-ci.org/eost/wphase.svg?branch=master)](https://travis-ci.org/eost/wphase)
+
 The Wphase package is an extensive source-inversion tool allowing rapid characterization of seismic sources and is a reliable and straightforward method to resolve first-order attributes of large earthquakes.   
 
 Main contributors are Z.Duputel, L.Rivera and H.Kanamori (California Institute of Technology and Universite de Strasbourg / CNRS).
@@ -7,6 +10,7 @@ Main contributors are Z.Duputel, L.Rivera and H.Kanamori (California Institute o
 Wphase is licensed under the GNU General Public License (GPL) v3.
 
 For a complete documentation, please refer to [the Wphase wiki page](http://wphase.unistra.fr/wiki/doku.php/wphase)
+
 
 ## Citation
 
