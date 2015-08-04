@@ -1,0 +1,14 @@
+language: c
+
+compiler: gcc
+
+before_install:
+    - export WPHASE_HOME=/home/travis/wphase
+
+install:
+    - cd ${WPHASE_HOME}/src
+    - make
+    - cd
+
+script: 
+    - ${WPHASE_HOME}/bin/wpinversion -h
