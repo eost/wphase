@@ -3,7 +3,7 @@ language: c
 compiler: gcc
 
 before_install:
-    - export WPHASE_HOME=/home/travis/wphase
+    - export WPHASE_HOME=$TRAVIS_BUILD_DIR
 
 install:
     - cd ${WPHASE_HOME}/src
