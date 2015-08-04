@@ -14,7 +14,8 @@ install:
   - cd
 
 script:
-  - ${WPHASE_HOME}/bin/wpinversion -h
+  - ${WPHASE_HOME}/bin/wpinversion    -h
+  - ${WPHASE_HOME}/bin/wpinversion_gs -h
 
 notifications:
   email:
