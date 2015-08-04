@@ -3,12 +3,15 @@ language: c
 compiler: gcc
 
 before_install:
-    - export WPHASE_HOME=$TRAVIS_BUILD_DIR
+    - sudo apt-get install csh
+    - sudo apt-get install gfortran
 
 install:
+    - export WPHASE_HOME=$TRAVIS_BUILD_DIR
     - cd ${WPHASE_HOME}/src
+    - pwd
     - make
     - cd
 
-script: 
+script:
     - ${WPHASE_HOME}/bin/wpinversion -h
