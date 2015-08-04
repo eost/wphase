@@ -4,7 +4,8 @@ The Wphase package is an extensive source-inversion tool allowing rapid characte
 
 For a complete documentation, please refer to [the Wphase wiki page](http://wphase.unistra.fr/wiki/doku.php/wphase)
 
-Main contributors are Z.Duputel, L.Rivera and H.Kanamori (California Institute of Technology and Universite de Strasbourg / CNRS).
+Main contributors are Z. Duputel, L. Rivera and H. Kanamori (California Institute of Technology and Universite de Strasbourg / CNRS).
+
 Wphase is licensed under the GNU General Public License (GPL) v3.
 
 
