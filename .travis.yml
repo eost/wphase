@@ -19,8 +19,8 @@ install:
   - make
 
 script:
-  - ${WPHASE_HOME}/bin/wpinversion    -h 
-  - ${WPHASE_HOME}/bin/wpinversion_gs -h 
+  - ${WPHASE_HOME}/bin/wpinversion    -h &> /dev/null
+  - ${WPHASE_HOME}/bin/wpinversion_gs -h &> /dev/null
   - git clone https://github.com/eost/wphase_test.git
   - cd wphase_test
   - ./wphase_test.csh
