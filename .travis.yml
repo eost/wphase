@@ -5,17 +5,25 @@ compiler: gcc
 before_install:
   - sudo apt-get install csh
   - sudo apt-get install gfortran
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda
+  - conda install --yes pip numpy matplotlib
 
 install:
   - export WPHASE_HOME=$TRAVIS_BUILD_DIR
   - cd ${WPHASE_HOME}/src
   - pwd
   - make
-  - cd
 
 script:
-  - ${WPHASE_HOME}/bin/wpinversion    -h
-  - ${WPHASE_HOME}/bin/wpinversion_gs -h
+  - ${WPHASE_HOME}/bin/wpinversion    -h 
+  - ${WPHASE_HOME}/bin/wpinversion_gs -h 
+  - git clone https://github.com/eost/wphase_test.git
+  - cd wphase_test
+  - ./wphase_test.csh
 
 notifications:
   email:
