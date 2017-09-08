@@ -31,3 +31,4 @@ notifications:
   email:
     recipients:
       - zacharie.duputel@unistra.fr
+      - luis.rivera@unistra.fr
