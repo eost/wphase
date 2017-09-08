@@ -59,7 +59,7 @@ import utils
 # Internal functions
 
 def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):    
-    if not m:
+    if m is None:
         from mpl_toolkits.basemap import Basemap
         if flagreg:
             m = Basemap(llcrnrlon=evlo-DLON, llcrnrlat=evla-DLAT,
@@ -96,7 +96,7 @@ def showPolarmap(ax,az,dist,coords):
     W  = pos[1][0]-pos[0][0] ; H  = pos[1][1]-pos[0][1] ;        
     ax2 = plt.axes([pos[1][0]-W*0.3,pos[0][1]+H*0.38,H*0.73,H*0.73],polar=True) 
     ax2.plot(coords[:,2],coords[:,3],'yv',ms=4)
-    ax2.plot(sacdata.az,sacdata.dist,'rv',ms=6)
+    ax2.plot(az,dist,'rv',ms=6)
     ax2.scatter([0.0],[0.0],c='r',marker=(5,1,0),s=70,zorder=1002)
     ax2.set_thetagrids([])
     ax2.set_rgrids(distlabel,labels='')
