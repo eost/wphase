@@ -1,32 +1,33 @@
 language: c
 
+sudo: enabled
+
 compiler: gcc
 
 before_install:
+  - cd $TRAVIS_BUILD_DIR
   - sudo apt-get install csh
   - sudo apt-get install gfortran
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-  - export PATH=/home/travis/miniconda/bin:$PATH
+  - wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+  - chmod +x Miniconda2-latest-Linux-x86_64.sh
+  - ./Miniconda2-latest-Linux-x86_64.sh -b
+  - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
-  - conda install --yes pip numpy matplotlib
+  - conda install --yes pip numpy matplotlib basemap
+  - git clone https://github.com/eost/wphase_test.git
 
 install:
   - export WPHASE_HOME=$TRAVIS_BUILD_DIR
   - cd ${WPHASE_HOME}/src
-  - pwd
   - make
 
 script:
+  - cd ${TRAVIS_BUILD_DIR}/wphase_test
   - ${WPHASE_HOME}/bin/wpinversion    -h &> /dev/null
   - ${WPHASE_HOME}/bin/wpinversion_gs -h &> /dev/null
-  - git clone https://github.com/eost/wphase_test.git
-  - cd wphase_test
   - ./wphase_test.csh
 
 notifications:
   email:
     recipients:
       - zacharie.duputel@unistra.fr
-      - luis.rivera@unistra.fr
