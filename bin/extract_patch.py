@@ -35,8 +35,10 @@ from sys        import stdin, stdout, stderr
 from os.path    import exists, isdir
 from shutil     import rmtree
 from os         import mkdir, unlink, environ, chdir, rename
+from os.path    import join
 from glob       import glob
 from subprocess import call
+import sacpy
 
 
 def RM(name):
@@ -59,8 +61,9 @@ def mkdir_new(name):
 
 def get_sac_header(file, var):
     tmpfile = '_tmp_'
+    WPBIN = join(environ['WPHASE_HOME'],'bin') 
     oo=open(tmpfile,'w')
-    cmd = 'saclst %s f %s'%(var,file)
+    cmd = join(WPBIN,'saclst')+' %s f %s'%(var,file)
     call(cmd, shell=True, stdin=stdin, stdout=oo, stderr=oo)
     oo.close()
     val = open(tmpfile,'r').readlines()[0].strip().split()[1]
@@ -68,6 +71,12 @@ def get_sac_header(file, var):
     # All done
     return val
     
+
+def ch_kcmpnm(ifile,kcmpnm):
+    s = sacpy.sac()
+    s.rsac(ifile)
+    s.kcmpnm = kcmpnm
+    s.wsac(ifile)
 
 def ch_sac_header(file, var, value):
     cmd = 'sac<<FIN\nrh %s\nch %s %s\nwh\nq\nFIN\n'%(file,var,value)
@@ -112,6 +121,7 @@ def main():
     # Patch
     chdir(DATA)
     Hsacs = glob('*.SAC')
+    list_reject = []
     for sac in Hsacs:
         doit = False
         kcmpnm = get_sac_header(sac, 'kcmpnm')
@@ -122,11 +132,14 @@ def main():
                 newcmp = kcmpnm.replace(k3,'E'); doit = True
             if abs(cmpaz) < TOL or abs(360.-cmpaz) < TOL:
                 newcmp = kcmpnm.replace(k3,'N'); doit = True
+            if not doit:
+                list_reject.append((sac,cmpaz))
         if doit:
             kstnm   = get_sac_header(sac, 'kstnm')
             knetwk  = get_sac_header(sac, 'knetwk')
             locid   = get_sac_header(sac, 'khole')
-            ch_sac_header(sac, 'kcmpnm', newcmp)
+            #ch_sac_header(sac, 'kcmpnm', newcmp)
+            ch_kcmpnm(sac, newcmp)
             newname = sac.replace('.'+kcmpnm+'.','.'+newcmp+'.')
             stdout.write('Renaming: %s\n -------> %s\n'%(sac, newname))
             rename(sac, newname)
@@ -137,6 +150,12 @@ def main():
                 newname = pz.replace('_'+kcmpnm+'_','_'+newcmp+'_')
                 stdout.write('Renaming: %s\n -------> %s\n'%(pz, newname))
                 rename(pz, newname)
+
+    # Print Reject files
+    print('Rejected files in extract_patch.py:')
+    for sactuple in list_reject:
+        print(' ** %s (rejected due to cmpaz = %3.0f deg)'%sactuple)
+        
     # All done
     return 0
 
