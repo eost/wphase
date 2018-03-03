@@ -35,16 +35,16 @@ Written by Z. Duputel, December 2013
 #
 ############################################################################
 
+
 import os,sys
 import numpy  as np
 import shutil as sh
+import scipy.signal as signal
 from copy     import deepcopy
 from datetime import datetime, timedelta
 
-
 NVHDR = 6
 ITIME = 1
-
 
 def unpack_c(chararray,rm_spaces=True):
     S = ''
@@ -72,7 +72,16 @@ class SacError(Exception):
 
 
 class sac(object):
-    def __init__(self):
+    '''
+    A simple sac class
+    '''
+    
+    def __init__(self,filename=None):
+        '''
+        Constructor
+        Args:
+            * filename: read sac filename (optional)
+        '''        
         self.delta  =  -12345.
         self.depmin =  -12345.
         self.depmax =  -12345.
@@ -155,9 +164,20 @@ class sac(object):
         self.kdatrd = '-12345'
         self.kinst  = '-12345'
         self.id     = self.knetwk+'_'+self.kstnm+'_'+self.khole+'_'+self.kcmpnm
-        self.depvar =  np.array([],dtype='d')
+        self.depvar =  np.array([])
 
-    def rsac(self,FILE,npts=None,datflag=True):
+        # Read sac file if filename is specified
+        if filename is not None:
+            assert os.path.exists(filename), filename+' not found'
+            self.read(filename)
+
+        # Spectrum flag
+        self.spec = False
+
+        # All done
+        
+
+    def read(self,FILE,npts=None,datflag=True):
         '''
         Read sac file
         Args:
@@ -273,32 +293,56 @@ class sac(object):
             self.khole = '--'
         self.id = self.knetwk+'_'+self.kstnm+'_'+self.khole+'_'\
                      +self.kcmpnm                        
-        # Read data
-        fid.seek(632,0);
-        if not datflag: # All done
+
+        # Don't read waveform
+        if not datflag: 
             fid.close()
+            # All done
             return
-        if npts == None or npts < 0 or npts > self.npts:
+
+        # Read waveform
+        fid.seek(632,0);
+        if npts is None or npts < 0 or npts > self.npts:
             npts = self.npts
         else:
             self.npts = int(npts)            
         if self.npts > 0:
-            self.depvar = np.array(np.fromfile(fid,ftype,self.npts),dtype='d')
+            self.depvar = np.fromfile(fid,ftype,self.npts)
         fid.close()
 
+        # Re-assign min/max amplitudes and end time
+        self.depmin  = self.depvar.min()
+        self.depmax  = self.depvar.max()
+        self.e       = self.b + float(self.npts - 1) * self.delta
+        
         # All done
-        return
-            
 
-    def wsac(self,FILE):
+        
+    def write(self,FILE):
         '''
         Write sac file
         Args:
            * FILE: output sac file name
         '''
+
+        # Check that we are in the time domain
+        assert not self.spec, "Can only save seismograms in the time-domain"
+        
+        # convert to list
+        if type(self.depvar)==list:
+            self.depvar = np.array(self.depvar)
+        
+        # Dummy variables
         dumi = np.array(-12345    ,dtype='int32')
         dumf = np.array(-12345.0  ,dtype='float32')
         dumc = np.array('-12345  ',dtype='c')
+        
+        # Re-assign min/max amplitudes and end time
+        self.depmin  = self.depvar.min()
+        self.depmax  = self.depvar.max()
+        self.e = self.b + float(self.npts - 1) * self.delta
+
+        # Write file
         fid = open(FILE,'wb')
         np.array(self.delta,dtype='float32').tofile(fid)
         np.array(self.depmin,dtype='float32').tofile(fid)
@@ -306,7 +350,6 @@ class sac(object):
         np.array(self.scale,dtype='float32').tofile(fid)
         np.array(self.odelta,dtype='float32').tofile(fid)
         np.array(self.b,dtype='float32').tofile(fid)
-        self.e = self.b + float(self.npts - 1) * self.delta
         np.array(self.e,dtype='float32').tofile(fid)
         np.array(self.o,dtype='float32').tofile(fid)
         np.array(self.a,dtype='float32').tofile(fid)
@@ -392,9 +435,29 @@ class sac(object):
         np.array(self.depvar,dtype='float32').tofile(fid)
         fid.close()
                 
-        # All done 
-        return
+        # All done
 
+        
+    def rsac(self,FILE,npts=None,datflag=True):
+        '''
+        Clone of self.read()
+        '''
+        sys.stderr.write('FutureWarning: sac.rsac will be replaced by sac.read in the future\n')
+        self.read(FILE,npts=None,datflag=True)
+
+        # All done
+
+        
+    def wsac(self,FILE):
+        '''
+        Clone of self.write
+        '''
+        sys.stderr.write('FutureWarning: sac.wsac will be replaced by sac.write in the future\n')
+        self.write(FILE)
+
+        # All done
+
+        
     def getnzdatetime(self):
         '''
         Get the reference datetime
@@ -421,7 +484,6 @@ class sac(object):
         self.o  = np.float32((otime-nztime).total_seconds())
 
         # All done
-        return
 
         
     def setarrivaltimes(self,phase_dict):
@@ -447,17 +509,445 @@ class sac(object):
             i += 1
                         
         # All done
-        return                
 
 
+    def __add__(self, other):
+        '''
+        Addition operation.         
+        other can be:
+          - sacpy.sac object
+          - list or ndarray
+          - real number (float or int)
+        '''        
+
+        # Check if the operation can be done
+        accepted=(self.__class__,int,float,list,np.ndarray)
+        assert isinstance(other,accepted), 'Unsuported type'
+        
+        # Copy current object
+        res  = self.copy()
+        flag = False
+
+        # Adding two sac files
+        if isinstance(other,self.__class__):
+            assert self.npts  == other.npts,  'Header field mismatch: npts'
+            assert self.delta == other.delta, 'Header field mismatch: delta'
+            assert self.b     == other.b,     'Header field mismatch: b'
+            assert self.e     == other.e,     'Header field mismatch: e'          
+            res.depvar += other.depvar
+            flag = True
+
+        # Adding array or list
+        if isinstance(other,(list,np.ndarray)):
+            assert len(other)==self.npts, 'Header field mismatch: npts'
+            res.depvar += other
+            flag = True
+
+        # Adding real number
+        if isinstance(other,(int,float)):
+            res.depvar += other
+            flag = True
+
+        # Re-assign min and max amplitudes
+        res.depmin  = res.depvar.min()
+        res.depmax  = res.depvar.max()
+        
+        # Check that operation was done
+        assert flag, 'Operation could not be completed'
+        
+        # All done
+        return res
+
+    def __sub__(self, other):
+        '''
+        Substraction operation.         
+        other can be:
+          - sacpy.sac object
+          - list or ndarray
+          - real number (float or int)
+        '''        
+
+        # Check if the operation can be done
+        accepted=(self.__class__,int,float,list,np.ndarray)
+        assert isinstance(other,accepted), 'Unsuported type'
+        
+        # Copy current object
+        res  = self.copy()
+        flag = False
+
+        # Adding two sac files
+        if isinstance(other,self.__class__):
+            assert self.npts  == other.npts,  'Header field mismatch: npts'
+            assert self.delta == other.delta, 'Header field mismatch: delta'
+            assert self.b     == other.b,     'Header field mismatch: b'
+            assert self.e     == other.e,     'Header field mismatch: e'          
+            res.depvar -= other.depvar
+            flag = True
+
+        # Adding array or list
+        if isinstance(other,(list,np.ndarray)):
+            assert len(other)==self.npts, 'Header field mismatch: npts'
+            res.depvar -= other
+            flag = True
+
+        # Adding real number
+        if isinstance(other,(int,float)):
+            res.depvar -= other
+            flag = True
+
+        # Re-assign min and max amplitudes
+        res.depmin  = res.depvar.min()
+        res.depmax  = res.depvar.max()
+        
+        # Check that operation was done
+        assert flag, 'Operation could not be completed'
+        
+        # All done
+        return res    
+
+    def __mul__(self, other):
+        '''
+        Multiplication operation.         
+        other can be:
+          - sacpy.sac object
+          - list or ndarray
+          - real number (float or int)
+        '''        
+
+        # Check if the operation can be done
+        accepted=(self.__class__,int,float,list,np.ndarray)
+        assert isinstance(other,accepted), 'Unsuported type'
+        
+        # Copy current object
+        res  = self.copy()
+        flag = False
+
+        # Adding two sac files
+        if isinstance(other,self.__class__):
+            assert self.npts  == other.npts,  'Header field mismatch: npts'
+            assert self.delta == other.delta, 'Header field mismatch: delta'
+            assert self.b     == other.b,     'Header field mismatch: b'
+            assert self.e     == other.e,     'Header field mismatch: e'          
+            res.depvar *= other.depvar
+            flag = True
+
+        # Adding array or list
+        if isinstance(other,(list,np.ndarray)):
+            assert len(other)==self.npts, 'Header field mismatch: npts'
+            res.depvar *= other
+            flag = True
+
+        # Adding real number
+        if isinstance(other,(int,float)):
+            res.depvar *= other
+            flag = True
+
+        # Re-assign min and max amplitudes
+        res.depmin  = res.depvar.min()
+        res.depmax  = res.depvar.max()
+        
+        # Check that operation was done
+        assert flag, 'Operation could not be completed'
+        
+        # All done
+        return res
+
+    
+    def integrate(self):
+        '''
+        Performs integration using the traperoidal rule
+        '''
+
+        # Integration
+        w  = self.depvar.copy()
+        wi = self.depvar.cumsum()
+        wi = (2*wi[1:]-(w[0]+w[1:]))*self.delta/2.
+        self.depvar = wi.copy()
+
+        # Re-assign b, e, npts, min/max amplitudes
+        self.b += self.delta/2.
+        self.npts -= 1
+        self.e = self.b + float(self.npts - 1) * self.delta
+        self.depmin  = self.depvar.min()
+        self.depmax  = self.depvar.max()
+        
+        # All done
+        return
+
+
+    def isempty(self):
+        '''
+        Check if important attributes are there
+        '''    
+        if (self.npts < 0) or (self.delta < 0) or (not self.depvar.size):
+            return True
+
+        # All done
+        return False
+
+        
+    def interpolate(self, delta_new):
+        '''
+        Interpolates data to a new sampling rate (sinc interpolation)
+        Args:
+            * delta_new: New sampling rate
+        '''
+
+        # Check that headers are correct
+        assert not self.isempty(), 'Some sac attributes are missing (e.g., npts, delta, depvar)'
+        
+        # time vectors
+        time_old = np.arange(self.npts,dtype='float32')*self.delta # Time vector before interpolation
+        npts_new = int(np.floor((self.npts-1)*self.delta/delta_new))
+        time_new = np.arange(npts_new,dtype='float32')*delta_new   # Time vector after interpolation
+
+        # Sinc interpolation
+        depvar_new = np.zeros((npts_new,),dtype='float32')
+        for i in range(npts_new):
+            depvar_new[i] = np.dot(self.depvar,np.sinc((time_new[i]-time_old)/self.delta))
+        self.depvar = depvar_new.copy()
+        self.npts   = npts_new
+        self.delta  = delta_new
+
+        # All done
+        return
+        
+
+    def decimate(self, dec_fac):
+        '''
+        Decimates data
+        Args:
+            * dec_fac: decimation factor
+        '''
+
+        #import decimate as decim
+        from . import decimate as decim
+
+        # Check that headers are correct
+        assert not self.isempty(), 'Some sac attributes are missing (e.g., npts, delta, depvar)'
+
+        # Check decimation factor
+        assert dec_fac in decim.FACS, 'Incorrect decimation factor'
+
+        # Init filters
+        fir = {2: decim.FIRfilter(decim.FIRDEC2),
+               3: decim.FIRfilter(decim.FIRDEC3),
+               4: decim.FIRfilter(decim.FIRDEC4),
+               5: decim.FIRfilter(decim.FIRDEC5)}
+
+        # Filter cascade
+        fir_cascade = decim.FACS[dec_fac]
+        for c in fir_cascade:
+            assert c>=1 and c<=5, 'Incorrect decimation factor (%d)'%(c)
+            if c==1:
+                continue
+            self.depvar = decim.decimate(self.depvar,fir[c],c)
+            self.delta *= np.float32(c)
+        self.npts = len(self.depvar)
+
+
+    def filter(self, freq, order=4, btype='lowpass'):
+        '''
+        Bandpass filter the data using a butterworth filter
+        Args:
+            * freq: A scalar or length-2 sequence giving the critical frequencies (in Hz)
+            * order:  Order of the filter.
+            * btype: {'lowpass', 'highpass', 'bandpass', 'bandstop'}, optional
+              (default is 'lowpass')
+        '''
+        
+        # Check that headers are correct
+        assert not self.isempty(), 'Some sac attributes are missing (e.g., npts, delta, depvar)'
+
+        # Filter design
+        if type(freq) is list:
+            freq = np.array(freq)
+        Wn = freq * 2. * self.delta # Normalizing frequencies
+        sos = signal.butter(order, Wn, btype, output='sos')
+        
+        # Filter waveform
+        depvar = signal.sosfilt(sos, self.depvar)
+        self.depvar = depvar.astype('float32')
+
+        # All done
+        return
+
+    def pad(self,tmin = None, tmax = None):
+        '''
+        Padding data with zeros
+        if tmin < self.b - self.o (beginning), adding zeros at the beginning
+        if tmax > self.e - self.o (end), adding zeros at the end
+        '''
+        # Check origin time is assigned
+        assert self.o != -12345., 'Origin time must be assigned'
+        
+        # Get trace beginning and end
+        self.e = self.b + float(self.npts - 1) * self.delta
+        tb = self.b - self.o
+        te = self.e - self.o
+
+        # Set the pad width
+        nbeg = 0
+        nend = 0
+        if tmin is not None and tmin < tb:
+            nbeg = int(np.ceil((tb-tmin)/self.delta))
+        if tmax is not None and tmax > te:
+            nend = int(np.ceil((tmax-te)/self.delta))
+
+        # Zero padding
+        gout = np.pad(self.depvar,((nbeg,nend),),mode="constant")
+        self.npts = len(gout)
+        self.b = self.b - nbeg * self.delta
+        self.e = self.e + nend * self.delta
+        self.depvar = gout.copy()
+
+        # All done
+        return
+
+    def fft(self):
+        '''
+        Compute fourier transform and return the seismogram spectrum
+        Output: Seismogram spectrum in the frequency domain (type: seismogram)        
+        '''
+        spectrum = self.copy()
+        spectrum.spec = True
+        spectrum.depvar = np.fft.rfft(self.depvar)        
+        
+        # All done
+        return spectrum
+
+    def ifft(self):
+        '''
+        Compute the inverse fourrier transform and returns the seismogram spectrum
+        Output: Seismogram in the time domain (type: seismogram)
+        '''
+        seis = self.copy()
+        seis.spec = False
+        seis.depvar=None
+        seis.depvar = np.fft.irfft(self.depvar) 
+        
+        # All done
+        return seis
+
+    def freq(self):
+        '''
+        Returns the frequency vector of the current data
+        '''
+        freq = np.fft.rfftfreq(self.npts,d=self.delta)
+        # All done        
+        return freq
+
+    def evalresp(self,PZ):
+        '''
+        Return frequency response
+        Args:
+            * PZ: dictionary including 'poles', 'zeros' and 'Const'
+        '''
+        s = 2.j*np.pi*self.freq()
+        resp = np.ones(s.shape,dtype=np.complex128)*PZ['Const']
+        for z in PZ['zeros']: resp *= s-z
+        for p in PZ['poles']: resp /= s-p
+        # All done
+        return resp
+
+    def convresp(self,PZ):
+        '''
+        Convolve with instrument response
+        Args:
+            * PZ: dictionary including 'poles', 'zeros' and 'Const'        
+        '''
+        npts = self.npts
+        # Trivial dtrend
+        self.depvar -= self.depvar[0]+np.arange(npts)*(self.depvar[-1]-self.depvar[0])/(npts-1)
+        # Zero padding
+        self.pad(tmax=2*self.e-self.b)
+        # Evaluate the instrument response from Poles and Zeros
+        resp = self.evalresp(PZ)
+        # Convolve with the instrument response
+        self.depvar = np.fft.irfft(resp*np.fft.rfft(self.depvar))[:npts]
+        self.npts = npts
+        self.e    = self.b + float(self.npts)*self.delta
+        self.depmin = self.depvar.min()
+        self.depmax = self.depvar.max()        
+        # All done
+        return
+
+    def time(self):
+        '''
+        Returns the time vector of the current data relative to nztime
+        '''
+        time = np.arange(self.npts)*self.delta + self.b
+        return time
+
+    def plot(self,ptype=None,xlog=False,ylog=False,**kwargs):
+        '''
+        Plot the seismogram or spectrum
+        Args: All arguments are optional
+            - ptype: plot type can be None, 'amp' for absolute amplitude, 'pha' for the phase, 
+                     'real' for the real part or 'imag' for the imaginary part.
+            - xlog: if True use a log scale on the x axis
+            - ylog: if True use a log scale on the y axis
+            - *kwargs* can be used to set line properties in pyplot commands (see help of plt.plot)
+        examples:
+                s.plot(color='r') or s.plot(color='red') will plot the seismogram with a red line
+        Use plt.show() to show the corresponding figure
+        '''
+
+        # Import the matplotlib module
+        import matplotlib.pyplot as plt
+
+        # Check attributes        
+        assert not self.isempty(),'Some attributes are missing (e.g., npts, delta, depvar)'
+
+        # Time or frequency vector
+        if self.spec is False: # Time vector
+            x = self.time()
+            xlabel = 'Time, sec'
+        else: # Frequency vector
+            x = self.freq()
+            xlabel = 'Freq., Hz'  
+        # What do we want to plot?
+        ylabel = 'Amplitude'        
+        if ptype is None and not self.spec: # Standard seismogram plot
+            y = self.depvar
+        elif (ptype is None and self.spec) or ptype == 'amp':  # Amplitude
+            y = np.abs(self.depvar)
+        elif ptype == 'pha':     # Phase
+            y = np.angle(self.depvar)
+            ylabel = 'Phase'            
+        elif ptype == 'real': # Real part
+            y = np.real(self.depvar)
+            ylabel = 'Real part amplitude'
+        elif ptype == 'imag':
+            y = np.imag(self.depvar)
+            ylabel = 'Imag. part amplitude'            
+        else:
+            print('Error: ptype should be None, amp, pha, real or imag')
+            return 1        
+
+        # Do we use log scale?
+        plotf = plt.plot  # Default: no log scale
+        if xlog and ylog: # loglog scale
+            plotf=plt.loglog
+        elif xlog:        # x log scale
+            plotf=plt.semilogx
+        elif ylog:        # y log scale
+            plotf=plt.semilogy
+        
+        # Plot seismogram
+        lines = plotf(x,y,**kwargs)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        
+        # All done
+        return lines    
+        
     def copy(self):
         '''
         Returns a copy of the sac object
         '''
-                
+        # All done
         return deepcopy(self)                
-
-
 
 def zero_pad_start(t,sac,t0):
     tmin = t[0]
@@ -471,4 +961,5 @@ def zero_pad_start(t,sac,t0):
     gout = np.append(0.0*tpad,sac.depvar)
     # all done
     return tout,gout
+
 
