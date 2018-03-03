@@ -31,13 +31,21 @@
 #
 ############################################################################
 
+# Insert WPHASE BIN in sys.path (Useful to get local versions)
+import os,sys
+WPHOME = os.path.expandvars('$WPHASE_HOME')
+WPBIN = os.path.join(WPHOME,'bin')
+sys.path.insert(0,'./')
+sys.path.insert(1,WPBIN)
+
+# Avoid writing pyc files
+sys.dont_write_bytecode = True
+
 # GRID SEARCH FOR WPHASE INVERSION
 from Arguments import *
 
-
 # Import external modules
-import os,shutil,sys,time,getopt
-
+import shutil,time,getopt
 
 # Import internal modules
 from EQ import *

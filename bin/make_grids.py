@@ -34,8 +34,8 @@
 # GRID SEARCH PLOTS
 
 # Customizing matplotlib
-import matplotlib
-matplotlib.use('AGG')
+import matplotlib as mpl
+mpl.use('AGG')
 
 # External modules
 import sys
@@ -43,6 +43,8 @@ import getopt as go
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Avoid writing pyc files
+sys.dont_write_bytecode = True
 
 def wraplons(lons):
     for i in range(len(lons)):
