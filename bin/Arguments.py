@@ -32,7 +32,7 @@ Input parameters for W-phase inversion
 #
 ############################################################################
 
-import os 
+import os,sys
 
 # Time-shift grid-search parameters
 TS_NIT   = 3  # Nb of iterations
@@ -76,12 +76,11 @@ NL = 5 # Number of lines
 CWP_FIGSIZE   = [11.69,8.27]
 
 TRACES_PLOTPARAMS = {'backend': 'pdf', 'axes.labelsize': 10,
-                     'font.size': 10,
-                     'xtick.labelsize': 10,
-                     'ytick.labelsize': 10,
-                     'legend.fontsize': 10,
+                     'font.size': 9,
+                     'xtick.labelsize': 9,
+                     'ytick.labelsize': 9,
+                     'legend.fontsize': 9,
                      'lines.markersize': 6,
-                     'font.size': 10,
                      'savefig.dpi': 200,
                      'keymap.all_axes': 'a',
                      'keymap.back': ['left', 'c', 'backspace'],
@@ -97,8 +96,9 @@ TRACES_PLOTPARAMS = {'backend': 'pdf', 'axes.labelsize': 10,
                      'path.snap': True,
                      'savefig.format': 'pdf',
                      'pdf.compression': 9,
+                     'pdf.fonttype' : 42,
+                     'ps.fonttype' : 42,
                      'figure.figsize': TRACES_FIGSIZE}
-
 
 # W-phase home directory
 WPHOME = os.path.expandvars('$WPHASE_HOME')

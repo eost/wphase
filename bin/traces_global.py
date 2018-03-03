@@ -31,43 +31,79 @@
 #
 ############################################################################
 
+# Append WPHASE BIN to pythonpath
+import os,sys
+WPHOME = os.path.expandvars('$WPHASE_HOME')
+WPBIN = os.path.join(WPHOME,'bin')
+sys.path.insert(0,'./')
+sys.path.insert(1,WPBIN)
+
+# Avoid writing pyc files
+sys.dont_write_bytecode = True
+
 # W PHASE TRACES
 from Arguments import *
 
 # Customizing matplotlib
-import matplotlib
-matplotlib.use('PDF')
-matplotlib.rcParams.update(TRACES_PLOTPARAMS)
-
+import matplotlib as mpl
+mpl.use('PDF')
+mpl.rcParams.update(TRACES_PLOTPARAMS)
 
 # Import external modules
-import os,sys,re
+import re
 import getopt as go
 import shutil as sh
 import numpy as np
 import matplotlib.pyplot as plt
 from subprocess import call
-
+from copy import deepcopy
 
 # Import internal modules
 import sacpy
 import utils
-
-
-
+from EQ import EarthQuake
 
 # Internal functions
-
-def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):    
-    if m is None:
+def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,basem=None):    
+    '''
+    Show network map
+    
+    Parameters
+    ----------
+    ax: matplotlib.axes.Axes
+        Axes of the seismogram
+    evla: float or ndarray
+        Event latitude
+    evlo: float or ndarray
+        Event longitude
+    stla: float
+        Station latitudes
+    stlo: float
+        Station longitudes
+    coords: ndarray
+        Array of latitudes,longitudes for the entire network
+    flagreg: bool
+        if False, use a global orthographic map
+        if True, use a regional Lambert azimuthal equal-area map
+    basem: None or mpl_toolkits.basemap.Basemap
+        Pre-instanciated Basemap object
+        
+    Returns
+    -------
+    basem: mpl_toolkits.basemap.Basemap
+        Basemap object
+    '''
+    # If there is no Basemap object provided
+    if basem is None:
         from mpl_toolkits.basemap import Basemap
         if flagreg:
-            m = Basemap(llcrnrlon=evlo-DLON, llcrnrlat=evla-DLAT,
-                        urcrnrlon=evlo+DLON, urcrnrlat=evla+DLAT,
-                        projection='lcc',lat_1=evla-DLAT/2.,lat_2=evla+DLAT/2.,
-                        lon_0=evlo, resolution ='c',area_thresh=50. )
+            basem = Basemap(projection='laea',lat_0=evla,lon_0=evlo, width=DLON*1.11e5, 
+                        height=DLAT*1.11e5,resolution ='c')
         else:
-            m = Basemap(projection='ortho',lat_0=evla,lon_0=evlo,resolution='c')
+            basem = Basemap(projection='ortho',lat_0=evla,lon_0=evlo,resolution='c')
+
+    # Plot a map
+    m = deepcopy(basem)
     pos  = ax.get_position().get_points()
     W  = pos[1][0]-pos[0][0] ; H  = pos[1][1]-pos[0][1] ;        
     ax2 = plt.axes([pos[1][0]-W*0.38,pos[0][1]+H*0.01,H*1.08,H*1.00])
@@ -80,17 +116,35 @@ def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):
         m.drawparallels(np.arange(-60,90,30.0),linewidth=0.2)
         m.drawmeridians(np.arange(0,420,60.0),linewidth=0.2)
     m.drawmapboundary(fill_color='w')
+
+    # Add stations on the map
     xs,ys = m(coords[:,1],coords[:,0])
     xr,yr = m(stlo,stla)
     xc,yc = m(evlo,evla)
     m.plot(xs,ys,'o',color=(1.00000,  0.74706,  0.00000),ms=4.0,alpha=1.0,zorder=1000)
     m.plot([xr],[yr],'o',color=(1,.27,0),ms=8,alpha=1.0,zorder=1001)
     m.scatter([xc],[yc],c='b',marker=(5,1,0),s=120,zorder=1002)    
+
     # All done
-    return m
+    return basem
 
 
 def showPolarmap(ax,az,dist,coords):
+    '''
+    Show polar map
+    
+    Parameters
+    ----------
+    ax: matplotlib.axes.Axes
+        Axes of the seismogram
+    az: float
+        Station azimuth
+    dist: float
+        Station distance
+    coords: ndarray
+        Array of latitudes,longitudes for the entire network
+    '''
+
     distlabel  = 6371.0*np.arange(30.0,120.0,30.0)*np.pi/180.0
     pos  = ax.get_position().get_points()
     W  = pos[1][0]-pos[0][0] ; H  = pos[1][1]-pos[0][1] ;        
@@ -125,7 +179,7 @@ class InvalidOption(Exception):
 
 
 def main(argv):
-    # Input parameters
+    # Input parameters (from Arguments.py)
     imaster = IMASTER
     length  = LENGTH_GLOBAL
     syndir  = 'SYNTH_traces'
@@ -162,6 +216,10 @@ def main(argv):
                 break
         if not solfile:
             raise IOError('No wcmtfile available, can be specified with --icmtf')
+ 
+    eq   = EarthQuake()
+    eq.rcmtfile(solfile)
+    cmtla,cmtlo = eq.lat, eq.lon   
 
     # Title
     conf  = utils.parseConfig(imaster)
@@ -195,7 +253,7 @@ def main(argv):
     L = open(o_wpinversion).readlines()
     for l in L:
         sacf = l.strip().split()[0]
-        sacdata.rsac(sacf,datflag=0)
+        sacdata.read(sacf,datflag=0)
         coords.append([sacdata.stla,sacdata.stlo,sacdata.az,sacdata.dist])
     coords = np.array(coords)
     
@@ -209,20 +267,20 @@ def main(argv):
     count = 1
     pages = 1
     fig = plt.figure()
-    fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.35)
+    fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.4)
     print('%d pages:'%(npages))
-    pp = matplotlib.backends.backend_pdf.PdfPages(OPDFFILE)
-    m = None
+    pp = mpl.backends.backend_pdf.PdfPages(OPDFFILE)
+    basem = None
     for l in L:
         # Parse line
         items = l.strip().split()
         fic1 = items[0]
-        sacdata.rsac(fic1)
+        sacdata.read(fic1)
         chan = sacdata.kcmpnm[0:3]
         loc  = sacdata.khole
         fic2 = syndir+'/%s.%s.%s.%s.complete_synth.bp.sac'\
                %(sacdata.kstnm,sacdata.knetwk,chan,loc)
-        sacsynt.rsac(fic2)        
+        sacsynt.read(fic2)        
         # pages
         if count > perpage:
             plt.suptitle(title+ ',   p %d/%d'%(pages,npages), fontsize=16, y=0.95)
@@ -234,7 +292,7 @@ def main(argv):
             pages += 1
             count = 1
             fig = plt.figure()
-            fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.35)
+            fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.4)
         # Time - W phase window
         t1 = np.arange(sacdata.npts,dtype='double')*sacdata.delta + sacdata.b - sacdata.o
         t2 = np.arange(sacsynt.npts,dtype='double')*sacsynt.delta + sacsynt.b - sacsynt.o        
@@ -276,12 +334,11 @@ def main(argv):
         if (count-1)/nc == nl-1 or nchan+nc > ntot:
             plt.xlabel('time, sec',fontsize=10) 
         plt.grid()
-        try:
-            m = showBasemap(ax,sacdata.evla,sacdata.evlo,sacdata.stla,sacdata.stlo,coords,flagreg,m)
-            pass
+        if True:
+            basem = showBasemap(ax,cmtla,cmtlo,sacdata.stla,sacdata.stlo,coords,flagreg,basem)
         except:
             showPolarmap(ax,sacdata.az,sacdata.dist,coords)
-            print('No basemap module')
+            print('Cannot use basemap')
         count += 1
         nchan += 1
     ofic = 'page_W_%02d.pdf'%(pages)
