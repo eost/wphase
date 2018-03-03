@@ -113,8 +113,8 @@ print('GF_PATH is %s'%(GF_PATH))
 VERSION = 'Version: r252'
 
 # Path to binaries
-BIN = WPHOME+'bin/'
+WPBIN = WPHOME+'bin/'
 
-WPINV_XY = BIN+'wpinversion_gs -imas i_master -ifil '+O_WPINVERSION
+WPINV_XY = WPBIN+'wpinversion_gs -imas i_master -ifil '+O_WPINVERSION
 SYNTHS   = WPHOME+'bin/synth_v6'
 
