@@ -40,6 +40,9 @@ from glob       import glob
 from subprocess import call
 import sacpy
 
+# Avoid writing pyc files
+import sys
+sys.dont_write_bytecode = True
 
 def RM(name):
     if exists(name):
@@ -74,7 +77,7 @@ def get_sac_header(file, var):
 
 def ch_kcmpnm(ifile,kcmpnm):
     s = sacpy.sac()
-    s.rsac(ifile)
+    s.read(ifile)
     s.kcmpnm = kcmpnm
     s.wsac(ifile)
 
