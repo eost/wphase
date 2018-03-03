@@ -83,6 +83,7 @@ typedef struct
   double *rms_in,rms_r_th,*rms_r,*p2p,*avg  ; 
   double xy_dx, dlat, dlon, dz, mindep, azp ;
   double ntr_val, wZ, wN, wE, priorsdrM0[4] ;
+  double med_minfc, med_maxfc               ;
   double *wgt, wgtnorm, dmin, dmax          ;
   char   i_master[FSIZE], i_saclst[FSIZE]   ;
   char   o_saclst[FSIZE], log[FSIZE]        ; 

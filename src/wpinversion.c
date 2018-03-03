@@ -346,10 +346,10 @@ void get_num_arg(argv,j,i,numarg2,type,value)
     free((void*)comp);
 }
 
-void get_num_arg3(argv, j, i, numarg2, value1, value2, value3)
+void get_num_arg2(argv, j, i, numarg2, value1, value2)
     int    i, j, numarg2;
     char   **argv;
-    double *value1, *value2, *value3;
+    double *value1, *value2;
 {
     char *comp;
     comp = char_alloc(32);
@@ -381,16 +381,6 @@ void get_num_arg3(argv, j, i, numarg2, value1, value2, value3)
         error_syntax(argv,comp);
     sscanf(argv[j+2],"%lf",value2);
 
-    if (argv[j+3][0]=='-') 
-    {
-        if (strlen(argv[j+3]) == 1 ) 
-            error_syntax(argv,comp);
-        if (!isdigit(argv[j+3][1]))  
-            error_syntax(argv,comp);
-    }
-    else if (!isdigit(argv[j+3][0])) 
-        error_syntax(argv,comp);
-    sscanf(argv[j+3],"%lf",value3);
     free((void*)comp);
 }
 
@@ -422,6 +412,8 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
     opt->cth_val   = 0. ;
     opt->df_val    = 0. ;
     opt->med_val   = 0. ;
+    opt->med_minfc = 0.1 ;
+    opt->med_maxfc = 3.0 ;
     opt->op_pa     = 0. ;
     opt->ref_flag  = 1  ;
     opt->ntr_val   = 1. ;
@@ -610,6 +602,18 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
         }
         if (!strncmp(argv[j],"-med",4))
         {
+            if (i+2<numarg2)
+              if (argv[j+1][0]!='-' && argv[j+2][0]!='-')
+                {
+                  get_num_arg2(argv,j,i,numarg2,&opt->med_minfc,&opt->med_maxfc) ;
+                  if (opt->med_minfc > opt->med_maxfc)
+                     error_syntax(argv,"Incompatible arguments -- med_minfc < med_maxfc is required (-med)") ;
+                  if (opt->med_minfc < 0.)
+                     error_syntax(argv,"Incompatible arguments -- positive med_minfc is required (-med)") ;
+                  if (opt->med_maxfc < 0.)
+                     error_syntax(argv,"Incompatible arguments -- positive med_maxfc is required (-med)") ;
+                  k+=2 ;
+                }  
             opt->med_val = 1 ;	
             k++ ;
         }

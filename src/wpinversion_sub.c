@@ -1698,8 +1698,8 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
     int    j, newn ;
     double min, max, val ;
     
-    min = 0.1 * (opt->p2p_med) ;
-    max = 3.0 * (opt->p2p_med) ;
+    min = opt->med_minfc * (opt->p2p_med) ;
+    max = opt->med_maxfc * (opt->p2p_med) ;
     
     if (o_log != NULL)
       {
