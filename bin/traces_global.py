@@ -334,7 +334,7 @@ def main(argv):
         if (count-1)/nc == nl-1 or nchan+nc > ntot:
             plt.xlabel('time, sec',fontsize=10) 
         plt.grid()
-        if True:
+        try:
             basem = showBasemap(ax,cmtla,cmtlo,sacdata.stla,sacdata.stlo,coords,flagreg,basem)
         except:
             showPolarmap(ax,sacdata.az,sacdata.dist,coords)
