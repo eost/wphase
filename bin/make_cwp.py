@@ -31,17 +31,26 @@
 #
 ############################################################################
 
+# Append WPHASE BIN to pythonpath
+import os,sys
+WPHOME = os.path.expandvars('$WPHASE_HOME')
+WPBIN = os.path.join(WPHOME,'bin')
+sys.path.insert(0,'./')
+sys.path.insert(1,WPBIN)
+
+# Avoid writing pyc files
+sys.dont_write_bytecode = True
+
 # CONCATENATED W PHASE TRACES
 from Arguments import *
 
-
 #Customizing matplotlib
-import matplotlib
-matplotlib.use('PDF')
+import matplotlib as mpl
+mpl.use('PDF')
 
 
 # Import external modules
-import os,sys,re
+import re
 import getopt as go
 import numpy as np
 import matplotlib.pyplot as plt
@@ -121,10 +130,10 @@ def main(argv):
     # Main loop
     sac = sacpy.sac()
     L = open(o_wpfile).readlines()
-    ppW = matplotlib.backends.backend_pdf.PdfPages('CWP_W.pdf')
+    ppW = mpl.backends.backend_pdf.PdfPages('CWP_W.pdf')
     sys.stdout.write('CWP_W.pdf\n')
     if isref:
-        ppR = matplotlib.backends.backend_pdf.PdfPages('CWP_R.pdf')
+        ppR = mpl.backends.backend_pdf.PdfPages('CWP_R.pdf')
         sys.stdout.write('CWP_R.pdf')
     for chan in CHAN:
         cb = 0.0
@@ -133,7 +142,7 @@ def main(argv):
         # Read o_wpinversion
         for l in L:
             items = l.strip().split()
-            sac.rsac(items[0])
+            sac.read(items[0])
             if sac.kcmpnm[2] != chan[2]:
                 continue
             stat_label.append(sac.kstnm)
