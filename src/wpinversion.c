@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
     rms = double_calloc2(nsac, 2*(opt.ref_flag+1));
     calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt);
     get_gap(hd_synt, nsac, &gap);
-    w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt); 
+    w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt,o_log); 
 
     /* Set stike/dip/rake */
     get_planes(eq.vm[0], TM, eval3, &s1,&d1,&r1, &s2,&d2,&r2);

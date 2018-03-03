@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
             diplow = d1 ;
         M0_12  = M0 * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ;
         /* Output */
-        w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt) ; 
+        w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt,o_log) ; 
         output_products(&opt,&eq,s1,d1,r1,s2,d2,r2,TM,eval3,M0,M0_12,Mw, global_rms,gap,Cond,nsac,hd_synt,o_log) ;
     }
     /* Time-shift grid search */
@@ -204,7 +204,10 @@ int main(int argc, char *argv[])
             diplow = d1 ;
         M0_12  = M0 * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ;
         /* Output */
-        w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt) ;
+        if (opt.xy_dx > 0. || opt.dz > 0.)
+            w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt,NULL) ;
+        else
+            w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt,o_log) ;
         output_products(&opt,&eq,s1,d1,r1,s2,d2,r2,TM,eval3,M0,M0_12,Mw, global_rms,gap,Cond,nsac,hd_synt,o_log) ;
     }
     /* Centroid position Grid-search */
@@ -244,7 +247,7 @@ int main(int argc, char *argv[])
             diplow = d1 ;
         M0_12  = M0 * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ;
         /* Output */
-        w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt) ;
+        w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt,o_log) ;
         output_products(&opt,&eq,s1,d1,r1,s2,d2,r2,TM,eval3,M0,M0_12,Mw, global_rms,gap,Cond,nsac,hd_synt,o_log) ;
     }
     fclose(o_log);

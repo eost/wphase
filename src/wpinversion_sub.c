@@ -534,7 +534,7 @@ void get_gap(sachdr *hd_synt, int ns, double *gap)
 }
 
 void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, double *data_norm, 
-                   structopt *opt) 
+                   structopt *opt, FILE *o_log) 
 {
     int  i, n0;
     FILE *o_sac ;
@@ -547,6 +547,11 @@ void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, double *
                             sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
                             (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], rms[i][0]/rms[i][1],
                             data_norm[i]/rms[i][1], opt->p2p[i], opt->avg[i], opt->wgt[i]);
+        if (o_log != NULL)
+            fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f %14.8f\n", hd_synt[i].kstnm, 
+                            hd_synt[i].knetwk, hd_synt[i].kcmpnm, hd_synt[i].gcarc, hd_synt[i].az, 
+                            hd_synt[i].user[2], hd_synt[i].user[3], rms[i][0]/rms[i][1]) ;
+
         n0 += hd_synt[i].npts ;
     }
     fclose(o_sac);
@@ -1596,10 +1601,6 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
             opt->avg[ns] *= 1000                 ; 
         }
 
-        if (opt->th_val <= 0. && opt->med_val <= 0.)
-            fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", (*hd_synt)[ns].kstnm, 
-                                   (*hd_synt)[ns].knetwk, (*hd_synt)[ns].kcmpnm, (*hd_synt)[ns].gcarc, (*hd_synt)[ns].az, 
-                                   (*hd_synt)[ns].user[2], (*hd_synt)[ns].user[3]) ;
         strcpy( (*sacfiles)[ns], datafile) ;
         ns++ ;
     }
@@ -1630,10 +1631,6 @@ void screen_rms(int *nsac, char **data_name, double **data, double ***G, sachdr 
     {
         if( opt->rms_in[j] < opt->th_val )
         {
-            if (o_log != NULL)
-                fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
-                                   hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
-                                   hd_synt[j].user[2], hd_synt[j].user[3]) ; 
             data_name[newn] = data_name[j] ;
             data[newn]      = data[j]      ;
             G[newn]         = G[j]         ;
@@ -1646,8 +1643,9 @@ void screen_rms(int *nsac, char **data_name, double **data, double ***G, sachdr 
         }
         else
         {
+            fprintf(stderr, "**** Rejected trace (rms exceed the threshold): %s\n", data_name[j]) ;
             if (o_log != NULL)
-                fprintf(stderr, "**** Rejected trace (rms exceed the threshold): %s\n", data_name[j]) ;
+                fprintf(o_log, "**** Rejected trace (rms exceed the threshold): %s\n", data_name[j]) ;
             free((void*)data_name[j]) ;
             free((void*)data[j])      ;
             free_G(G+j)               ;
@@ -1666,9 +1664,6 @@ void screen_ratio(int *nsac,char **data_name,double **data,double ***G,sachdr *h
     {
         if (opt->rms_r[j]<opt->rms_r_th && opt->rms_r[j]>1./opt->rms_r_th)
         {
-            fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
-                             hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
-                             hd_synt[j].user[2], hd_synt[j].user[3]) ; 
             data_name[newn] = data_name[j] ;
             data[newn]      = data[j]      ;
             G[newn]         = G[j]         ;
@@ -1682,6 +1677,9 @@ void screen_ratio(int *nsac,char **data_name,double **data,double ***G,sachdr *h
         else
         {
             fprintf(stderr, "**** Rejected trace (rms ratio exceed the threshold): %s\n", 
+                            data_name[j]) ;
+            if (o_log != NULL)
+                fprintf(o_log, "**** Rejected trace (rms ratio exceed the threshold): %s\n", 
                             data_name[j]) ;
             free((void*)data_name[j]) ;
             free((void*)data[j])      ;
@@ -1714,10 +1712,6 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
         val = opt->p2p[j];
         if ( (min < val) && (val < max) && (fabs(opt->avg[j]) < (opt->p2p_med)/2.) )
                   {
-                    if (opt->th_val <= 0. && o_log != NULL)
-                          fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", hd_synt[j].kstnm, 
-                                           hd_synt[j].knetwk, hd_synt[j].kcmpnm, hd_synt[j].gcarc, hd_synt[j].az, 
-                                           hd_synt[j].user[2], hd_synt[j].user[3]) ; 
                     data_name[newn] = data_name[j] ;
                     data[newn]      = data[j]      ;
                     G[newn]         = G[j]         ;
@@ -1730,8 +1724,9 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
                   }
         else 
                   {
+                    fprintf(stderr,"**** Rejected trace (p2p or avg out of bounds): %s\n", data_name[j])  ; 
                     if (o_log != NULL)
-                          fprintf(stderr,"**** Rejected trace (p2p or avg out of bounds): %s\n",
+                          fprintf(o_log,"**** Rejected trace (p2p or avg out of bounds): %s\n",
                                           data_name[j])  ; 
                     free((void*)data_name[j]);
                     free((void*)data[j])     ;
@@ -2861,10 +2856,6 @@ void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char 
             opt->p2p[ns] *= 1000                 ;
             opt->avg[ns] *= 1000                 ; 
         }
-        if (opt->th_val <= 0. && opt->med_val <= 0.)
-            fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f\n", (*hd_synt)[ns].kstnm, 
-                             (*hd_synt)[ns].knetwk, (*hd_synt)[ns].kcmpnm, (*hd_synt)[ns].gcarc, (*hd_synt)[ns].az, 
-                             (*hd_synt)[ns].user[2], (*hd_synt)[ns].user[3]) ;
         strcpy( (*sacfiles)[ns], datafile) ;
         ns++ ;
     }
