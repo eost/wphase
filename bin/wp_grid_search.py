@@ -268,11 +268,15 @@ def main(argv):
     # Set comments in output ps file
     Median    = '-med '
     if 'P2P_SCREENING' in iconfig:
-        if iconfig['P2P_SCREENING'] != 'YES':
+        p2p_items = iconfig['P2P_SCREENING'].split()
+        if p2p_items[0] != 'YES':
             Median = ' '
-    ths = '5.0 3.0 0.9'
+        elif len(p2p_items)>1:
+            for p in p2p_items[1:]:
+                Median += p+' '
+    ths = '-th 5.0 3.0 0.9'
     if 'RMS_SCREENING' in iconfig:
-        ths = iconfig['RMS_SCREENING']
+        ths = '-th '+iconfig['RMS_SCREENING']
     comments = [VERSION,'GF_PATH: '+GF_PATH,'Screening: '+Median+ths]
 
     # Read reference CMTFILE
