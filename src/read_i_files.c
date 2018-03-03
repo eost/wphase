@@ -112,7 +112,7 @@ int get_cmtf(eq, flag)
         fprintf(stderr,"ERROR: reading pdeline in cmtfile %s\n",eq->cmtfile) ;
         exit(1);
     }
-    tmp1 = sscanf(&eq->pdeline[5], "%i %i %i %i %i %lf %lf %lf %lf", 
+    tmp1 = sscanf(&eq->pdeline[5], "%d %d %d %d %d %lf %lf %lf %lf", 
                 &eq->ot_ye, &eq->ot_mo, &eq->ot_dm, &eq->ot_ho, &eq->ot_mi, 
                 &tmp2     , &eq->pde_evla, &eq->pde_evlo, &eq->pde_evdp ) ;
     check_scan(9, tmp1   , eq->cmtfile  , cmtfile);
