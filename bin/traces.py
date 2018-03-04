@@ -268,7 +268,7 @@ def main(argv):
     pages = 1
     fig = plt.figure()
     fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.4)
-    print('%d pages:'%(npages))
+    print('All pages will be saved in %s'%(OPDFFILE))
     pp = mpl.backends.backend_pdf.PdfPages(OPDFFILE)
     basem = None
     for l in L:
@@ -284,8 +284,7 @@ def main(argv):
         # pages
         if count > perpage:
             plt.suptitle(title+ ',   p %d/%d'%(pages,npages), fontsize=16, y=0.95)
-            ofic = 'page_W_%02d.pdf'%(pages)
-            print(ofic)
+            print('page %d/%d'%(pages,npages))
             #fig.set_rasterized(True)
             pp.savefig(orientation='landscape')
             plt.close()
@@ -341,8 +340,7 @@ def main(argv):
             print('Cannot use basemap')
         count += 1
         nchan += 1
-    ofic = 'page_W_%02d.pdf'%(pages)
-    print(ofic)
+    print('page %d/%d'%(pages,npages))
     #fig.set_rasterized(True)
     plt.suptitle(title + ',    p %d/%d'%(pages,npages), fontsize=16, y=0.95)
     pp.savefig(orientation='landscape')
