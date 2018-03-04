@@ -73,7 +73,6 @@ rm -f ${o_file}
 cat << EOF > ${o_file}
 set      gf_path = \$GF_PATH
 set      wp_home = \$WPHASE_HOME
-set      gmt_bin = \$GMT_BIN
 set      rdseed  = \$RDSEED
 set      home    = \$HOME
 
@@ -84,7 +83,6 @@ setenv   ARGV      "\$argv"
 setenv   DISPLAY   :0.0
 setenv   GF_PATH   \$gf_path
 setenv   WPHASE_HOME   \$wp_home
-setenv   GMT_BIN   \$gmt_bin
 setenv   RDSEED    \$rdseed
 
 unset    *
@@ -114,13 +112,6 @@ set CONV_VBB             = \$BIN/conv_vbb
 
 set SACLST               = \$BIN/saclst
 set DECIMATE             = \$BIN/decim_one_sac_file_to_1sps
-#GMT
-set PSTEXT               = \$GMT_BIN/pstext
-set PSCOAST              = \$GMT_BIN/pscoast
-set PSXY                 = \$GMT_BIN/psxy
-set PSBASEMAP            = \$GMT_BIN/psbasemap
-set GMTSET               = \$GMT_BIN/gmtset
-set PSHISTOGRAM          = \$GMT_BIN/pshistogram
 
 # commands
 EOF
