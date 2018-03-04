@@ -28,7 +28,6 @@ If you use the W-phase package for your own research, please cite the following 
 * python2.7 (or later)
 * You have to install numpy, matplotlib, basemap and netCDF4 to run some python scripts which make figures.
 * rdseed
-* GMT4
 
 To install these dependencies on MacOs, [you can refer to this page](http://wphase.unistra.fr/wiki/doku.php/wphase:macos).
 
@@ -37,7 +36,6 @@ To install these dependencies on MacOs, [you can refer to this page](http://wpha
 To install the code, we must first setup a few environment variables. If you use csh or tcsh:
 
 ```
-setenv GMT_BIN      /path/to/gmt/bin
 setenv RDSEED       /path/to/rdseed/executable
 setenv GF_PATH      /path/to/greens/functions/database
 setenv WPHASE_HOME  /path/to/wphase/package
@@ -46,7 +44,6 @@ setenv WPHASE_HOME  /path/to/wphase/package
 If you use bash:
 
 ```
-export GMT_BIN=/path/to/gmt/bin
 export RDSEED=/path/to/rdseed/executable
 export GF_PATH=/path/to/greens/functions/database
 export WPHASE_HOME=/path/to/wphase/package
