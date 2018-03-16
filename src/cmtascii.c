@@ -52,12 +52,12 @@
 
 double **set_mt(double *vm) ;
 void   get_planes(double *vm, double **eval3, double ***evec3, double *s1, double *d1, 
-                  double *r1, double *s2,double *d2,double *r2) ;
+        double *r1, double *s2,double *d2,double *r2) ;
 void   jacobi(double **a,int n, int np, double *d, double **v, int *nrot) ;
 void   eigsrt(double *d, double **v, int n) ;
 int    charplot(double *M, double s1, double d1, double s2, double d2, 
-                char D, char P, char W, char B, char sep, char pnod, 
-                int rx, int ry, FILE *stream) ;
+        char D, char P, char W, char B, char sep, char pnod, 
+        int rx, int ry, FILE *stream) ;
 void   format_latlon(double lat, double lon, char *slat, char *slon) ;
 void   vn2sdr(double *vn, double *vs, double *s, double *d, double *r);
 double round(double x);
@@ -122,7 +122,8 @@ int main(int argc, char *argv[])
     printf("Moment mag.  : %5.2f\n",Mw)  ;  
     printf("PDE location : Lat=%7s; Lon=%8s; Dep=%5.1f km\n",pdela,pdelo,eq.pde_evdp) ; 
     printf("Centroid loc.: Lat=%7s; Lon=%8s; Dep=%5.1f km\n",cenla,cenlo,eq.evdp)        ;
-    printf("Origin time  : %04d/%02d/%02d %02d:%02d:%05.2f\n", eq.ot_ye,eq.ot_mo, eq.ot_dm,eq.ot_ho,eq.ot_mi, (double)eq.ot_se+(double)eq.ot_ms/1000.)  ;
+    printf("Origin time  : %04d/%02d/%02d %02d:%02d:%05.2f\n", eq.ot_ye,eq.ot_mo,
+           eq.ot_dm,eq.ot_ho,eq.ot_mi, (double)eq.ot_se+(double)eq.ot_ms/1000.)  ;
     printf("Time delay   : %-5.1f sec\n",eq.ts) ;
     printf("Half duration: %-5.1f sec\n\n",eq.hd) ;
     printf("Moment tensor: scale= 1.0E+%02d dyn.cm\n",p) ;
@@ -186,7 +187,7 @@ void get_planes(vm, eval3, evec3, s1,d1,r1, s2,d2,r2)
     int    nrot, i ;
     double **TM;
     double *vn1, *vn2 ;
-  
+    double tmp;
     /* Memory allocation */
     *eval3 = double_alloc(3)    ;
     *evec3 = double_alloc2(3,3) ;
@@ -207,6 +208,13 @@ void get_planes(vm, eval3, evec3, s1,d1,r1, s2,d2,r2)
     }
     vn2sdr(vn1, vn2, s1, d1, r1); 
     vn2sdr(vn2, vn1, s2, d2, r2); 
+  
+    if (*d1 > *d2)
+    {
+         tmp = *s1; *s1 = *s2; *s2 = tmp;
+         tmp = *d1; *d1 = *d2; *d2 = tmp;
+         tmp = *r1; *r1 = *r2; *r2 = tmp;
+    }
   
     /* Memory Freeing */
     free((void*)vn1) ;
