@@ -174,6 +174,8 @@ double *T, double *P, sachdr *hdr)
     /* Longitudinal */
     get_name(segm1, "/RR/", segm2, "L.SAC", sac_GF);
     rhdrsac(sac_GF, hdr, &ierror) ;
+    if (hdr->npts != max)
+        hdr->npts = max ;
     rdatsac(sac_GF, hdr, GFs[4], &ierror) ; /* Read samples */
 
     get_name(segm1, "/TT/", segm2, "L.SAC", sac_GF);
