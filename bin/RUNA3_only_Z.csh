@@ -20,12 +20,18 @@ set PREPARE = ${BIN}/prepare_wp.csh
 set WPINVER = ${BIN}/wpinversion
 
 set median  = "-med"
-set p2p_scr = `$GREP ^P2P_SCREENING i_master| $CUT -d':' -f2`
-if ( $#p2p_scr != 0 && $p2p_scr != "YES" ) set median = ""
+set p2p_flag = `$GREP ^P2P_SCREENING i_master | $CUT -d':' -f2`
+set p2p_yes = `$ECHO $p2p_flag | $CUT -d':' -f2 | $GREP YES`
+set p2p_scr = `$ECHO $p2p_flag | $CUT -d':' -f2 | $SED 's/YES//'`
+if ( $#p2p_flag != 0 && $#p2p_yes == 0 ) then
+    set median = ""
+else if ( $#p2p_scr != 0 ) then
+    set median = "${median} $p2p_scr"
+endif    
+
 set ths     = "5.0 3.0 0.9"
 set rms_scr = `$GREP ^RMS_SCREENING i_master| $CUT -d':' -f2`
 if ( $#rms_scr != 0 ) set ths = "$rms_scr"
- 
 
 if ( -e SYNTH ) ${RM} -rf SYNTH 
 ${MKDIR} SYNTH; 
