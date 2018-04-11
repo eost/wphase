@@ -98,7 +98,7 @@ def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,basem=None):
         from mpl_toolkits.basemap import Basemap
         if flagreg:
             basem = Basemap(projection='laea',lat_0=evla,lon_0=evlo, width=DLON*1.11e5, 
-                        height=DLAT*1.11e5,resolution ='c')
+                        height=DLAT*1.11e5,resolution='l')
         else:
             basem = Basemap(projection='ortho',lat_0=evla,lon_0=evlo,resolution='c')
 
@@ -319,14 +319,26 @@ def main(argv):
         plt.ylim(ylims)        
         # Annotations
         if sacdata.kcmpnm[2] == 'Z':
-            label = r'%s %s %s %s $(\phi,\Delta) = %6.1f^{\circ}, %6.1f^{\circ}$'%(
+            if sys.version_info >= (2,7):
+                label = r'%s %s %s %s $(\phi,\Delta) = %6.1f^{\circ}, %6.1f^{\circ}$'%(
                     sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-            sacdata.az, sacdata.gcarc)
+                    sacdata.az, sacdata.gcarc)
+            else:
+                label = r'%s %s %s %s Az=%3.0f, delta=%3.0f' %(
+                    sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+                    sacdata.az, sacdata.gcarc)
+            
         else:
-            label  = r'%s %s %s %s $(\phi,\Delta,\alpha) = %6.1f^{\circ},'
-            label += '%6.1f^{\circ}, %6.1f^{\circ}$'
-            label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-            sacdata.az, sacdata.gcarc, sacdata.cmpaz)    
+            if sys.version_info >= (2,7):
+                label  = r'%s %s %s %s $(\phi,\Delta,\alpha) = %6.1f^{\circ},'
+                label += '%6.1f^{\circ}, %6.1f^{\circ}$'
+                label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+                                sacdata.az, sacdata.gcarc, sacdata.cmpaz) 
+            else:
+                label  = r'%s %s %s %s Az=%3.0f, delta=%3.0f'
+                label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+                                sacdata.az, sacdata.gcarc)
+        
         plt.title(label,fontsize=10.0,va='center',ha='center')
         if not (count-1)%nc:
             plt.ylabel('mm',fontsize=10)
