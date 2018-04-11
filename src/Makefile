@@ -75,6 +75,7 @@ EXE = 	$(BIN)/WP_HEADER.CSH		\
 	$(BIN)/prep_kernels 		\
 	$(BIN)/wpinversion_gs 		\
 	$(BIN)/cmtascii			\
+	$(BIN)/gcmtascii			\
 	$(BIN)/decim_one_sac_file_to_1sps
 
 OBJS =  read_stats.o     \
@@ -109,6 +110,10 @@ $(BIN)/WP_HEADER.CSH:configure.csh
 $(BIN)/cmtascii:cmtascii.o proto_alloc.o rwtextfiles.o jacobi.o charplot.o read_i_files.o
 	$(CC) $(LDFLAGS) cmtascii.o proto_alloc.o rwtextfiles.o jacobi.o charplot.o \
         read_i_files.o -o $(BIN)/cmtascii -lm
+
+$(BIN)/gcmtascii:gcmtascii.o proto_alloc.o rwtextfiles.o jacobi.o charplot.o read_i_files.o
+	$(CC) $(LDFLAGS) gcmtascii.o proto_alloc.o rwtextfiles.o jacobi.o charplot.o \
+        read_i_files.o -o $(BIN)/gcmtascii -lm
 
 # Inversion
 $(BIN)/wpinversion:wpinversion.o wpinversion_sub.o jacobi.o charplot.o \
