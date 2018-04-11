@@ -548,8 +548,8 @@ void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, double *
                             (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], rms[i][0]/rms[i][1],
                             data_norm[i]/rms[i][1], opt->p2p[i], opt->avg[i], opt->wgt[i]);
         if (o_log != NULL)
-            fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f %14.8f\n", hd_synt[i].kstnm, 
-                            hd_synt[i].knetwk, hd_synt[i].kcmpnm, hd_synt[i].gcarc, hd_synt[i].az, 
+            fprintf( o_log,"stat: %-9s %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f %14.8f\n", hd_synt[i].kstnm, 
+		            hd_synt[i].knetwk, hd_synt[i].khole, hd_synt[i].kcmpnm, hd_synt[i].gcarc, hd_synt[i].az, 
                             hd_synt[i].user[2], hd_synt[i].user[3], rms[i][0]/rms[i][1]) ;
 
         n0 += hd_synt[i].npts ;
