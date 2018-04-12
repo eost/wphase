@@ -1590,7 +1590,8 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
 
         strcpy((*hd_synt)[ns].kstnm, hd_data.kstnm)   ; 
         strcpy((*hd_synt)[ns].knetwk, hd_data.knetwk) ; 
-        strcpy((*hd_synt)[ns].kcmpnm, hd_data.kcmpnm) ; 
+        strcpy((*hd_synt)[ns].kcmpnm, hd_data.kcmpnm) ;
+	strcpy((*hd_synt)[ns].khole, hd_data.khole) ;
         /* Calculate seismogram peak-to-peak and average amplitude */
         if (opt->op_pa <= 0.) 
         {
@@ -2838,9 +2839,9 @@ void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char 
         strcpy((*hd_synt)[ns].kstnm, hd_data.kstnm)   ; 
         strcpy((*hd_synt)[ns].knetwk, hd_data.knetwk) ; 
         strcpy((*hd_synt)[ns].kcmpnm, hd_data.kcmpnm) ; 
-            strcpy((*hd_synt)[ns].khole, hd_data.khole) ; 
+	strcpy((*hd_synt)[ns].khole, hd_data.khole) ; 
         (*hd_synt)[ns].az     = hd_data.az     ;
-            (*hd_synt)[ns].baz    = hd_data.baz    ;
+	(*hd_synt)[ns].baz    = hd_data.baz    ;
         (*hd_synt)[ns].gcarc  = hd_data.gcarc  ;
         (*hd_synt)[ns].stla   = hd_data.stla   ;
         (*hd_synt)[ns].stlo   = hd_data.stlo   ;
