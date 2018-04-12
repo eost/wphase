@@ -74,9 +74,9 @@ int    charplot(double *M, double s1, double d1, double s2, double d2,
 		char D, char P, char W, char B, char sep, char pnod, 
 		int rx, int ry, FILE *stream) ;
 void   format_latlon(double lat, double lon, char *slat, char *slon, int res) ;
+void   vn2sdr(double *vn, double *vs, double *s, double *d, double *r);
 
-int 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   int    buildtime,i, p;
   double s1, d1, r1, s2, d2, r2, plg[3], azm[3] ;
@@ -178,7 +178,6 @@ main(int argc, char *argv[])
 
 
   /* Get Network of stations used for moment tensor solution    */
-   
    if (( f=fopen(argv[2],"r"))==NULL)
     {
       fprintf (stderr, "ERROR (read) : opening file: %s \n", argv[2]) ;
@@ -303,8 +302,7 @@ void format_latlon(double lat, double lon, char *slat, char *slon, int res)
   }
 }
 
-double **
-set_mt(double *vm)
+double **set_mt(double *vm)
 {
   double **TM ;
   TM       = double_alloc2(3,3) ;
@@ -322,89 +320,86 @@ set_mt(double *vm)
 }
 
 
-void 
-get_planes(vm, eval3, evec3, s1,d1,r1, s2,d2,r2)
-     double *vm, **eval3, ***evec3, *s1, *d1, *r1, *s2, *d2, *r2;
+void get_planes(vm, eval3, evec3, s1,d1,r1, s2,d2,r2)
+    double *vm, **eval3, ***evec3, *s1, *d1, *r1, *s2, *d2, *r2;
 {
-  int    nrot, i, j ;
-  double **TM;
-  double si, co  ;
-  double *vn, *vs ;
-
+    int    nrot, i ;
+    double **TM;
+    double *vn1, *vn2 ;
+    double tmp;
+    /* Memory allocation */
+    *eval3 = double_alloc(3)    ;
+    *evec3 = double_alloc2(3,3) ;
+    vn1    = double_alloc(3)    ;
+    vn2    = double_alloc(3)    ;
   
-  /* Memory allocation */
-  *eval3 = double_alloc(3)    ;
-  *evec3 = double_alloc2(3,3) ;
-  vn     = double_alloc(3)    ;
-  vs     = double_alloc(3)    ;
-  
-  /* Tensor representation */
-  TM = set_mt(vm) ;
+    /* Tensor representation */
+    TM = set_mt(vm) ;
 
-  /* Get eigvalues and eigvectors*/
-  jacobi(TM,3,3,(*eval3),*evec3,&nrot) ;
-  eigsrt((*eval3),*evec3,3) ;
+    /* Get eigvalues and eigvectors*/
+    jacobi(TM,3,3,(*eval3),*evec3,&nrot) ;
+    eigsrt((*eval3),*evec3,3) ;
 
-  /* Select poles in the lower hemisphere */
-  for(j=0; j<3; j++)
-	  if((*evec3)[0][j] > 0.0) 
-		for(i=0 ; i<3 ; i++)
-		  (*evec3)[i][j] *= -1.;
-
-  /* *** First nodal plane *** */
-  for(i=0 ; i<3 ; i++)
+    for(i=0 ; i<3 ; i++)
     {
-      vn[i] = ((*evec3)[i][0]+(*evec3)[i][2])/sqrt(2.) ;
-      vs[i] = ((*evec3)[i][0]-(*evec3)[i][2])/sqrt(2.) ;
+         vn1[i] = ((*evec3)[i][0]+(*evec3)[i][2])/sqrt(2.) ;
+         vn2[i] = ((*evec3)[i][0]-(*evec3)[i][2])/sqrt(2.) ;
     }
-  if (vn[0] < 0.)
-    for(i=0; i<3; i++)
-      {
-		vn[i] *= -1.;
-		vs[i] *= -1.;
-      }
+    vn2sdr(vn1, vn2, s1, d1, r1); 
+    vn2sdr(vn2, vn1, s2, d2, r2); 
   
-  *s1 = atan2(vn[1], vn[2]) ;
-  *d1 = acos(vn[0]) ;
-   si = sin(*s1) ;
-   co = cos(*s1) ;
-   /* printf("%f  %f\n",-vs[1]*si - vs[2]*co,(-vs[1]*co + vs[2]*si)*vn[0]);*/
-  *r1 = atan2((-vs[1]*si - vs[2]*co),(-vs[1]*co + vs[2]*si)*vn[0]) ;
-
-  /* *** Second nodal plane *** */
-  for(i=0 ; i<3 ; i++)
+    if (*d1 > *d2)
     {
-      vn[i] = ((*evec3)[i][0]-(*evec3)[i][2])/sqrt(2.) ;
-      vs[i] = ((*evec3)[i][0]+(*evec3)[i][2])/sqrt(2.) ;
+         tmp = *s1; *s1 = *s2; *s2 = tmp;
+         tmp = *d1; *d1 = *d2; *d2 = tmp;
+         tmp = *r1; *r1 = *r2; *r2 = tmp;
     }
-  if (vn[0] < 0.)
-    for(i=0; i<3; i++)
-      {
-		vn[i] *= -1.;
-		vs[i] *= -1.;
-      }
   
-  *s2 = atan2(vn[1], vn[2]) ;
-  *d2 = acos(vn[0]) ;
-   si = sin(*s2) ;
-   co = cos(*s2) ;
-  *r2 = atan2((-vs[1]*si - vs[2]*co),(-vs[1]*co + vs[2]*si)*vn[0]) ;
+    /* Memory Freeing */
+    free((void*)vn1) ;
+    free((void*)vn2) ;
+    for(i=0 ; i<3 ; i++) 
+        free((void*)TM[i]) ;
+    free((void**)TM)    ;
+}
 
+void vn2sdr(double *vn, double *vs, double *s, double *d, double *r)
+{
+    const float EPSI = 0.001;
+    int   i;
+    /* printf("%f %f %f\n", vn[0], vn[1], vn[2]); */
+    if (vn[0] < 0.)              // Upwards normal
+        for(i=0; i<3; i++)
+        {
+             vn[i] *= -1.;
+             vs[i] *= -1.;
+        }
 
-  *s1 /= (double)DEG2RAD ;
-  if ((*s1) < 0.) (*s1) += 360. ;
-  *d1 /= (double)DEG2RAD ;
-  *r1 /= (double)DEG2RAD ;
-  
-  *s2 /= (double)DEG2RAD ;
-  if ((*s2) < 0.) (*s2) += 360. ;
-  *d2 /= (double)DEG2RAD ;
-  *r2 /= (double)DEG2RAD ;
+    if ( vn[0] > 1. - EPSI )     // Horizontal plane
+    {
+        *s = 0.;
+        *d = 0.;
+        *r = atan2(-vs[2], -vs[1]);
+    }
 
-  /* Memory Freeing */
-  free((void*)vn) ;
-  free((void*)vs) ;
-  for(i=0 ; i<3 ; i++) 
-    free((void*)TM[i]) ;
-  free((void**)TM)    ;
+    else if ( vn[0] < EPSI )    // Vertical plane
+    {
+        *s = atan2(vn[1], vn[2]);
+        *d = M_PI/2.;
+        *r = atan2(vs[0], -vs[1]*vn[2] + vs[2]*vn[1]);
+    }
+
+    else                        // Oblique plane
+    { 
+        *s = atan2(vn[1], vn[2]);
+        *d = acos(vn[0]);
+        *r = atan2((-vs[1]*vn[1] - vs[2]*vn[2]), (-vs[1]*vn[2] + vs[2]*vn[1])*vn[0]);
+    }
+
+    *s /= (double)DEG2RAD;
+    if ((*s) < 0.) 
+        (*s) += 360.;
+    *d /= (double)DEG2RAD;
+    *r /= (double)DEG2RAD;
+    return;
 }
