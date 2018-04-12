@@ -119,7 +119,7 @@ def r_xy_gfile(ifile):
     # All done
     return [latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms]
 
-def plotxyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=False,mksmin=1.,mksmax=300.):
+def plotxyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',ofile='grid_search_z.pdf',flag=False,mksmin=1.,mksmax=300.):
     if not flag:
         try:            
             from mpl_toolkits.mplot3d import Axes3D
@@ -128,7 +128,7 @@ def plotxyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=Fal
     latopt,lonopt,depopt,rmsopt,latpde,lonpde,deppde,rmspde,lats,lons,deps,rmss,depths,rmsdep = rxyzgfile(ifilexyz) 
     fig = plt.figure(figsize=(7.6875, 6.125))
     if flag:
-        ofile='grid_search_z.pdf'
+        #ofile='grid_search_z.pdf'
         minrms = rmsopt
         maxrms = rmss.max()
         nrmsdep = rmsdep/minrms*100.0
@@ -142,7 +142,7 @@ def plotxyz(ifilexyz='grid_search_xyz_out',ifilexy='grid_search_xy_out',flag=Fal
         plt.ylim([99.,rmsmax])
         plt.grid()
     else:
-        ofile='grid_search_xyz.pdf'
+        #ofile='grid_search_xyz.pdf'
         latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms = r_xy_gfile(ifilexy)
         minrms  = rmsopt
         maxrms  = rmss.max()
@@ -319,13 +319,23 @@ def plot_etopo(file,m,ax):
 
 def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=False,mksmin=1.,
         mksmax=30.,delta=1.0,resolution = 'h'):
+    from os.path import expandvars,exists 
     # Initialize variables
     rms  = []
     lon  = []
     lat  = []
     flag = False
-    # Read file
-    latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms = r_xy_gfile(ifile)    
+    # Read file grid search XYZ
+    # WARNING :: PDE from XYZ is the initial epicenter 
+    xyzfile='grid_search_xyz_out'
+    if exists(xyzfile):
+        latopt,lonopt,depopt,rmsopt,ilatpde,ilonpde,deppde,rmspde,lats,lons,deps,rmss,depths,rmsdep = rxyzgfile(xyzfile)
+    # Read file grid search XY
+    # WARNING :: PDE from XY is the solution of grid search in Z 
+    latopt,lonopt,depopt,rmsopt,latpde,lonpde,rmspde,lat,lon,rms = r_xy_gfile(ifile) 
+    if not exists(xyzfile):
+        ilatpde=latpde
+        ilonpde=lonpde
     # RMS Scale
     minrms = rmsopt    
     nrms = rms/minrms*100.
@@ -333,7 +343,7 @@ def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=Fal
     minrms = 100.
     plt.figure(figsize=(9.6125,  8.1))
     ax1 = plt.axes([0.04,0.13,0.8,0.85])
-    ax2 = plt.axes([0.85,0.2,0.1,0.6])
+    ax2 = plt.axes([0.85,0.35,0.1,0.6])
     cm = plt.get_cmap('jet')
     for i in range(8):
         Bpos   = interp(i,8,0.,1.)
@@ -356,8 +366,7 @@ def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=Fal
             print('   The mpl_toolkits.basemap module is necessary')
             print('   if you want to plot bathymetry and coastlines')
             basemapflag = False
-    if basemapflag:
-        from os.path import expandvars,exists        
+    if basemapflag:       
         wraplons(lon)
         deltalon = delta/np.cos(np.pi*latpde/180.0)
         latll = lat.min() - delta ; latur = lat.max() + delta ;
@@ -370,10 +379,13 @@ def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=Fal
         if exists(ETOPO_file):
             try:
                 plot_etopo(ETOPO_file,m,ax1)
+                etopoflag=True
             except:
+                etopoflag=False
                 print('WARNING: error encountered while plotting ETOPO')
                 print('         Will not display topography/bathymetry')
         else:
+            etopoflag=False
             if ETOPO_file[0]=='$':
                 print('WARNING: Undefined environment variable $ETOPOFILE')
             else:
@@ -381,22 +393,45 @@ def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=Fal
                 print('         Will not display topography/bathymetry')
         # Coastlines/meridians/paralells
         plt.axes(ax1)
-        m.drawcoastlines(linewidth=0.3)
+        m.drawcoastlines(linewidth=0.5)
         m.drawmeridians(np.arange(float(int(lonll)),lonur+delta,delta),labels=[0,0,0,1],
                 dashes=[1,1],linewidth=0.5,color='k')
         m.drawparallels(np.arange(float(int(latll)),latur+delta,delta),labels=[1,0,0,0],
                 dashes=[1,1],linewidth=0.5,color='k')
+        if not etopoflag:
+            try:
+                BLUEMARBLE_file = expandvars('$BLUEMARBLEFILE')
+                if exists(BLUEMARBLE_file):
+                    m.warpimage(image=BLUEMARBLE_file)
+                else:
+                    if BLUEMARBLE_file[0]=='$':
+                        print('WARNING: Undefined environment variable $BLUEMARBLEFILE')
+                    else:
+                        print('WARNING: BLUEMARBLEFILE=%s does not exists'%(BLUEMARBLE_file))
+                        print('         Will not display topography/bathymetry')
+            except:
+                print('WARNING: error encountered while plotting background bluemarbe image')
+                print('         Will not display topography/bathymetry')
+                pass
+            m.fillcontinents(color='0.65', lake_color='white')
+        m.drawcountries(linewidth=0.3, color='k')
         # RMS misfit
         for la,lo,err,siz in zip(lat,lon,nrms,mksize):
             x,y = m(lo,la)
             col = cm((err-minrms)/(maxrms-minrms))        
             m.plot([x],[y],c=col,marker='o',ms=siz)
-        l = [lonpde,lonopt]
+        l = [ilonpde,lonopt]
         wraplons(l)
-        xpde,ypde = m(l[0],latpde)
+        xpde,ypde = m(l[0],ilatpde)
         xopt,yopt = m(l[1],latopt)
-        m.plot([xpde],[ypde],'k+',ms=14,mew=2.5,alpha=0.7)
-        m.plot([xopt],[yopt],'rv',ms=14,alpha=0.7)
+        #m.plot([xpde],[ypde],'k+',ms=14,mew=2.5,alpha=0.7)
+        #m.plot([xopt],[yopt],'rv',ms=14,alpha=0.7)
+        m.plot([xpde],[ypde],'rv',ms=14,alpha=0.7,label='Initial PDE')
+        m.plot([xopt],[yopt],'g*',ms=18,mew=1.2,alpha=0.7,label='W-Phase Centroid')
+        leg = plt.legend(loc='lower center',prop={'size': 12},numpoints=1, scatterpoints=1, \
+                             bbox_to_anchor=(0.5, 0.01),ncol=2, shadow=True, fancybox=True)
+        #leg.legendHandles[0]._sizes = [30]
+        leg.get_frame().set_alpha(0.6)
     else:
         deltalon = delta/np.cos(np.pi*latpde/180.0)
         latll = lat.min() - delta ; latur = lat.max() + delta ;
@@ -453,12 +488,15 @@ def disphelp(cmd):
     print('\nAll parameters are optional:')
     print('   -t, --onlyts         centroid time-shift grid search (ts) only')
     print('   -p, --onlyxy         centroid position grid search (xy) only')
+    print('   -z, --onlyz          centroid position grid search (z) only')
     print('   -b, --basemap        display coastlines and bathymetry')
-    print('   --its \'file\'       set input ASCII file for ts (grid_search_ts_out)')
-    print('   --ixy \'file\'       set input ASCII file for xy ((grid_search_xy_out))')
-    print('   --ots \'file\'       set output png file for ts (grid_search_ts.pdf)')
-    print('   --oxy \'file\'       set output png file for xy ((grid_search_xy.pdf))')
-    print('\n   -h, --help           display this help and exit')
+    print('   --its  \'file\'       set input ASCII file for ts (grid_search_ts_out)')
+    print('   --ixy  \'file\'       set input ASCII file for xy ((grid_search_xy_out))')
+    print('   --ixyz \'file\'       set input ASCII file for xy ((grid_search_xyz_out))')
+    print('   --ots  \'file\'       set output png file for ts (grid_search_ts.pdf)')
+    print('   --oxy  \'file\'       set output png file for xy ((grid_search_xy.pdf))')
+    print('   --oxyz \'file\'       set output png file for xy ((grid_search_xyz.pdf))')
+    print('\n   -h,  --help           display this help and exit')
     print('\nReport bugs to: <zacharie.duputel@eost.u-strasbg.fr>')
     # All done
     return;
@@ -466,7 +504,7 @@ def disphelp(cmd):
 
 def main(argv):
     try:
-        opts, args = go.gnu_getopt(argv[1:],'tphzb',["onlyts","onlyxy","basemap","its=","ixy=","ots=","oxy=","help"])
+        opts, args = go.gnu_getopt(argv[1:],'tphzb',["onlyts","onlyxy","onlyz","basemap","its=","ixy=","ixyz=","ots=","oxy=","oxyz=","help"])
     except go.GetoptError as err:
         usage(sys.argv[0])
         raise
@@ -478,6 +516,8 @@ def main(argv):
     ts_ofile='grid_search_ts.pdf'
     xy_ifile='grid_search_xy_out'
     xy_ofile='grid_search_xy.pdf'
+    xyz_ifile='grid_search_xyz_out'
+    xyz_ofile='grid_search_xyz.pdf'
     for o, a in opts:
         if o == '-h' or o == '--help':
             disphelp(sys.argv[0])
@@ -498,14 +538,20 @@ def main(argv):
             ts_ifile = a
         if o == '--ixy':
             xy_ifile = a
+        if o == '--ixyz':
+            xyz_ifile = a
         if o == '--ots':
             ts_ofile = a
         if o == '--oxy':
             xy_ofile = a
+        if o == '--oxyz':
+            xyz_ofile = a
         if o == '-b' or o=='--basemap':
             basemap = 1
-        if o == '-z':
+        if o == '-z' or o == '--onlyz':
             flagxyz = True
+            flagts = False
+            flagxy = False
 
     if flagts:
         plotts(ts_ifile,ts_ofile)
@@ -513,7 +559,7 @@ def main(argv):
         plotxy(xy_ifile,xy_ofile,basemapflag=basemap)
     if flagxyz:
         #plotxyz(flag=False)
-        plotxyz(flag=True)
+        plotxyz(xyz_ifile,xy_ifile,xyz_ofile,flag=True)
 
 
 if __name__=='__main__':

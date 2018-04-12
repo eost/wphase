@@ -548,8 +548,8 @@ void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, double *
                             (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], rms[i][0]/rms[i][1],
                             data_norm[i]/rms[i][1], opt->p2p[i], opt->avg[i], opt->wgt[i]);
         if (o_log != NULL)
-            fprintf( o_log,"stat: %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f %14.8f\n", hd_synt[i].kstnm, 
-                            hd_synt[i].knetwk, hd_synt[i].kcmpnm, hd_synt[i].gcarc, hd_synt[i].az, 
+            fprintf( o_log,"stat: %-9s %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f %14.8f\n", hd_synt[i].kstnm, 
+		            hd_synt[i].knetwk, hd_synt[i].khole, hd_synt[i].kcmpnm, hd_synt[i].gcarc, hd_synt[i].az, 
                             hd_synt[i].user[2], hd_synt[i].user[3], rms[i][0]/rms[i][1]) ;
 
         n0 += hd_synt[i].npts ;
@@ -1590,7 +1590,8 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
 
         strcpy((*hd_synt)[ns].kstnm, hd_data.kstnm)   ; 
         strcpy((*hd_synt)[ns].knetwk, hd_data.knetwk) ; 
-        strcpy((*hd_synt)[ns].kcmpnm, hd_data.kcmpnm) ; 
+        strcpy((*hd_synt)[ns].kcmpnm, hd_data.kcmpnm) ;
+	strcpy((*hd_synt)[ns].khole, hd_data.khole) ;
         /* Calculate seismogram peak-to-peak and average amplitude */
         if (opt->op_pa <= 0.) 
         {
@@ -2838,9 +2839,9 @@ void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char 
         strcpy((*hd_synt)[ns].kstnm, hd_data.kstnm)   ; 
         strcpy((*hd_synt)[ns].knetwk, hd_data.knetwk) ; 
         strcpy((*hd_synt)[ns].kcmpnm, hd_data.kcmpnm) ; 
-            strcpy((*hd_synt)[ns].khole, hd_data.khole) ; 
+	strcpy((*hd_synt)[ns].khole, hd_data.khole) ; 
         (*hd_synt)[ns].az     = hd_data.az     ;
-            (*hd_synt)[ns].baz    = hd_data.baz    ;
+	(*hd_synt)[ns].baz    = hd_data.baz    ;
         (*hd_synt)[ns].gcarc  = hd_data.gcarc  ;
         (*hd_synt)[ns].stla   = hd_data.stla   ;
         (*hd_synt)[ns].stlo   = hd_data.stlo   ;
