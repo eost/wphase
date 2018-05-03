@@ -40,7 +40,7 @@ if $status exit 1
 $PREPARE Z
 if $status exit 1
 
-set version = "Version: "
+set version = "Version: r252"
 if ( -e $WPHASE_HOME/.svn/entries ) set version = "${version}`$HEAD -4 $WPHASE_HOME/.svn/entries | $TAIL -1`"
 set screening = "Screening: $median"
 set comgfdir  = "GF_PATH: $GF_PATH"
