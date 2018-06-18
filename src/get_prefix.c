@@ -63,7 +63,7 @@ void get_prefix(double cmt_dep, double xdeg, char *best_segm1, char *best_segm2,
     #else
     #ifdef __GFS_0005D__
     idist = (int)floor((1000.0*xdeg+2.5)/5.)*5;
-    idistmax = 22100;
+    idistmax = 30000;
     #else
     idist = 2*(int)floor(5.*xdeg)+1;
     #endif
