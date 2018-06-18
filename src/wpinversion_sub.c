@@ -533,6 +533,32 @@ void get_gap(sachdr *hd_synt, int ns, double *gap)
     free((void*)tmp) ;
 }
 
+
+/*****************************************/
+/*    set_dmindmax(hd_synt, ns, opt)     */
+/*****************************************/
+/* Compute gap                           */
+/* Input: hd_synt: structs sac headers   */
+/*        nsac   : nb of channels      */
+/*        opt    : structopt to fill out */
+void set_dmindmax(sachdr *hd_synt, int nsac, structopt *opt)
+{
+    int i ;
+    double gcarc;
+    
+    opt->dmin = 2.e4 ;
+    opt->dmax = 0.   ;  
+    
+    for( i=0 ; i<nsac ; i++)
+    {
+        gcarc = (double) hd_synt[i].gcarc ;
+        if (opt->dmin > gcarc)
+            opt->dmin = gcarc ;
+        if (opt->dmax < gcarc)
+            opt->dmax = gcarc ;
+    }
+}
+
 void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, double *data_norm, 
                    structopt *opt, FILE *o_log) 
 {
@@ -1605,6 +1631,7 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
         ns++ ;
     }
     fclose(i_sac) ;
+
     /* Memory Freeing */
     for(i=ns;i<*nsac;i++)
         free((void*)(*sacfiles)[i]) ;

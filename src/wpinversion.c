@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
     rms = double_calloc2(nsac, 2*(opt.ref_flag+1));
     calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt);
     get_gap(hd_synt, nsac, &gap);
+    set_dmindmax(hd_synt,nsac,&opt);
     w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt,o_log); 
 
     /* Set stike/dip/rake */

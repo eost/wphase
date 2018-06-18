@@ -143,6 +143,7 @@ void write_cmtf(char *filename, str_quake_params *eq, double *vm) ;
 void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, 
 		double *data_norm, structopt *opt, FILE *o_log) ;
 void get_gap(sachdr *hd_synt, int ns, double *gap) ;
+void set_dmindmax(sachdr *hd_synt, int nsac, structopt *opt) ;
 int charplot(double *M, double s1, double d1, double s2, double d2, 
 	     char D, char P, char W, char B, char sep, char pnod, 
 	     int rx, int ry, FILE *stream) ;
