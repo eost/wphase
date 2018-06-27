@@ -70,7 +70,7 @@ def addrefsol(cmtref,cmtfile):
 
 
 def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,flagts,flagxy,sdrM0={},dz=0.,
-        minz=3.5,ts_ofile='grid_search_ts_out',xy_ofile='grid_search_xy_out',stdoutput='stdout',
+        minz=MINDEP,ts_ofile='grid_search_ts_out',xy_ofile='grid_search_xy_out',stdoutput='stdout',
         logfile='LOG/gs_o_wpinversion.log', comments = []):
     '''
     Grid search
@@ -106,7 +106,7 @@ def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,f
 
     # Setting parameters
     cmttmp = cmtref
-    optpar = ' -log %s -osyndir gs_SYNTH -icmtf %s '%(logfile,cmtref)
+    optpar = ' -log %s -osyndir gs_SYNTH -icmtf %s -minz %.5f'%(logfile,cmtref,minz)
     for o,a in sdrM0.items():
         if len(a):
             optpar += ' %s %s '%(o,a)
@@ -135,15 +135,15 @@ def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,f
                     ts2 = 100. 
                 else: 
                     ts2 = 168.
-        optpar += ' -ts %10.4f %10.4f %10.4f -ts_Nit %d -otsgsf %s'%(ts1,ts_dt,ts2,ts_Nit,ts_ofile)
+        optpar += ' -ts %10.5f %10.5f %10.5f -ts_Nit %d -otsgsf %s'%(ts1,ts_dt,ts2,ts_Nit,ts_ofile)
         if not fastflag:
             optpar += ' -hdsafe '
     else:
         optpar += ' -nots '
     if flagxy:
-        optpar += ' -xy_Nit %d -dx %.2f -Nx %d -Nopt %d -oxygsf %s'%(xy_Nit,xy_dx,xy_Nx,xy_Nopt,xy_ofile)
+        optpar += ' -xy_Nit %d -dx %.5f -Nx %d -Nopt %d -oxygsf %s'%(xy_Nit,xy_dx,xy_Nx,xy_Nopt,xy_ofile)
         if dz>0.:
-            optpar += ' -dz %.2f -minz %.2f '%(dz,minz)
+            optpar += ' -dz %.5f '%(dz)
         wcmtfile = 'xy_WCMTSOLUTION'        
     else:
         optpar += ' -noxy '
