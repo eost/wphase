@@ -98,7 +98,7 @@ def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,basem=None):
         from mpl_toolkits.basemap import Basemap
         if flagreg:
             basem = Basemap(projection='laea',lat_0=evla,lon_0=evlo, width=DLON*1.11e5, 
-                        height=DLAT*1.11e5,resolution ='c')
+                        height=DLAT*1.11e5,resolution ='i')
         else:
             basem = Basemap(projection='ortho',lat_0=evla,lon_0=evlo,resolution='c')
 
