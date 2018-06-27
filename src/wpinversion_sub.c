@@ -2203,9 +2203,9 @@ int find_coor(double **coords,int Ngrid, double lat,double lon,double dep)
 {
     int i;
     for(i=0;i<Ngrid;i++)
-        if( (int)round(coords[i][0]*100.)==(int)round(lat*100.)
-                  && (int)round(coords[i][1]*100.)==(int)round(lon*100.)
-                  && (int)round(coords[i][2]*100.)==(int)round(dep*100.) )
+        if( (int)round(coords[i][0]*10000.)==(int)round(lat*10000.)
+                  && (int)round(coords[i][1]*10000.)==(int)round(lon*10000.)
+                  && (int)round(coords[i][2]*10000.)==(int)round(dep*10000.) )
             return 1 ;     
     return 0 ;
 }
@@ -2594,9 +2594,11 @@ void xy_gridsearch(int nsac,int M, int nd,double *dv,double *tv, sachdr *hd_synt
     if (IZ[0]<l)
         IZ[0] = l;
     if ((k%2) != (IZ[0]%2)) 
-        IZ[0]+= 1;
+        if((IZ[0]+1)<=IZ[1])
+            IZ[0]+= 1; 
     if (IZ[1]<=IZ[0]) 
     {
+            
         IZ[1]   = IZ[0] ;
         opt->dz = 0     ;
     }
