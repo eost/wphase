@@ -34,6 +34,9 @@ Input parameters for W-phase inversion
 
 import os,sys
 
+# Minimum depth
+MINDEP    = 11.5 
+
 # Time-shift grid-search parameters
 TS_NIT   = 3  # Nb of iterations
 TS_DT    = 4. # Initial time step
@@ -53,7 +56,6 @@ XYZ_DX    = 0.6  # Intial samp. period
 XYZ_NX    = 1    # Half_width = XYZ_NX*XYZ_DX (if XYZ_NX=0: no Lat/Lon grid-seach is performed)
 XYZ_NOPT  = 4    # Nb of optimal-points
 DDEP      = 50.  # Delta depth ( Z_SEARCH within Z_INITIAL +/- DDEP )
-MINDEP    = 11.5 
 XYZ_OFILE = 'grid_search_xyz_out'
 
 # Filenames
