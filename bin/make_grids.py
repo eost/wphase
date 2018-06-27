@@ -33,6 +33,19 @@
 
 # GRID SEARCH PLOTS
 
+# Insert WPHASE BIN in sys.path (Useful to get local versions)
+import os,sys
+WPHOME = os.path.expandvars('$WPHASE_HOME')
+WPBIN = os.path.join(WPHOME,'bin')
+sys.path.insert(0,'./')
+sys.path.insert(1,WPBIN)
+
+# Avoid writing pyc files
+sys.dont_write_bytecode = True
+
+# WPHASE ARGUMENTS
+from Arguments import *
+
 # Customizing matplotlib
 import matplotlib as mpl
 mpl.use('AGG')
@@ -42,6 +55,7 @@ import sys
 import getopt as go
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 # Avoid writing pyc files
 sys.dont_write_bytecode = True
@@ -318,7 +332,7 @@ def plot_etopo(file,m,ax):
         plt.axes(ax)
 
 def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=False,mksmin=1.,
-        mksmax=30.,delta=1.0,resolution = 'h'):
+        mksmax=30.,delta=XY_NX*XY_DX,resolution = 'h'):
     # Initialize variables
     rms  = []
     lon  = []
