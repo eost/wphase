@@ -569,7 +569,7 @@ void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, double *
     n0 = 0;
     for(i=0; i<ns; i++)
     {
-        fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %14.8f %14.8f %14.8f %14.8f %14.8f %10.3f\n",
+        fprintf(o_sac,"%-65s %8.2f %8.2f %6d %6d %6d %6d %14.8f %14.8f %14.8f %14.8f %14.8f %10.3e\n",
                             sacfiles[i], hd_synt[i].az, hd_synt[i].gcarc, n0, n0 + hd_synt[i].npts, 
                             (int)hd_synt[i].user[0], (int)hd_synt[i].user[1], rms[i][0], rms[i][0]/rms[i][1],
                             data_norm[i]/rms[i][1], opt->p2p[i], opt->avg[i], opt->wgt[i]);
