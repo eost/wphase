@@ -1927,7 +1927,7 @@ void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_s
     {
         opt->dts_val = dtmin ;
         while ( opt->dts_val <= dtmax )
-        {        
+        {       
             /* Compute inversion for opt->dts_val */
             load_kernel(eq,opt,hd_synt,nsac,nd,dv,tv,G,o_log)      ;
             if (opt->dc_flag) /* Double Couple inversion                 */
@@ -1948,6 +1948,7 @@ void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_s
             }
             Err = 1000.*(global_rms[0]) ;
             ts  = eq->ts+opt->dts_val    ;
+
             fprintf(tmp,"%03d %03d %10.4f %10.4f %10.4f %10.4f %10.4f %12.8f %12.8f\n",
                             k,it,ts,eq->hd,eq->evla,eq->evlo,eq->evdp,Err,(global_rms[0])/(global_rms[1])) ;
             printf("        ts = %10.4f rms = %12.8f mm\n",ts, Err) ;
@@ -1965,16 +1966,20 @@ void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_s
             k++ ;
         }
         printf("Optimum values: time_shift = %10.4f rms = %12.8f mm \n",eq->ts+*tsopt,*rmsopt) ;
+
+
         if (dtmax <= *tsopt + dt && Nexp < 5)
         {
             printf("Optimum value on the maximum explored time-shift\n   ... extending the time-shift grid-search area\n");
             dtmin = *tsopt + dt   ;
-            dtmax = *tsopt + 4*dt ;
+            dtmax = *tsopt + 4*dt ; /* shifts the bounds to [tsopt , tsopt+4*dt] */
             Nexp++;
             continue ;
         }
+
         if (it>0)
             dt = dt/2. ;
+
         if (tsopt2 <= *tsopt)
         {
             dtmin = tsopt2 - dt/2. ;
@@ -1985,9 +1990,7 @@ void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_s
             dtmin = (*tsopt)  - dt/2. ;
             dtmax = tsopt2 + dt/2. ;
         }
-        if (dtmin < 1. - eq->ts)
-            while (dtmin <  1. - eq->ts)
-                dtmin += dt ;
+
         it++;
     }
     fclose(tmp);
