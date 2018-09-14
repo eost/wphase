@@ -121,7 +121,7 @@ def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,basem=None):
     xs,ys = m(coords[:,1],coords[:,0])
     xr,yr = m(stlo,stla)
     xc,yc = m(evlo,evla)
-    m.plot(xs,ys,'o',color=(1.00000,  0.74706,  0.00000),ms=4.0,alpha=1.0,zorder=1000)
+    m.plot(xs,ys,'o',color=(1.0,  1.0,  0.0),ms=4.0,alpha=1.0,zorder=1000)
     m.plot([xr],[yr],'o',color=(1,.27,0),ms=8,alpha=1.0,zorder=1001)
     m.scatter([xc],[yc],c='b',marker=(5,1,0),s=120,zorder=1002)    
 
@@ -321,10 +321,18 @@ def main(argv):
         if sacdata.kcmpnm[2] == 'Z':
             label = r'%s %s %s %s $(\phi,\Delta) = %6.1f^{\circ}, %6.1f^{\circ}$'%(
                     sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-            sacdata.az, sacdata.gcarc)
+                    sacdata.az, sacdata.gcarc)
+            if flagreg:
+                label = r'%s %s %s %s $(\phi,\Delta) = %6.2f^{\circ}, %6.2f^{\circ}$'%(
+                          sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+                          sacdata.az, sacdata.gcarc)
+
         else:
             label  = r'%s %s %s %s $(\phi,\Delta,\alpha) = %6.1f^{\circ},'
-            label += '%6.1f^{\circ}, %6.1f^{\circ}$'
+            if flagreg:
+                label += '%6.2f^{\circ}, %6.2f^{\circ}$'
+            else:   
+                label += '%6.1f^{\circ}, %6.1f^{\circ}$'
             label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
             sacdata.az, sacdata.gcarc, sacdata.cmpaz)    
         plt.title(label,fontsize=10.0,va='center',ha='center')
