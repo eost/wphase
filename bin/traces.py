@@ -318,23 +318,44 @@ def main(argv):
             ylims = YLIMFIXED
         plt.ylim(ylims)        
         # Annotations
+        plt.rcParams['font.family'] = 'sans-serif'
+        plt.rcParams['font.sans-serif'] = 'Arial'
+        plt.rcParams['mathtext.fontset'] = 'custom'
+        plt.rcParams['mathtext.rm'] = 'sans'
+        plt.rcParams['mathtext.it'] = 'sans:italic'
+        plt.rcParams['mathtext.default'] = 'it'
+
         if sacdata.kcmpnm[2] == 'Z':
-            label = r'%s %s %s %s $(\phi,\Delta) = %6.1f^{\circ}, %6.1f^{\circ}$'%(
+            if sys.version_info >= (2,7):
+                label = r'%s %s %s %s $(\phi,\Delta) = %6.1f\degree, %6.1f\degree$'%(
+                    sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+                    sacdata.az, sacdata.gcarc)
+            else:
+                label = r'%s %s %s %s Az=%3.0f, delta=%3.0f' %(
                     sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
                     sacdata.az, sacdata.gcarc)
             if flagreg:
-                label = r'%s %s %s %s $(\phi,\Delta) = %6.2f^{\circ}, %6.2f^{\circ}$'%(
-                          sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-                          sacdata.az, sacdata.gcarc)
+                if sys.version_info >= (2,7):
+                    label = r'%s %s %s %s $(\phi,\Delta) = %6.2f\degree, %6.2f\degree$'%(
+                            sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+                            sacdata.az, sacdata.gcarc)
+                else:
+                    label = r'%s %s %s %s Az= %6.2f, delta=%6.2f'%(
+                            sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+                            sacdata.az, sacdata.gcarc)
+
 
         else:
-            label  = r'%s %s %s %s $(\phi,\Delta,\alpha) = %6.1f^{\circ},'
-            if flagreg:
-                label += '%6.2f^{\circ}, %6.2f^{\circ}$'
-            else:   
-                label += '%6.1f^{\circ}, %6.1f^{\circ}$'
-            label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-            sacdata.az, sacdata.gcarc, sacdata.cmpaz)    
+            if sys.version_info >= (2,7):
+                label  = r'%s %s %s %s $(\phi,\Delta,\alpha) = %6.1f\degree,'
+                label += '%6.1f\degree, %6.1f\degree$'
+                label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+                                sacdata.az, sacdata.gcarc, sacdata.cmpaz) 
+            else:
+                label  = r'%s %s %s %s Az=%3.0f, delta=%3.0f'
+                label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+                                sacdata.az, sacdata.gcarc)
+        
         plt.title(label,fontsize=10.0,va='center',ha='center')
         if not (count-1)%nc:
             plt.ylabel('mm',fontsize=10)
