@@ -175,8 +175,10 @@ int main(int argc, char *argv[])
             fast_ts_gridsearch(nsac,M,nd,dv,tv,hd_synt,data,G,dcalc,rms,global_rms, &opt,&eq,&tsopt,&rmsopt,o_log);
             opt.dts_val = 0.; /* Optimum solution */
             eq.ts += tsopt  ;      
-            eq.hd = eq.ts ;
+	        if (!opt.hdind) 
+	            eq.hd = eq.ts ;
         }
+
         realloc_gridsearch(nsac,rms,global_rms,dcalc,opt.ref_flag+1) ;
           //save_G(G, nsac, hd_synt, "G_file_before");
         calc_kernel(&eq,&opt,hd_synt,nsac,"l",nd,dv,tv,G,o_log) ;
@@ -522,6 +524,7 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
     opt->xy_Nx     = 3   ;
     opt->xy_Nopt   = 5   ;
     opt->hdsafe    = 0   ;
+    opt->hdind     = 0   ;
     opt->mindep    = 3.5 ;
     opt->dz        = 0.  ;
     opt->dc_flag   = 0   ;
@@ -624,14 +627,21 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
               error_syntax(argv,"Incompatible arguments -- tsmin < tsmax is required (-ts)") ;
             else if (opt->dts_step <= 0)
               error_syntax(argv,"Incompatible arguments --  dts > 0 is required (-ts)") ;
-            else if (opt->dts_min < 0)
-              error_syntax(argv,"Negative time-shift -- tsmax > tsmin > 0 is required(-ts)") ;
             k+=4 ;
             i++  ;
         }
         else if (!strncmp(argv[j],"-hdsafe",7))
         { 
             opt->hdsafe = 1;
+            if (opt->hdind)
+                error_syntax(argv,"Incompatible options -hdsafe and -hdind") ;
+            k+=1 ;
+        }       
+        else if (!strncmp(argv[j],"-hdind",7))
+        { 
+            opt->hdind = 1;
+            if (opt->hdsafe)
+                error_syntax(argv,"Incompatible options -hdsafe and -hdind") ;
             k+=1 ;
         }       
         else if (!strncmp(argv[j],"-xy_Nit",7)) 
@@ -758,6 +768,9 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
         else if (!strncmp(argv[j],"--help",6))
             disphelp(argv,opt) ;
     } /* endfor */
+
+    if (!opt->hdind && opt->dts_min < 0)
+        error_syntax(argv,"Positive minimum time-shift is required without -hdind (-ts)") ;
 
     if (k != numarg2)
         error_syntax(argv,"") ;

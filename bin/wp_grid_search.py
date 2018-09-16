@@ -69,7 +69,7 @@ def addrefsol(cmtref,cmtfile):
     return;
 
 
-def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,flagts,flagxy,sdrM0={},dz=0.,
+def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,hdind,flagts,flagxy,sdrM0={},dz=0.,
         minz=MINDEP,ts_ofile='grid_search_ts_out',xy_ofile='grid_search_xy_out',stdoutput='stdout',
         logfile='LOG/gs_o_wpinversion.log', comments = []):
     '''
@@ -117,16 +117,16 @@ def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,f
 
     # Prepare command line
     EXE = WPINV_XY        
-    if flagts: # time-shift
+
+    # -- flag ts -- #
+    if flagts: 
         if len(tsb) == 2:
             ts1 = tsb[0]
             ts2 = tsb[1]
         else:        
             if eq.mag < 5.5:
-                ts1 = 1.
-                ts2 = eq.ts*3.    
-                if ts2 > 100.:
-                    ts2 = 100.    
+                ts1 = 0.
+                ts2 = eq.ts + 10.   
             else:
                 ts1 =  1. 
                 if eq.mag <= 7.0:
@@ -136,10 +136,13 @@ def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,f
                 else: 
                     ts2 = 168.
         optpar += ' -ts %10.5f %10.5f %10.5f -ts_Nit %d -otsgsf %s'%(ts1,ts_dt,ts2,ts_Nit,ts_ofile)
-        if not fastflag:
+        if not fastflag and not hdind:
             optpar += ' -hdsafe '
+	    if fastflag and hdind: 
+	        optpar += ' -hdind '   # requires both conditions
     else:
         optpar += ' -nots '
+    # -- flag xy -- #
     if flagxy:
         optpar += ' -xy_Nit %d -dx %.5f -Nx %d -Nopt %d -oxygsf %s'%(xy_Nit,xy_dx,xy_Nx,xy_Nopt,xy_ofile)
         if dz>0.:
@@ -183,6 +186,7 @@ def disphelp():
     usage()
     print('\nAll parameters are optional:')
     print('   -s, --hdsafe         Use a  time grid-search considering ts=fd')
+    print('   -d, --hdind          Do not equalize hd to ts after grid-search')
     print('   -t, --onlyts         Centroid time-shift grid search only')
     print('   -p, --onlyxy         Centroid position grid search only')
     print('   -S, --npar           Do not use the parallelized grid-search and use ')
@@ -204,7 +208,7 @@ def disphelp():
 def main(argv):
     # Extract command line options
     try:
-        opts, args = getopt.gnu_getopt(argv[1:],'stpSdi:nhz',["hdsafe","onlyts","onlyxy","npar",
+        opts, args = getopt.gnu_getopt(argv[1:],'stpSdi:nhz',["hdsafe","hdind","onlyts","onlyxy","npar",
                                       "imas=","strike=","dc","nont","dip=",
                                       "rake=","mom=","noref","xyz","old",
                                       "help"])
@@ -215,6 +219,7 @@ def main(argv):
     # Parse command line options
     i_master = IMASTER
     fastflag = True
+    hdind    = False
     flagts   = True
     flagxy   = True
     flagxyz  = False
@@ -225,7 +230,15 @@ def main(argv):
             disphelp()
             sys.exit(0)
         if o == '-s' or o == '--hdsafe':
+            if hdind:
+                usage()
+                raise getopt.GetoptError('options -s and -d cannot be used simultaneously')
             fastflag = False
+	    if o == '-d' or o == '--hdind':
+            if not fastflag:
+                usage()
+                raise getopt.GetoptError('options -s and -d cannot be used simultaneously')
+	        hdind    = True
         if o == '-t' or o == '--onlyts':
             if not flagts:
                 usage()
@@ -238,6 +251,7 @@ def main(argv):
                 raise getopt.GetoptError('options -t and -p cannot be used simultaneously')                
             flagts   = False
             fastflag = False
+	        hdind    = False
             flagxy = True
         if o == '--dc':
             sdrM0['-dc']=''
@@ -292,12 +306,12 @@ def main(argv):
 
     # TS and/or LAT/LON Grid-search
     if (flagts or flagxy) and not flagxyz:
-        grid_search(eq,cmtref,TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,fastflag,
+        grid_search(eq,cmtref,TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,fastflag,hdind,
                     flagts,flagxy,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments)
 
     # TS and LAT/LON/DEP Grid-search
     if flagxyz:
-        grid_search(eq,cmtref,TS_NIT,TS_DT,TSBOUNDS,XYZ_NIT,XYZ_DX,XYZ_NX,XYZ_NOPT,fastflag,
+        grid_search(eq,cmtref,TS_NIT,TS_DT,TSBOUNDS,XYZ_NIT,XYZ_DX,XYZ_NX,XYZ_NOPT,fastflag,hdind,
                     flagts,flagxyz,sdrM0,dz=DDEP,minz=MINDEP,ts_ofile=TS_OFILE,xy_ofile=XYZ_OFILE,
                     comments=comments)
         if flagxy:
@@ -305,7 +319,7 @@ def main(argv):
             if flagref:
                 addrefsol(cmtref,'_tmp_CMTSOLUTION.xyz')
             grid_search(eq,'_tmp_CMTSOLUTION.xyz',TS_NIT,TS_DT,TSBOUNDS,XY_NIT,XY_DX,XY_NX,XY_NOPT,
-                    0,0,1,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments)
+                    0,0,0,1,sdrM0,ts_ofile=TS_OFILE,xy_ofile=XY_OFILE,comments=comments) 
             utils.rm('_tmp_CMTSOLUTION.xyz')
     
     # Cleaning up

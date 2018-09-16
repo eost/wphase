@@ -1990,7 +1990,10 @@ void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_s
             dtmin = (*tsopt)  - dt/2. ;
             dtmax = tsopt2 + dt/2. ;
         }
-
+        if (!opt->hdind) /* Negative time-shift allowed only when hdind is on */
+            if (dtmin < -eq->ts)
+                while (dtmin <  -eq->ts)
+                    dtmin += dt ;
         it++;
     }
     fclose(tmp);
@@ -2319,6 +2322,7 @@ void copy_opt(structopt *i_opt, structopt *o_opt,int nsac)
     o_opt->xy_Nopt  = i_opt->xy_Nopt  ;
     o_opt->xy_Nit   = i_opt->xy_Nit   ;
     o_opt->hdsafe   = i_opt->hdsafe   ;
+    o_opt->hdind    = i_opt->hdind    ;   
     o_opt->dc_flag  = i_opt->dc_flag  ;
     o_opt->ref_flag = i_opt->ref_flag ;
     o_opt->ip       = i_opt->ip       ;
@@ -2601,7 +2605,6 @@ void xy_gridsearch(int nsac,int M, int nd,double *dv,double *tv, sachdr *hd_synt
             IZ[0]+= 1; 
     if (IZ[1]<=IZ[0]) 
     {
-            
         IZ[1]   = IZ[0] ;
         opt->dz = 0     ;
     }
