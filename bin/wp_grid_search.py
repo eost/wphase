@@ -138,8 +138,8 @@ def grid_search(eq,cmtref,ts_Nit,ts_dt,tsb,xy_Nit,xy_dx,xy_Nx,xy_Nopt,fastflag,h
         optpar += ' -ts %10.5f %10.5f %10.5f -ts_Nit %d -otsgsf %s'%(ts1,ts_dt,ts2,ts_Nit,ts_ofile)
         if not fastflag and not hdind:
             optpar += ' -hdsafe '
-	    if fastflag and hdind: 
-	        optpar += ' -hdind '   # requires both conditions
+        if fastflag and hdind: 
+            optpar += ' -hdind '   # requires both conditions
     else:
         optpar += ' -nots '
     # -- flag xy -- #
@@ -251,7 +251,7 @@ def main(argv):
                 raise getopt.GetoptError('options -t and -p cannot be used simultaneously')                
             flagts   = False
             fastflag = False
-	        hdind    = False
+            hdind    = False
             flagxy = True
         if o == '--dc':
             sdrM0['-dc']=''

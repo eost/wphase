@@ -175,8 +175,8 @@ int main(int argc, char *argv[])
             fast_ts_gridsearch(nsac,M,nd,dv,tv,hd_synt,data,G,dcalc,rms,global_rms, &opt,&eq,&tsopt,&rmsopt,o_log);
             opt.dts_val = 0.; /* Optimum solution */
             eq.ts += tsopt  ;      
-	        if (!opt.hdind) 
-	            eq.hd = eq.ts ;
+            if (!opt.hdind) 
+                eq.hd = eq.ts ;
         }
 
         realloc_gridsearch(nsac,rms,global_rms,dcalc,opt.ref_flag+1) ;
