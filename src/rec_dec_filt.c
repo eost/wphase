@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
 {
     int     i, n ,tmp, count, nsects, ierror = 1;
     int     beg, end, MAX, nsac;
+    const int pre_P_safety = 10 ;
     double  *c1, *c2, *c3, *b1,*b2,*a1,*a2, scale, gain ;
     double  *x_in, *x_int, dt=1. ;
     char    **ids, *x_int_fil ;
@@ -157,7 +158,7 @@ int main(int argc, char *argv[])
             dtrd( x_in,hdr.npts) ;                       /* dtrend */
             beg = (int)(eq.preevent/hdr.delta+0.5);
             end = (int)(eq.fend/hdr.delta+0.5);
-            taper(x_in,hdr.npts,eq.preevent,eq.fend) ;   /* taper  */
+            taper(x_in,hdr.npts,eq.preevent-pre_P_safety,eq.fend) ;   /* taper  */
         }
         else if (eq.idtr==2)   /*   shift the base line, eq.preevent=duration over which the  */
         {                    /*                      base line is defined, eq.fend = dummy  */
