@@ -30,7 +30,7 @@
 
 
 # Compilers
-CC      =  gcc-8          # C compiler
+CC      =  gcc          # C compiler
 FC	    =  gfortran     # fortran compiler
 			    #
 # Some parameters
