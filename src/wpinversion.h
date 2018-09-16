@@ -76,7 +76,7 @@
 typedef struct
 {
   int    ts_Nit, ps, xy_Nx, xy_Nopt, xy_Nit, ncom ;
-  int    hdsafe, dc_flag, ref_flag,ip,ib[4] ;
+  int    hdsafe, hdind, dc_flag, ref_flag,ip,ib[4] ;
   double th_val, cth_val, df_val, med_val,ts;
   double op_pa, p2p_med, p2p_low, p2p_high  ;
   double dts_min,dts_step,dts_max, dts_val  ;
