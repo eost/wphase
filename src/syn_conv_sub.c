@@ -136,6 +136,7 @@ void conv_by_stf(double delay,double half_width,char *itype,sachdr *hdr,double *
     int lh, nbeg, nend;
     const int max_base     = 59;   /*  SAMPLES  */
     const int pre_P_safety = 10;   /*  SAMPLES  */
+    int i;
 
     nbeg = 0;
     nend = (int)floor((hdr->t[0] - hdr->b - pre_P_safety)/hdr->delta);
@@ -143,6 +144,13 @@ void conv_by_stf(double delay,double half_width,char *itype,sachdr *hdr,double *
 
     left_taper(x_in, hdr->npts, nbeg, nend);
     lh = (int)floor(half_width/hdr->delta + 0.5);
-    runave(x_in,x_conv,hdr->npts,lh,itype);
+
+    if (lh > 1)
+        runave(x_in,x_conv,hdr->npts,lh,itype);
+    else
+    {
+        for(i=0;i<hdr->npts;i++)
+            x_conv[i] = x_in[i] ;
+    }
     hdr->b += delay;
 }
