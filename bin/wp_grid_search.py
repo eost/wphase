@@ -234,11 +234,11 @@ def main(argv):
                 usage()
                 raise getopt.GetoptError('options -s and -d cannot be used simultaneously')
             fastflag = False
-	    if o == '-d' or o == '--hdind':
+        if o == '-d' or o == '--hdind':
             if not fastflag:
                 usage()
                 raise getopt.GetoptError('options -s and -d cannot be used simultaneously')
-	        hdind    = True
+            hdind    = True
         if o == '-t' or o == '--onlyts':
             if not flagts:
                 usage()
