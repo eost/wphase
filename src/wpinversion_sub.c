@@ -2018,6 +2018,7 @@ void run_ts_gs(double *ts,int Ngrid, int nsac, int M, int nd, double *dv,
 {
     int i,j;
     double Cond,***dcalc,**rms,*global_rms,*sdrM0,***G=NULL ;
+    structopt opt_gs       ;
     str_quake_params eq_gs ;  
     #ifdef _OPENMP      
     int rang,ntaches;
@@ -2037,41 +2038,47 @@ void run_ts_gs(double *ts,int Ngrid, int nsac, int M, int nd, double *dv,
     eq_gs.wp_win4 = double_alloc(4)      ;   
     eq_gs.vm      = double_calloc2(2,NM) ;
     copy_eq(eq,&eq_gs) ;  
+    opt_gs.rms_in = double_alloc(nsac) ;
+    opt_gs.rms_r  = double_alloc(nsac) ;
+    opt_gs.p2p    = double_alloc(nsac) ;
+    opt_gs.avg    = double_alloc(nsac) ;
+    opt_gs.wgt    = double_alloc(nsac) ;
+    copy_opt(opt,&opt_gs,nsac) ;
     /* Main loop */
     for(i=0;i<Ngrid;i++)
     {
         eq_gs.ts = ts[i];
         eq_gs.hd = ts[i];
         /* Compute G */
-        calc_kernel(&eq_gs,opt,hd_synt,nsac,"l",nd,dv,tv,G,NULL) ;
+        calc_kernel(&eq_gs,&opt_gs,hd_synt,nsac,"l",nd,dv,tv,G,NULL) ;
         /* Inversion */
         if (opt->dc_flag) /* Double Couple inversion                 */
         {                /* Warning: This has not been fully tested */
             for(j=0;j<4;j++)
                   sdrM0[j] = opt->priorsdrM0[j] ;           
-            inversion_dc(nsac,hd_synt,G,data,sdrM0,vrms[i],opt,NULL) ;
+            inversion_dc(nsac,hd_synt,G,data,sdrM0,vrms[i],&opt_gs,NULL) ;
             sdr2mt(eq_gs.vm[0],sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2]) ;
         }
         else
         {
-            inversion(M,nsac,hd_synt,G,data,eq_gs.vm[0],&Cond,opt,NULL) ;
+            inversion(M,nsac,hd_synt,G,data,eq_gs.vm[0],&Cond,&opt_gs,NULL) ;
             /* Predicted data  */
-            calc_data(nsac,hd_synt,G,eq_gs.vm,data,dcalc,opt,NULL) ;
+            calc_data(nsac,hd_synt,G,eq_gs.vm,data,dcalc,&opt_gs,NULL) ;
             /* RMS error       */
-            calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,opt) ;
+            calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt_gs) ;
             vrms[i][0] = global_rms[0] ;
             vrms[i][1] = global_rms[1] ;
             realloc_gridsearch(nsac, rms, global_rms, dcalc,1) ;
         }
         fflush(stderr);
-  #ifdef _OPENMP      
+        #ifdef _OPENMP      
         if (verbose)
             printf("thread %d/%d %10.4f %12.8f %12.8f\n",rang+1,ntaches,
                        ts[i],vrms[i][0]*1000,vrms[i][0]/vrms[i][1]);
-  #else
+        #else
         if (verbose)
             printf("%10.4f %12.8f %12.8f\n",ts[i],vrms[i][0]*1000,vrms[i][0]/vrms[i][1]);   
-  #endif
+        #endif
         fflush(stdout); 
     }
     /* Free memory */
@@ -2079,6 +2086,11 @@ void run_ts_gs(double *ts,int Ngrid, int nsac, int M, int nd, double *dv,
     free((void*)eq_gs.vm[0])   ;
     free((void*)eq_gs.vm[1])   ;
     free((void**)eq_gs.vm)     ;
+    free((void*)opt_gs.rms_in) ;
+    free((void*)opt_gs.rms_r)  ;
+    free((void*)opt_gs.p2p)    ;
+    free((void*)opt_gs.avg)    ;
+    free((void*)opt_gs.wgt)    ;
     if (opt->dc_flag)
         free((void*)sdrM0);
     for(i=0 ; i<nsac ; i++)
