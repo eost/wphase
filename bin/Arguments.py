@@ -66,7 +66,7 @@ LOGDIR          = 'LOG'
 # traces plot parameters
 LENGTH_GLOBAL   = 3000 ;        # Traces lenght (teleseismic data)
 LENGTH_REGIONAL = 1500 ;        # Traces lenght (regional data)
-DLAT,DLON       = 20.,20.
+DLAT,DLON       = 12.,12.
 OPDFFILE        = 'wp_pages.pdf'
 TRACES_FIGSIZE  = [11.69,8.270]
 YLIM_AUTO = True

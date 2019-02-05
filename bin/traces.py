@@ -97,8 +97,7 @@ def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,basem=None):
     if basem is None:
         from mpl_toolkits.basemap import Basemap
         if flagreg:
-            basem = Basemap(projection='laea',lat_0=evla,lon_0=evlo, width=DLON*1.11e5, 
-                        height=DLAT*1.11e5,resolution ='i')
+            basem = Basemap(projection='laea',lat_0=evla,lon_0=evlo, width=DLON*2.22e5, height=DLAT*2.22e5,resolution ='i')
         else:
             basem = Basemap(projection='ortho',lat_0=evla,lon_0=evlo,resolution='c')
 
@@ -121,9 +120,9 @@ def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,basem=None):
     xs,ys = m(coords[:,1],coords[:,0])
     xr,yr = m(stlo,stla)
     xc,yc = m(evlo,evla)
-    m.plot(xs,ys,'o',color=(1.0,  1.0,  0.0),ms=4.0,alpha=1.0,zorder=1000)
+    m.plot(xs,ys,'o',color=(1.0, 0.74706, 0.0),ms=4.0,alpha=1.0,zorder=1000,mec='k')
     m.plot([xr],[yr],'o',color=(1,.27,0),ms=8,alpha=1.0,zorder=1001)
-    m.scatter([xc],[yc],c='b',marker=(5,1,0),s=120,zorder=1002)    
+    m.scatter([xc],[yc],c='b',marker=(5,1,0),s=120,zorder=1002,edgecolors='k')    
 
     # All done
     return basem
@@ -267,7 +266,7 @@ def main(argv):
     count = 1
     pages = 1
     fig = plt.figure()
-    fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.4)
+    fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.35)
     print('All pages will be saved in %s'%(OPDFFILE))
     pp = mpl.backends.backend_pdf.PdfPages(OPDFFILE)
     basem = None
@@ -291,7 +290,7 @@ def main(argv):
             pages += 1
             count = 1
             fig = plt.figure()
-            fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.4)
+            fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.35)
         # Time - W phase window
         t1 = np.arange(sacdata.npts,dtype='double')*sacdata.delta + sacdata.b - sacdata.o
         t2 = np.arange(sacsynt.npts,dtype='double')*sacsynt.delta + sacsynt.b - sacsynt.o        
@@ -318,44 +317,14 @@ def main(argv):
             ylims = YLIMFIXED
         plt.ylim(ylims)        
         # Annotations
-        plt.rcParams['font.family'] = 'sans-serif'
-        plt.rcParams['font.sans-serif'] = 'Arial'
-        plt.rcParams['mathtext.fontset'] = 'custom'
-        plt.rcParams['mathtext.rm'] = 'sans'
-        plt.rcParams['mathtext.it'] = 'sans:italic'
-        plt.rcParams['mathtext.default'] = 'it'
-
         if sacdata.kcmpnm[2] == 'Z':
-            if sys.version_info >= (2,7):
-                label = r'%s %s %s %s $(\phi,\Delta) = %6.1f\degree, %6.1f\degree$'%(
-                    sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-                    sacdata.az, sacdata.gcarc)
-            else:
-                label = r'%s %s %s %s Az=%3.0f, delta=%3.0f' %(
-                    sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-                    sacdata.az, sacdata.gcarc)
-            if flagreg:
-                if sys.version_info >= (2,7):
-                    label = r'%s %s %s %s $(\phi,\Delta) = %6.2f\degree, %6.2f\degree$'%(
-                            sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-                            sacdata.az, sacdata.gcarc)
-                else:
-                    label = r'%s %s %s %s Az= %6.2f, delta=%6.2f'%(
-                            sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-                            sacdata.az, sacdata.gcarc)
-
-
+            label = u'%s %s %s %s (\u03C6,\u0394) = %6.1f\u00B0, %5.1f\u00B0'
+            label = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+            sacdata.az, sacdata.gcarc)
         else:
-            if sys.version_info >= (2,7):
-                label  = r'%s %s %s %s $(\phi,\Delta,\alpha) = %6.1f\degree,'
-                label += '%6.1f\degree, %6.1f\degree$'
-                label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-                                sacdata.az, sacdata.gcarc, sacdata.cmpaz) 
-            else:
-                label  = r'%s %s %s %s Az=%3.0f, delta=%3.0f'
-                label  = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
-                                sacdata.az, sacdata.gcarc)
-        
+            label = u'%s %s %s %s (\u03C6,\u0394,\u03B1) = %6.1f\u00B0, %5.1f\u00B0, %6.1f\u00B0'
+            label = label%(sacdata.knetwk,sacdata.kstnm, sacdata.kcmpnm, sacdata.khole,
+            sacdata.az, sacdata.gcarc, sacdata.cmpaz)    
         plt.title(label,fontsize=10.0,va='center',ha='center')
         if not (count-1)%nc:
             plt.ylabel('mm',fontsize=10)
@@ -366,7 +335,7 @@ def main(argv):
             basem = showBasemap(ax,cmtla,cmtlo,sacdata.stla,sacdata.stlo,coords,flagreg,basem)
         except:
             showPolarmap(ax,sacdata.az,sacdata.dist,coords)
-            print('Cannot use basemap')
+            print('No basemap module')
         count += 1
         nchan += 1
     print('page %d/%d'%(pages,npages))
