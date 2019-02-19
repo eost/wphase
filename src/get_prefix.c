@@ -52,24 +52,39 @@ void get_prefix(double cmt_dep, double xdeg, char *best_segm1, char *best_segm2,
                                 double *best_depth, double *best_dist )
 {
     char   gf_path[FSIZE];
-    double dd,dd_best,depths[NDEPTHS_LOC];
-    int    jd, nd=88, idist, idistmax;
+    double dd,dd_best,depths[NDEPTHS_LOC],ifac;
+    int    jd, nd=88, idist, idistmin, idistmax;
 
     /* ############################################################### */
     /* This section should be updated if the distance grid is modified */
-    idistmax = 899;
     #ifdef __GFS_01D__
-    idist = (int)floor(10.0*xdeg+0.5);
+    ifac = 10.;
+    idist = (int)floor(ifac*xdeg+0.5);
     #else
     #ifdef __GFS_0005D__
-    idist = (int)floor((1000.0*xdeg+2.5)/5.)*5;
-    idistmax = 30000;
+    ifac = 1000.;
+    idist = (int)floor((ifac*xdeg+2.5)/5.)*5;
     #else
+    #ifdef __GFS_005D__
+    ifac = 1000.;
+    idist = (int)floor((100.0*xdeg+2.5)/5.)*50;
+    #else
+    ifac = 10.;
     idist = 2*(int)floor(5.*xdeg)+1;
+    #endif 
+    #endif 
+    #endif 
+
+    idistmin = 1;
+    idistmax = 899;
+    #ifdef __IDISTMIN__
+    idistmin = __IDISTMIN__;
     #endif
-    #endif /* not FSIZE */  
-  
-    if (idist < 1) 
+    #ifdef __IDISTMAX__
+    idistmax = __IDISTMAX__;
+    #endif
+
+    if (idist < idistmin) 
     {
         fprintf(stderr, "Warning distance too short!; using 0.1 deg\n");
         idist = 1;
@@ -109,9 +124,13 @@ void get_prefix(double cmt_dep, double xdeg, char *best_segm1, char *best_segm2,
     #ifdef __GFS_0005D__
     sprintf(best_segm2, "GF.%05d.SY.LH", idist); 
     #else
+    #ifdef __GFS_005D__
+    sprintf(best_segm2, "GF.%05d.SY.LH", idist); 
+    #else
     sprintf(best_segm2, "GF.%04d.SY.LH", idist); 
     #endif
-    *best_dist = (float)idist/10.;
+    #endif
+    *best_dist = (float)idist/ifac;
     //fprintf(stdout, "Using gf's %s/*/%sZ.SAC\n", best_segm1,best_segm2);
     return;
 }
