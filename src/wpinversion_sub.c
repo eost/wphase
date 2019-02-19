@@ -864,7 +864,7 @@ void comp_GtG(int M,int nsac, sachdr *hd_synt, double ***G, double **GtG, struct
 void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d, 
                   double *vma, double *Cond, structopt *opt, FILE *o_log)
 {
-    int    i, j ,k, l, s, nk, nrot, N  ;
+    int    i, j ,k, l, s, nk, nrot, N ;
     double **GtG, *eigvals, **eigvects, **cov ;
     FILE   *o_cov ;
 
@@ -957,7 +957,7 @@ void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d,
         for(i=0;i<M;i++)
         {
             for(k=0;k<M;k++)
-                fprintf( o_cov,"%16.2f ", cov[i][k]) ;
+                fprintf( o_cov,"%16.4e ", cov[i][k]) ;
             fprintf( o_cov,"\n") ;
         }
         fclose(o_cov) ;
