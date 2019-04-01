@@ -257,7 +257,7 @@ def concatCmap(cmaps,offs,cuts,prop):
                 cur = cmaps[k]._segmentdata[key][i+offs[k]]
                 cdict[key].append((float(int(idx[i+anp]*1000))/1000.,cur[1],cur[2]))
         anp += nps[k]
-    colmap = matplotlib.colors.LinearSegmentedColormap('colormap',cdict,1024)
+    colmap = mpl.colors.LinearSegmentedColormap('colormap',cdict,1024)
     # All done
     return colmap
 
