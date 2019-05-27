@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
   format_latlon(eq.evla, eq.evlo, cenla, cenlo,3);
   sscanf(&eq.pdeline[5],"%*d %*d %*d %*d %*d %*f %*f %*f %*f %*f    %59[a-zA-Z ,.]s",tRegion);
   // GCMT LIKE
-  // printf("%s %s, Mw=%3.1f\n\n",buffer_time,tRegion,Mw) ;                       
+  // printf("%s %s, Mw=%4.2f\n\n",buffer_time,tRegion,Mw) ;                       
   // CPPT LIKE
   printf("Mw=%3.1f, %s\n",Mw,tRegion) ;
   printf("Event Time: %s\n",buffer_time) ;
