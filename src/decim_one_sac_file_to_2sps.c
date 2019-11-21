@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     init_casc(&cascades[ 6], N_casc_len, facs_040);
     init_casc(&cascades[ 7], N_casc_len, facs_030);
     init_casc(&cascades[ 8], N_casc_len, facs_020);
-    init_casc(&cascades[ 8], N_casc_len, facs_010);
+    init_casc(&cascades[ 9], N_casc_len, facs_010);
     init_casc(&cascades[10], N_casc_len, facs_002);
 
     // Parses arguments
