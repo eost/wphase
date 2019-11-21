@@ -4,6 +4,7 @@ bin/WP_HEADER.CSH
 bin/cmtascii
 bin/gcmtascii
 bin/decim_one_sac_file_to_1sps
+bin/decim_one_sac_file_to_2sps
 bin/fast_synth
 bin/fast_synth_only_Z
 bin/fast_synth_rot
