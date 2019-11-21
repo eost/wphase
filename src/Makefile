@@ -69,15 +69,16 @@ EXE = 	$(BIN)/WP_HEADER.CSH		\
 	$(BIN)/wpinversion		\
 	$(BIN)/synth_v6			\
 	$(BIN)/saclst                  	\
-	$(BIN)/fast_synth 		\
+	$(BIN)/fast_synth 	    	\
 	$(BIN)/fast_synth_only_Z  	\
 	$(BIN)/fast_synth_rot 		\
 	$(BIN)/prep_kernels_only_Z 	\
 	$(BIN)/prep_kernels 		\
 	$(BIN)/wpinversion_gs 		\
-	$(BIN)/cmtascii			\
-	$(BIN)/gcmtascii			\
-	$(BIN)/decim_one_sac_file_to_1sps
+	$(BIN)/cmtascii		    	\
+    $(BIN)/gcmtascii	    	\
+	$(BIN)/decim_one_sac_file_to_1sps \
+    $(BIN)/decim_one_sac_file_to_2sps
 
 OBJS =  read_stats.o     \
 	get_prefix.o     \
@@ -187,6 +188,9 @@ ${BIN}/saclst: saclst.o
 # Decimate
 $(BIN)/decim_one_sac_file_to_1sps: decim_one_sac_file_to_1sps.o decimate.o proto_alloc.o rwsacs.o
 	$(CC) $(LDFLAGS) decim_one_sac_file_to_1sps.o decimate.o proto_alloc.o rwsacs.o -o $(BIN)/decim_one_sac_file_to_1sps
+
+$(BIN)/decim_one_sac_file_to_2sps: decim_one_sac_file_to_2sps.o decimate.o proto_alloc.o rwsacs.o
+	$(CC) $(LDFLAGS) decim_one_sac_file_to_2sps.o decimate.o proto_alloc.o rwsacs.o -o $(BIN)/decim_one_sac_file_to_2sps
 
 ########################
 # COMPILE AND ASSEMBLE

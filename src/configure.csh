@@ -112,6 +112,7 @@ set CONV_VBB             = \$BIN/conv_vbb
 
 set SACLST               = \$BIN/saclst
 set DECIMATE             = \$BIN/decim_one_sac_file_to_1sps
+set DECIMATE_2SPS        = \$BIN/decim_one_sac_file_to_2sps
 
 # commands
 EOF
