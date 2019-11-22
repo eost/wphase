@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
         //try_update_name_LH(o_sac_filename);
         n = strlen(o_sac_filename);
         if (strncmp(o_sac_filename+n-5, ".SAC", 4)) 
-            strcpy(o_sac_filename+n-3, "1sps.SAC");
+            strcpy(o_sac_filename+n-3, "2sps.SAC");
     }
     printf("%s\t\t%s\n",   i_sac_filename, o_sac_filename);
 
