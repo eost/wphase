@@ -127,6 +127,7 @@ def parseConfig(cfg_file):
                 key   = key.strip()
                 value = value.strip()
                 if key in config:
+                    config[key] = [config[key]]
                     config[key].append(value)
                 else:
                     config[key]=value
