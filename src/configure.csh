@@ -141,3 +141,86 @@ foreach com ($coms)
          echo "set $COM = $compath" >> ${o_file}
     endif
 end
+
+unset o_file
+set o_file = $BIN/WP_HEADER_GPS.CSH
+
+echo "Creating  $BIN/WP_HEADER_GPS.CSH"
+
+rm -f ${o_file}
+
+cat << EOF > ${o_file}
+set      gf_path = \$GF_PATH
+set      wp_home = \$WPHASE_HOME
+set      rdseed  = \$RDSEED
+set      home    = \$HOME
+set      sac     = \$SAC
+set      sacaux  = \$SACAUX
+
+unsetenv *
+
+setenv   HOME      \$home
+setenv   ARGV      "\$argv"
+setenv   DISPLAY   :0.0
+setenv   GF_PATH   \$gf_path
+setenv   WPHASE_HOME   \$wp_home
+setenv   RDSEED    \$rdseed
+setenv   SAC       \$sac
+setenv   SACAUX    \$sacaux
+
+unset    *
+
+setenv   LC_ALL en_US
+
+set BIN                  = \$WPHASE_HOME/bin
+set TRIM_SAC_FILES	 = \$BIN/trim_sac_files
+set TRIM_SAC_FILES_QRT	 = \$BIN/trim_sac_files_qrt
+set MAKE_RESP_TABLE      = \$BIN/make_resp_lookup_table
+
+set REC_DEC_FILT         = \$BIN/rec_dec_filt
+set SYN_CONV_FILT        = \$BIN/syn_conv_filt
+set ROT_HORIZ_CMP        = \$BIN/rot_horiz_cmp
+
+set PREP_KERNELS         = \${BIN}/prep_kernels
+set PREP_KERNELS_only_Z  = \${BIN}/prep_kernels_only_Z
+
+set FAST_SYNTH_Z         = \$BIN/fast_synth_only_Z
+set FAST_SYNTH           = \$BIN/fast_synth
+set FAST_SYNTH_ROT       = \$BIN/fast_synth_rot
+
+set DELTA_T              = \$BIN/delta_t
+set READCMT              = \$BIN/readcmt
+set SYNTHS               = \$BIN/synth_v6
+set CONV_VBB             = \$BIN/conv_vbb
+
+set SACLST               = \$BIN/saclst
+set DECIMATE             = \$BIN/decim_one_sac_file_to_1sps
+set DECIMATE_2SPS        = \$BIN/decim_one_sac_file_to_2sps
+
+# commands
+EOF
+
+set coms = "echo ls ln cp mv rm sed cat pwd grep expand date mkdir cut awk find head tail sort touch od tr wc seq xargs paste dirname basename ps2pdf gs"
+
+set dirs = '/usr/bin /bin'
+unset WHICH
+foreach dir ($dirs)
+	if -e $dir/which set WHICH = $dir/which
+end
+if ! $?WHICH then
+	echo "ERROR: Command 'which' not found in $dirs"
+        exit 1
+endif
+
+
+foreach com ($coms)
+    unset compath
+    set COM        = `echo $com | tr "[:lower:]" "[:upper:]"` 
+    set compath    = `$WHICH $com`
+    if ( $status ) then
+         echo "ERROR: Command $com not found in "'$PATH'
+         exit;
+    else
+         echo "set $COM = $compath" >> ${o_file}
+    endif
+end

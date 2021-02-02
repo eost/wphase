@@ -39,6 +39,8 @@ To install the code, we must first setup a few environment variables. If you use
 setenv RDSEED       /path/to/rdseed/executable
 setenv GF_PATH      /path/to/greens/functions/database
 setenv WPHASE_HOME  /path/to/wphase/package
+setenv SAC          /path/to/sac/executable
+setenv SACHOME      /path/to/sac/aux/directory
 ```
 
 If you use bash:
@@ -47,9 +49,11 @@ If you use bash:
 export RDSEED=/path/to/rdseed/executable
 export GF_PATH=/path/to/greens/functions/database
 export WPHASE_HOME=/path/to/wphase/package
+export SAC=/path/to/sac/executable
+export SACHOME=/path/to/sac/aux/directory
 ```
 
-These variables are necessary both at installation time and at run time. In addition to these variables, it is handy to include the wphase bin directory into the PATH environment variable:
+These variables are necessary both at installation time and at run time. SAC and SACAUX are only necessary in order to use WGPS data. In addition to these variables, it is handy to include the wphase bin directory into the PATH environment variable:
 
 ```
 setenv PATH         ${PATH}:$WPHASE_HOME/bin
