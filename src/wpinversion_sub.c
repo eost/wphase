@@ -957,7 +957,7 @@ void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d,
         for(i=0;i<M;i++)
         {
             for(k=0;k<M;k++)
-                fprintf( o_cov,"%16.2e ", cov[i][k]) ;
+                fprintf( o_cov,"%16.4e ", cov[i][k]) ;
             fprintf( o_cov,"\n") ;
         }
         fclose(o_cov) ;
@@ -1629,15 +1629,15 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
             opt->p2p[ns] *= 1000                 ;
             opt->avg[ns] *= 1000                 ; 
             if ( hd_data.kcmpnm[2]  == 'N' ||  hd_data.kcmpnm[2] == 'E' ||  hd_data.kcmpnm[2] == '1' || hd_data.kcmpnm[2] == '2' )
-	    {
+            {
                 opt->p2ph[ns] = opt->p2p[ns];
                 opt->avgh[ns] = opt->avg[ns];
-	    }
+            }
 	    else
-	    {
+            {
                 opt->p2ph[ns] = -999.;
                 opt->avgh[ns] = -999.;
-	    }
+            }
         }
 
         strcpy( (*sacfiles)[ns], datafile) ;
@@ -1759,7 +1759,7 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
         {
 	    val = opt->p2ph[j];
 	    if ( (minh < val) && (val < maxh) && (fabs(opt->avgh[j]) < (opt->p2ph_med)/2.) )
-	    {
+            {
 		data_name[newn] = data_name[j] ;
 		data[newn]      = data[j]      ;
 		G[newn]         = G[j]         ;
@@ -1771,9 +1771,9 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
 		opt->wgt[newn]  = opt->wgt[j]  ;
 		opt->rms_r[newn]=opt->rms_r[j] ;
 		newn++ ;
-	    }
+            }
 	    else
-	    {
+            {
 		fprintf(stderr,"**** Rejected trace (p2p or avg out of bounds): %s\n", data_name[j]) ;
 		if (o_log != NULL)
 		  fprintf(o_log,"**** Rejected trace (p2p or avg out of bounds): %s\n",data_name[j]) ;
@@ -1781,10 +1781,10 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
 		free((void*)data[j])     ;
 		free_G(G+j)              ;
             }
-	}
+        }
 	/* Screen vertical streams */
 	else
-	{
+        {
 	    val = opt->p2p[j];
 	    if ( (min < val) && (val < max) && (fabs(opt->avg[j]) < (opt->p2p_med)/2.) )
             {
@@ -2752,7 +2752,7 @@ void xy_gridsearch(int nsac,int M, int nd,double *dv,double *tv, sachdr *hd_synt
         #ifdef _OPENMP
         #pragma omp parallel default(shared) private(j)
         {
-	 #pragma omp for schedule(dynamic)
+        #pragma omp for schedule(dynamic)
             for(j=0;j<Ngrid;j++)
                 run_xy_gs(new_loc+j,1,nsac,M,nd,dv,tv,hd_synt,data,eq,opt,vrms+j,vms+j,1) ;
         }
