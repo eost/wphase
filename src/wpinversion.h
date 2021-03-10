@@ -79,8 +79,10 @@ typedef struct
   int    hdsafe, hdind, dc_flag, ref_flag,ip,ib[4] ;
   double th_val, cth_val, df_val, med_val,ts;
   double op_pa, p2p_med, p2p_low, p2p_high  ;
+  double p2ph_med,p2ph_low, p2ph_high       ;
   double dts_min,dts_step,dts_max, dts_val  ;
-  double *rms_in,rms_r_th,*rms_r,*p2p,*avg  ; 
+  double *rms_in,rms_r_th,*rms_r,*p2p,*avg  ;
+  double *p2ph,*avgh ;
   double xy_dx, dlat, dlon, dz, mindep, azp ;
   double ntr_val, wZ, wN, wE, priorsdrM0[4] ;
   double med_minfc, med_maxfc               ;

@@ -197,6 +197,8 @@ int main(int argc, char *argv[])
     free((void*)opt.rms_r);
     free((void*)opt.p2p);
     free((void*)opt.avg);
+    free((void*)opt.p2ph);
+    free((void*)opt.avgh);
     free((void*)opt.wgt);	 
     free((void*)hd_synt);
     return 0;

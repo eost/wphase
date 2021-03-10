@@ -575,7 +575,7 @@ void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, double *
                             data_norm[i]/rms[i][1], opt->p2p[i], opt->avg[i], opt->wgt[i]);
         if (o_log != NULL)
             fprintf( o_log,"stat: %-9s %-9s %-9s %-9s %8.1f %8.1f %8.1f %8.1f %14.8f\n", hd_synt[i].kstnm, 
-                     hd_synt[i].knetwk, hd_synt[i].khole, hd_synt[i].kcmpnm, hd_synt[i].gcarc, hd_synt[i].az, 
+                     hd_synt[i].knetwk, hd_synt[i].khole, hd_synt[i].kcmpnm, hd_synt[i].gcarc, hd_synt[i].az,
                      hd_synt[i].user[2], hd_synt[i].user[3], rms[i][0]/rms[i][1]) ;
 
         n0 += hd_synt[i].npts ;
@@ -957,7 +957,7 @@ void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d,
         for(i=0;i<M;i++)
         {
             for(k=0;k<M;k++)
-                fprintf( o_cov,"%16.4e ", cov[i][k]) ;
+                fprintf( o_cov,"%16.2e ", cov[i][k]) ;
             fprintf( o_cov,"\n") ;
         }
         fclose(o_cov) ;
@@ -1495,6 +1495,8 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
         opt->rms_r  = double_alloc(*nsac)    ;
         opt->p2p    = double_alloc(*nsac)    ;
         opt->avg    = double_alloc(*nsac)    ;
+        opt->p2ph   = double_alloc(*nsac)    ;
+        opt->avgh   = double_alloc(*nsac)    ;
         hdr_tab(hd_synt, *nsac)              ; 
         flag2 = 1 ;
     }
@@ -1623,9 +1625,19 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
         {
             (*hd_synt)[ns].az    = hd_data.az    ;
             (*hd_synt)[ns].gcarc = hd_data.gcarc ;
-            calc_stat( npts, (*data)[ns], &opt->p2p[ns], &opt->avg[ns]);  
+            calc_stat( npts, (*data)[ns], &opt->p2p[ns], &opt->avg[ns]);
             opt->p2p[ns] *= 1000                 ;
             opt->avg[ns] *= 1000                 ; 
+            if ( hd_data.kcmpnm[2]  == 'N' ||  hd_data.kcmpnm[2] == 'E' ||  hd_data.kcmpnm[2] == '1' || hd_data.kcmpnm[2] == '2' )
+	    {
+                opt->p2ph[ns] = opt->p2p[ns];
+                opt->avgh[ns] = opt->avg[ns];
+	    }
+	    else
+	    {
+                opt->p2ph[ns] = -999.;
+                opt->avgh[ns] = -999.;
+	    }
         }
 
         strcpy( (*sacfiles)[ns], datafile) ;
@@ -1722,65 +1734,121 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
                    sachdr *hd_synt, structopt *opt, FILE *o_log)
 {
     int    j, newn ;
-    double min, max, val ;
+    double min, max, minh, maxh,val ;
     
     min = opt->med_minfc * (opt->p2p_med) ;
     max = opt->med_maxfc * (opt->p2p_med) ;
-    
+    minh = opt->med_minfc * (opt->p2ph_med) ;
+    maxh = opt->med_maxfc * (opt->p2ph_med) ;
     if (o_log != NULL)
       {
-        fprintf(o_log,"screen_med:\n") ;
+        fprintf(o_log,"screen_med, Vertical streams (Z):\n") ;
         fprintf(o_log,"   p2p_med: %15.8f\n",opt->p2p_med) ;
         fprintf(o_log,"   reject p2p < : %15.8f or > %15.8f\n",min,max) ;
         fprintf(o_log,"   reject avg > : %15.8f \n",opt->p2p_med/2) ;
+        fprintf(o_log,"screen_med, Horizontal streams (E,N):\n") ;
+        fprintf(o_log,"   p2p_med: %15.8f\n",opt->p2ph_med) ;
+        fprintf(o_log,"   reject p2p < : %15.8f or > %15.8f\n",minh,maxh) ;
+        fprintf(o_log,"   reject avg > : %15.8f \n",opt->p2ph_med/2) ;
       }
     newn = 0 ;
     for (j=0;j<*nsac;j++)
-      {
-        val = opt->p2p[j];
-        if ( (min < val) && (val < max) && (fabs(opt->avg[j]) < (opt->p2p_med)/2.) )
-                  {
-                    data_name[newn] = data_name[j] ;
-                    data[newn]      = data[j]      ;
-                    G[newn]         = G[j]         ;
-                    hd_synt[newn]   = hd_synt[j]   ;
-                    opt->p2p[newn]  = opt->p2p[j]  ;
-                    opt->avg[newn]  = opt->avg[j]  ;
-                    opt->wgt[newn]  = opt->wgt[j]  ;
-                    opt->rms_r[newn]=opt->rms_r[j] ;
-                    newn++ ;
-                  }
-        else 
-                  {
-                    fprintf(stderr,"**** Rejected trace (p2p or avg out of bounds): %s\n", data_name[j])  ; 
-                    if (o_log != NULL)
-                          fprintf(o_log,"**** Rejected trace (p2p or avg out of bounds): %s\n",
-                                          data_name[j])  ; 
-                    free((void*)data_name[j]);
-                    free((void*)data[j])     ;
-                    free_G(G+j)              ;
-                  }
-      }
+    {
+	/* Screen horizontal streams */
+	if ( opt->p2ph[j] > -999 &&  opt->avgh[j] > -999)
+        {
+	    val = opt->p2ph[j];
+	    if ( (minh < val) && (val < maxh) && (fabs(opt->avgh[j]) < (opt->p2ph_med)/2.) )
+	    {
+		data_name[newn] = data_name[j] ;
+		data[newn]      = data[j]      ;
+		G[newn]         = G[j]         ;
+		hd_synt[newn]   = hd_synt[j]   ;
+		opt->p2p[newn]  = opt->p2p[j]  ;
+		opt->avg[newn]  = opt->avg[j]  ;
+		opt->p2ph[newn]  = opt->p2ph[j];
+		opt->avgh[newn]  = opt->avgh[j];
+		opt->wgt[newn]  = opt->wgt[j]  ;
+		opt->rms_r[newn]=opt->rms_r[j] ;
+		newn++ ;
+	    }
+	    else
+	    {
+		fprintf(stderr,"**** Rejected trace (p2p or avg out of bounds): %s\n", data_name[j]) ;
+		if (o_log != NULL)
+		  fprintf(o_log,"**** Rejected trace (p2p or avg out of bounds): %s\n",data_name[j]) ;
+		free((void*)data_name[j]);
+		free((void*)data[j])     ;
+		free_G(G+j)              ;
+            }
+	}
+	/* Screen vertical streams */
+	else
+	{
+	    val = opt->p2p[j];
+	    if ( (min < val) && (val < max) && (fabs(opt->avg[j]) < (opt->p2p_med)/2.) )
+            {
+		data_name[newn] = data_name[j] ;
+		data[newn]      = data[j]      ;
+		G[newn]         = G[j]         ;
+		hd_synt[newn]   = hd_synt[j]   ;
+		opt->p2p[newn]  = opt->p2p[j]  ;
+		opt->avg[newn]  = opt->avg[j]  ;
+		opt->p2ph[newn]  = opt->p2ph[j];
+		opt->avgh[newn]  = opt->avgh[j];
+		opt->wgt[newn]  = opt->wgt[j]  ;
+		opt->rms_r[newn]=opt->rms_r[j] ;
+		newn++ ;
+            }
+	    else
+            {
+		fprintf(stderr,"**** Rejected trace (p2p or avg out of bounds): %s\n", data_name[j]) ;
+		if (o_log != NULL)
+		  fprintf(o_log,"**** Rejected trace (p2p or avg out of bounds): %s\n", data_name[j]);
+		free((void*)data_name[j]);
+		free((void*)data[j])     ;
+		free_G(G+j)              ;
+            }
+         }
+    }
     *nsac = newn ;
 }
 
 
 void median(int nsac, structopt *opt)
 {
-    int    i    ;
-    double *tmp ;
+    int    i, h, v   ;
+    double *tmp,*tmph ;
     
     tmp = double_alloc(nsac) ;
+    tmph = double_alloc(nsac) ;
+    v=h=0;
     for (i=0;i<nsac;i++)
-       tmp[i] = opt->p2p[i]    ;
+    {
+	if (opt->p2ph[i] > -999)
+	{
+	    tmph[h] = opt->p2ph[i]    ;
+	    h++;
+	}
+	else
+	{
+	    tmp[v] = opt->p2p[i]    ;
+	    v++;
+	}
+    }
+    sort(tmp,v);
+    sort(tmph,h);
 
-    sort(tmp,nsac);
+    opt->p2p_med  = tmp[(int)    (v/2.)-1] ;
+    opt->p2p_low  = tmp[(int)    (v/4.)-1] ;
+    opt->p2p_high = tmp[(int) (v*3./4.)-1] ;
 
-    opt->p2p_med  = tmp[(int)    (nsac/2.)-1] ;
-    opt->p2p_low  = tmp[(int)    (nsac/4.)-1] ;
-    opt->p2p_high = tmp[(int) (nsac*3./4.)-1] ;
+    opt->p2ph_med  = tmph[(int)    (h/2.)-1] ;
+    opt->p2ph_low  = tmph[(int)    (h/4.)-1] ;
+    opt->p2ph_high = tmph[(int) (h*3./4.)-1] ;
 
     free((void *)tmp);
+    free((void *)tmph);
 }
   
 
@@ -1928,7 +1996,7 @@ void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_s
     {
         opt->dts_val = dtmin ;
         while ( opt->dts_val <= dtmax )
-        {       
+        {
             /* Compute inversion for opt->dts_val */
             load_kernel(eq,opt,hd_synt,nsac,nd,dv,tv,G,o_log)      ;
             if (opt->dc_flag) /* Double Couple inversion                 */
@@ -2071,7 +2139,7 @@ void run_ts_gs(double *ts,int Ngrid, int nsac, int M, int nd, double *dv,
             realloc_gridsearch(nsac, rms, global_rms, dcalc,1) ;
         }
         fflush(stderr);
-        #ifdef _OPENMP      
+        #ifdef _OPENMP
         if (verbose)
             printf("thread %d/%d %10.4f %12.8f %12.8f\n",rang+1,ntaches,
                        ts[i],vrms[i][0]*1000,vrms[i][0]/vrms[i][1]);
@@ -2335,7 +2403,7 @@ void copy_opt(structopt *i_opt, structopt *o_opt,int nsac)
     o_opt->xy_Nopt  = i_opt->xy_Nopt  ;
     o_opt->xy_Nit   = i_opt->xy_Nit   ;
     o_opt->hdsafe   = i_opt->hdsafe   ;
-    o_opt->hdind    = i_opt->hdind    ;   
+    o_opt->hdind    = i_opt->hdind    ;
     o_opt->dc_flag  = i_opt->dc_flag  ;
     o_opt->ref_flag = i_opt->ref_flag ;
     o_opt->ip       = i_opt->ip       ;
@@ -2684,7 +2752,7 @@ void xy_gridsearch(int nsac,int M, int nd,double *dv,double *tv, sachdr *hd_synt
         #ifdef _OPENMP
         #pragma omp parallel default(shared) private(j)
         {
-        #pragma omp for schedule(dynamic)
+	 #pragma omp for schedule(dynamic)
             for(j=0;j<Ngrid;j++)
                 run_xy_gs(new_loc+j,1,nsac,M,nd,dv,tv,hd_synt,data,eq,opt,vrms+j,vms+j,1) ;
         }
@@ -2895,8 +2963,8 @@ void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char 
         (*hd_synt)[ns].evlo   = hd_data.evlo   ;
         (*hd_synt)[ns].evla   = hd_data.evla   ;
         (*hd_synt)[ns].evdp   = hd_data.evdp   ;
-            (*hd_synt)[ns].cmpaz  = hd_data.cmpaz  ;
-            (*hd_synt)[ns].cmpinc = hd_data.cmpinc ;
+        (*hd_synt)[ns].cmpaz  = hd_data.cmpaz  ;
+        (*hd_synt)[ns].cmpinc = hd_data.cmpinc ;
         /* Calculate seismogram peak-to-peak and average amplitude */
         if (opt->op_pa <= 0.) 
         {
