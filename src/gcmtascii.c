@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
   // Moment tensor values are divide by POW (defined at 1E+28) when read from cmtfile
   get_planes(eq.vm[1], &eval3, &evec3, &s1,&d1,&r1, &s2,&d2,&r2) ;
   M0     = ((fabs(eval3[0]) + fabs(eval3[2])) * (double)POW) / 2. ; 
-  Mw     = (log10(M0) - 16.1) / 1.5 ;  
+  Mw     = (log10(M0) - 16.1) / 1.5 + 0.005 ;  
   
   /* Principal axes              */
   for (i=0; i<3 ; i++)
