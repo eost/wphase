@@ -28,6 +28,7 @@ If you use the W-phase package for your own research, please cite the following 
 * python2.7 (or later)
 * You have to install numpy, matplotlib, basemap and netCDF4 to run some python scripts which make figures.
 * rdseed
+* sac
 
 To install these dependencies on MacOs, [you can refer to this page](http://wphase.unistra.fr/wiki/doku.php/wphase:macos).
 
