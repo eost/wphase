@@ -61,7 +61,7 @@ export FC
 export CFLAGS
 export LDFLAGS
 
-EXE = 	$(BIN)/WP_HEADER.CSH		\
+EXE =   configure.csh                   \
 	$(BIN)/rec_dec_filt		\
 	$(BIN)/syn_conv_filt		\
 	$(BIN)/make_resp_lookup_table 	\
@@ -76,9 +76,9 @@ EXE = 	$(BIN)/WP_HEADER.CSH		\
 	$(BIN)/prep_kernels 		\
 	$(BIN)/wpinversion_gs 		\
 	$(BIN)/cmtascii		    	\
-    $(BIN)/gcmtascii	    	\
+        $(BIN)/gcmtascii	    	\
 	$(BIN)/decim_one_sac_file_to_1sps \
-    $(BIN)/decim_one_sac_file_to_2sps
+        $(BIN)/decim_one_sac_file_to_2sps
 
 OBJS =  read_stats.o     \
 	get_prefix.o     \
@@ -101,8 +101,9 @@ OBJS =  read_stats.o     \
 
 all : $(EXE)
 
-# Scripts header
-$(BIN)/WP_HEADER.CSH:configure.csh
+#############
+# CONFIGURE
+configure.csh:configure.csh
 	@ ./configure.csh
 
 ###########
