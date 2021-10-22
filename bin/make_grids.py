@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# *-* coding: iso-8859-1 *-*
 
 ############################################################################
 #
@@ -55,7 +54,7 @@ import sys
 import getopt as go
 import numpy as np
 import matplotlib.pyplot as plt
-
+from cartopy import crs, feature
 
 # Avoid writing pyc files
 sys.dont_write_bytecode = True
@@ -261,21 +260,14 @@ def concatCmap(cmaps,offs,cuts,prop):
     # All done
     return colmap
 
-def plot_etopo(file,m,ax):
+def plot_etopo(file,ax,latll,latur,lonll,lonur):
     from copy import deepcopy
-    try:
-        from mpl_toolkits.basemap import NetCDFFile
-    except:
-        from netCDF4 import Dataset as NetCDFFile
-    latll = m.llcrnrlat
-    latur = m.urcrnrlat
-    lonll = m.llcrnrlon
-    lonur = m.urcrnrlon    
+    from netCDF4 import Dataset as NetCDFFile
     # Read NetCDF ETOPO file
     try:
         data=NetCDFFile(file)
     except:
-        print('plot_etopo: Incorrect ETOPO NetCDF file')
+        print('plot_etopo: Cannot read ETOPO NetCDF file')
         raise 'WARNING: error encountered while plotting ETOPO'
     lats = data.variables['lat'][:]
     lons = deepcopy(data.variables['lon'][:])
@@ -292,7 +284,6 @@ def plot_etopo(file,m,ax):
     la  = lats[ila] ; lo  = lons[ilo] ;
     z = data.variables['z'][ila[0]:ila[-1]+1,ilo]
     lon, lat = np.meshgrid(lo, la)
-    x, y = m(lon, lat)
     # Colormaps
     Lref = 0.35 ; # Colorbar half length
     minz = z.min() ; maxz = z.max() ;
@@ -309,9 +300,8 @@ def plot_etopo(file,m,ax):
         elevcmap = plt.cm.YlGn    
     # Ocean contour
     if minz < 0.:
-        plt.axes(ax)
         zo = np.ma.masked_where(z >= 0.,z)
-        co = m.contourf(x,y,zo,30,cmap=oceancmap)
+        co = ax.contourf(lon,lat,zo,30,cmap=oceancmap,transform=crs.PlateCarree())
         if Laxo>0.:   # Ocean depth colorbar
             caxo = plt.axes([0.45-H,0.04,Laxo,0.02])        
             plt.title('Ocean Depth, m',fontsize='medium')
@@ -319,18 +309,16 @@ def plot_etopo(file,m,ax):
                        orientation='horizontal')
     # Land contour
     if maxz >= 0.:
-        plt.axes(ax)
         zc = np.ma.masked_where(z <  0.,z)
-        cc = m.contourf(x,y,zc,30,cmap=elevcmap)
+        cc = ax.contourf(lon,lat,zc,30,cmap=elevcmap,transform=crs.PlateCarree())
         if Laxc > 0.: # Elevation colorbar
             caxc = plt.axes([0.45-H+Laxo,0.04,Laxc,0.02])
             plt.title('Elevation, m',fontsize='medium')
             cbc = plt.colorbar(mappable=cc,cax=caxc,ticks=tickc,format='%.0f',
                        orientation='horizontal')
-        plt.axes(ax)
 
-def plotxy(ifile='grid_search_xy_out',xyzfile='grid_search_xyz_out',ofile='grid_search_xy.pdf',basemapflag=False,mksmin=1.,
-        mksmax=30.,delta=XY_NX*XY_DX,resolution = 'h'):
+def plotxy(ifile='grid_search_xy_out',xyzfile='grid_search_xyz_out',ofile='grid_search_xy.pdf',mksmin=1.,
+        mksmax=30.,delta=XY_NX*XY_DX):
     # Initialize variables
     rms  = []
     lon  = []
@@ -352,7 +340,6 @@ def plotxy(ifile='grid_search_xy_out',xyzfile='grid_search_xyz_out',ofile='grid_
     maxrms = max(rms)/minrms*100.
     minrms = 100.
     plt.figure(figsize=(9.6125,  8.1))
-    ax1 = plt.axes([0.04,0.13,0.8,0.85])
     ax2 = plt.axes([0.85,0.35,0.1,0.6])
     cm = plt.get_cmap('jet')
     for i in range(8):
@@ -367,89 +354,54 @@ def plotxy(ifile='grid_search_xy_out',xyzfile='grid_search_xyz_out',ofile='grid_
     plt.xlim(0,1.6)
     plt.title('Normalized RMS')
     # DISPLAY MAP
-    plt.axes(ax1)        
-    if basemapflag:
-        try:
-            from mpl_toolkits.basemap import Basemap
-        except:
-            print('WARNING: No module named basemap')
-            print('   The mpl_toolkits.basemap module is necessary')
-            print('   if you want to plot bathymetry and coastlines')
-            basemapflag = False
-    if basemapflag:
-        wraplons(lon)
-        deltalon = delta/np.cos(np.pi*latpde/180.0)
-        latll = lat.min() - delta ; latur = lat.max() + delta ;
-        lonll = lon.min() - deltalon ; lonur = lon.max() + deltalon ;        
-        # Basemap instance
-        m = Basemap(projection='merc',llcrnrlon=lonll,llcrnrlat=latll,urcrnrlon=lonur,
-                urcrnrlat=latur,resolution=resolution)
-        # Bathymetry        
-        ETOPO_file = os.path.expandvars('$ETOPOFILE')
-        if os.path.exists(ETOPO_file):
-            try:
-                plot_etopo(ETOPO_file,m,ax1)
-                etopoflag=True
-            except:
-                etopoflag=False
-                print('WARNING: error encountered while plotting ETOPO')
-                print('         Will not display topography/bathymetry')
+    # Map extent
+    wraplons(lon)
+    deltalon = delta/np.cos(np.pi*latpde/180.0)
+    latll = lat.min() - delta ; latur = lat.max() + delta ;
+    lonll = lon.min() - deltalon ; lonur = lon.max() + deltalon ;        
+    clat = (latll+latur)/2.
+    clon = (lonll+lonur)/2.
+    # Map projection  
+    lonlat = crs.PlateCarree()
+    proj   = crs.AzimuthalEquidistant(central_longitude=clon,central_latitude=clat)
+    ax1 = plt.axes([0.04,0.13,0.8,0.85],projection=proj)
+    ax1.set_extent([lonll,lonur,latll,latur])
+    # Bathymetry        
+    ETOPO_file = os.path.expandvars('$ETOPOFILE')
+    if os.path.exists(ETOPO_file):
+        if True:
+            plot_etopo(ETOPO_file,ax1,latll-delta,latur+delta,lonll-deltalon,lonur+deltalon)
+            etopoflag=True
         else:
+            #except:
             etopoflag=False
-            if ETOPO_file[0]=='$':
-                print('WARNING: Undefined environment variable $ETOPOFILE')
-            else:
-                print('WARNING: ETOPOFILE=%s does not exists'%(ETOPO_file))
-                print('         Will not display topography/bathymetry')
-        # Coastlines/meridians/paralells
-        plt.axes(ax1)
-        m.drawcoastlines(linewidth=0.5)
-        m.drawmeridians(np.arange(float(int(lonll)),lonur+delta,delta),labels=[0,0,0,1],
-                dashes=[1,1],linewidth=0.5,color='k')
-        m.drawparallels(np.arange(float(int(latll)),latur+delta,delta),labels=[1,0,0,0],
-                dashes=[1,1],linewidth=0.5,color='k')
-        if not etopoflag:
-            try:
-                BLUEMARBLE_file = os.path.expandvars('$BLUEMARBLEFILE')
-                if os.path.exists(BLUEMARBLE_file):
-                    m.warpimage(image=BLUEMARBLE_file)
-                else:
-                    if BLUEMARBLE_file[0]=='$':
-                        print('WARNING: Undefined environment variable $BLUEMARBLEFILE')
-                    else:
-                        print('WARNING: BLUEMARBLEFILE=%s does not exists'%(BLUEMARBLE_file))
-                        print('         Will not display topography/bathymetry')
-            except:
-                print('WARNING: error encountered while plotting background bluemarbe image')
-                print('         Will not display topography/bathymetry')
-                pass
-            m.fillcontinents(color='0.65', lake_color='white')
-        m.drawcountries(linewidth=0.3, color='k')
-        # RMS misfit
-        for la,lo,err,siz in zip(lat,lon,nrms,mksize):
-            x,y = m(lo,la)
-            col = cm((err-minrms)/(maxrms-minrms))        
-            m.plot([x],[y],c=col,marker='o',ms=siz)
-        l = [ilonpde,lonopt]
-        wraplons(l)
-        xpde,ypde = m(l[0],ilatpde)
-        xopt,yopt = m(l[1],latopt)
-        m.plot([xpde],[ypde],'rv',ms=14,alpha=0.7,label='Initial PDE')
-        m.plot([xopt],[yopt],'g*',ms=18,mew=1.2,alpha=0.7,label='W-Phase Centroid')
-        leg = plt.legend(loc='lower center',prop={'size': 12},numpoints=1, scatterpoints=1, \
-                             bbox_to_anchor=(0.5, 0.01),ncol=2, shadow=True, fancybox=True)
-        leg.get_frame().set_alpha(0.6)
+            print('WARNING: error encountered while plotting ETOPO')
+            print('         Will not display topography/bathymetry')
+            land_50m = feature.NaturalEarthFeature('physical', 'land', '50m',edgecolor='black',facecolor=feature.COLORS['land'])
+            ax1.add_feature(land_50m,zorder=0,edgecolor='black')
     else:
-        deltalon = delta/np.cos(np.pi*latpde/180.0)
-        latll = lat.min() - delta ; latur = lat.max() + delta ;
-        lonll = lon.min() - deltalon ; lonur = lon.max() + deltalon ;
-        for la,lo,err,siz in zip(lat,lon,nrms,mksize):
-            col = cm((err-minrms)/(maxrms-minrms))        
-            plt.plot([lo],[la],c=col,marker='o',ms=siz)
-        plt.plot([lonpde],[latpde],'k+',ms=14,mew=2.5,alpha=0.7)
-        plt.plot([lonopt],[latopt],'rv',ms=14,alpha=0.7)
-        plt.xlim([lonll,lonur])
-        plt.ylim([latll,latur])
+        etopoflag=False
+        if ETOPO_file[0]=='$':
+            print('WARNING: Undefined environment variable $ETOPOFILE')
+        else:
+            print('WARNING: ETOPOFILE=%s does not exists'%(ETOPO_file))
+        print('         Will not display topography/bathymetry')
+        land_50m = feature.NaturalEarthFeature('physical', 'land', '50m',edgecolor='black',facecolor=feature.COLORS['land'])
+        ax1.add_feature(land_50m,zorder=0,edgecolor='black')
+
+    # Coastlines/meridians/paralells
+    ax1.coastlines(resolution='50m')
+    ax1.gridlines(color=(.9,.9,.9), zorder=1)
+    # RMS misfit
+    for la,lo,err,siz in zip(lat,lon,nrms,mksize):
+        col = cm((err-minrms)/(maxrms-minrms))        
+        ax1.plot([lo],[la],c=col,marker='o',ms=siz,transform=lonlat)
+    l = [ilonpde,lonopt]
+    wraplons(l)
+    ax1.plot([l[0]],[ilatpde],'rv',ms=14,alpha=0.7,label='Initial PDE',transform=lonlat)
+    ax1.plot([l[1]] ,[latopt],'g*',ms=18,mew=1.2,alpha=0.7,label='W-Phase Centroid',transform=lonlat)
+    ax1.legend(loc='lower center',prop={'size': 12},numpoints=1, scatterpoints=1, \
+               bbox_to_anchor=(0.5, 0.01),ncol=2)
     plt.savefig(ofile)
     # All done
     return;
@@ -496,7 +448,6 @@ def disphelp(cmd):
     print('   -t, --onlyts         centroid time-shift grid search (ts) only')
     print('   -p, --onlyxy         centroid position grid search (xy) only')
     print('   -z, --onlyz          centroid position grid search (z) only')
-    print('   -b, --basemap        display coastlines and bathymetry')
     print('   --its  \'file\'       set input ASCII file for ts (grid_search_ts_out)')
     print('   --ixy  \'file\'       set input ASCII file for xy ((grid_search_xy_out))')
     print('   --ixyz \'file\'       set input ASCII file for xyz ((grid_search_xyz_out))')
@@ -511,14 +462,13 @@ def disphelp(cmd):
 
 def main(argv):
     try:
-        opts, args = go.gnu_getopt(argv[1:],'tphzb',["onlyts","onlyxy","onlyz","basemap","its=","ixy=","ixyz=","ots=","oxy=","oxyz=","help"])
+        opts, args = go.gnu_getopt(argv[1:],'tphzb',["onlyts","onlyxy","onlyz","its=","ixy=","ixyz=","ots=","oxy=","oxyz=","help"])
     except go.GetoptError as err:
         usage(sys.argv[0])
         raise
     flagts  = True
     flagxy  = True
     flagxyz = False
-    basemap = False
     ts_ifile='grid_search_ts_out'
     ts_ofile='grid_search_ts.pdf'
     xy_ifile='grid_search_xy_out'
@@ -553,8 +503,6 @@ def main(argv):
             xy_ofile = a
         if o == '--oxyz':
             xyz_ofile = a
-        if o == '-b' or o=='--basemap':
-            basemap = 1
         if o == '-z' or o == '--onlyz':
             flagxyz = True
             flagts = False
@@ -563,7 +511,7 @@ def main(argv):
     if flagts:
         plotts(ts_ifile,ts_ofile)
     if flagxy:
-        plotxy(xy_ifile,xyz_ifile,xy_ofile,basemapflag=basemap)
+        plotxy(xy_ifile,xyz_ifile,xy_ofile)
     if flagxyz:
         plotxyz(xyz_ifile,xy_ifile,xyz_ofile,flag=True)
 

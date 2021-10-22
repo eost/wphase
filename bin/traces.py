@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#*-* coding: iso-8859-1 *-*
+# -*- coding: utf-8 -*-
 
 ############################################################################
 #
@@ -55,8 +55,10 @@ import getopt as go
 import shutil as sh
 import numpy as np
 import matplotlib.pyplot as plt
+from cartopy import crs, feature
 from subprocess import call
 from copy import deepcopy
+from traceback import format_exception
 
 # Import internal modules
 import sacpy
@@ -64,7 +66,7 @@ import utils
 from EQ import EarthQuake
 
 # Internal functions
-def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,basem=None):    
+def showmap(ax,evla,evlo,stla,stlo,coords,flagreg=False):    
     '''
     Show network map
     
@@ -85,47 +87,29 @@ def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,basem=None):
     flagreg: bool
         if False, use a global orthographic map
         if True, use a regional Lambert azimuthal equal-area map
-    basem: None or mpl_toolkits.basemap.Basemap
-        Pre-instanciated Basemap object
-        
-    Returns
-    -------
-    basem: mpl_toolkits.basemap.Basemap
-        Basemap object
     '''
-    # If there is no Basemap object provided
-    if basem is None:
-        from mpl_toolkits.basemap import Basemap
-        if flagreg:
-            basem = Basemap(projection='laea',lat_0=evla,lon_0=evlo, width=DLON*2.22e5, height=DLAT*2.22e5,resolution ='i')
-        else:
-            basem = Basemap(projection='ortho',lat_0=evla,lon_0=evlo,resolution='c')
+    
+    lonlat = crs.PlateCarree()    
+    if flagreg: proj = crs.AzimuthalEquidistant(    central_longitude=evlo, central_latitude=evla)
+    else:       proj = crs.cartopy.crs.Orthographic(central_longitude=evlo, central_latitude=evla)
 
-    # Plot a map
-    m = deepcopy(basem)
-    pos  = ax.get_position().get_points()
-    W  = pos[1][0]-pos[0][0] ; H  = pos[1][1]-pos[0][1] ;        
-    ax2 = plt.axes([pos[1][0]-W*0.38,pos[0][1]+H*0.01,H*1.08,H*1.00])
-    m.drawcoastlines(linewidth=0.5,zorder=900)
-    m.fillcontinents(color='0.75',lake_color=None)
-    if flagreg:
-        m.drawparallels(np.arange(evla-DLAT,evla+DLAT,5.0),linewidth=0.2)
-        m.drawmeridians(np.arange(evlo-DLON,evlo+DLON,5.0),linewidth=0.2)
-    else:
-        m.drawparallels(np.arange(-60,90,30.0),linewidth=0.2)
-        m.drawmeridians(np.arange(0,420,60.0),linewidth=0.2)
-    m.drawmapboundary(fill_color='w')
+    pos    = ax.get_position().get_points()
+    W      = pos[1][0]-pos[0][0] ; H  = pos[1][1]-pos[0][1];
+    ax2    = plt.axes([pos[1][0]-W*0.38,pos[0][1]+H*0.01,H*1.08,H],projection=proj)
 
-    # Add stations on the map
-    xs,ys = m(coords[:,1],coords[:,0])
-    xr,yr = m(stlo,stla)
-    xc,yc = m(evlo,evla)
-    m.plot(xs,ys,'o',color=(1.0, 0.74706, 0.0),ms=4.0,alpha=1.0,zorder=1000,mec='k')
-    m.plot([xr],[yr],'o',color=(1,.27,0),ms=8,alpha=1.0,zorder=1001)
-    m.scatter([xc],[yc],c='b',marker=(5,1,0),s=120,zorder=1002,edgecolors='k')    
+    if flagreg: ax2.set_extent([evlo-DLON,evlo+DLON,evla-DLAT,evla+DLAT])
+    else:       ax2.set_global()
+    
+    ax2.coastlines(resolution='110m')
+    ax2.add_feature(feature.OCEAN, zorder=0, color=(.95,.95,1.))
+    ax2.add_feature(feature.LAND,  zorder=0, color=(.8,.8,.8), edgecolor='black')
+    ax2.gridlines(color=(.9,.9,.9), zorder=1)
+    ax2.scatter(coords[:,1],coords[:,0], color=(1.,.5,0.), marker='o',     s=8,  zorder=2, transform=lonlat)
+    ax2.scatter([stlo],[stla],           color=(1.,.0,0.), marker='o',     s=10, zorder=3, transform=lonlat)
+    ax2.scatter([evlo],[evla],           color=(0.,.0,1.), marker=(5,1,0), s=20, zorder=4, transform=lonlat)
 
     # All done
-    return basem
+    return
 
 
 def showPolarmap(ax,az,dist,coords):
@@ -246,8 +230,8 @@ def main(argv):
         sys.exit(1)
         
     # Create Sac Objects
-    sacdata = sacpy.sac()
-    sacsynt = sacpy.sac()
+    sacdata = sacpy.Sac()
+    sacsynt = sacpy.Sac()
     coords = []
     L = open(o_wpinversion).readlines()
     for l in L:
@@ -269,7 +253,6 @@ def main(argv):
     fig.subplots_adjust(bottom=0.06,top=0.87,left=0.06,right=0.95,wspace=0.25,hspace=0.35)
     print('All pages will be saved in %s'%(OPDFFILE))
     pp = mpl.backends.backend_pdf.PdfPages(OPDFFILE)
-    basem = None
     for l in L:
         # Parse line
         items = l.strip().split()
@@ -332,10 +315,12 @@ def main(argv):
             plt.xlabel('time, sec',fontsize=10) 
         plt.grid()
         try:
-            basem = showBasemap(ax,cmtla,cmtlo,sacdata.stla,sacdata.stlo,coords,flagreg,basem)
+            showmap(ax,cmtla,cmtlo,sacdata.stla,sacdata.stlo,coords,flagreg)
+            pass
         except:
             showPolarmap(ax,sacdata.az,sacdata.dist,coords)
-            print('No basemap module')
+            print('Cannot plot Cartopy map')
+            print(format_exception(*sys.exc_info()))
         count += 1
         nchan += 1
     print('page %d/%d'%(pages,npages))
