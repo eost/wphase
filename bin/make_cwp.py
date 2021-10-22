@@ -128,7 +128,7 @@ def main(argv):
     sys.stdout.write('\nRead %s ...\n%s pages:\n'%(o_wpfile,count))
 
     # Main loop
-    sac = sacpy.sac()
+    sac = sacpy.Sac()
     L = open(o_wpfile).readlines()
     ppW = mpl.backends.backend_pdf.PdfPages('CWP_W.pdf')
     sys.stdout.write('CWP_W.pdf\n')
