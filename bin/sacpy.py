@@ -46,15 +46,11 @@ from datetime import datetime, timedelta
 NVHDR = 6
 ITIME = 1
 
-def unpack_c(chararray,rm_spaces=True):
+def unpack_c(chararray,strip=True):
     S = ''
-    for c in chararray:
-        c = c.decode('utf-8')
-        if rm_spaces and (c == ' ' or c == ''):
-            break
-        S+=c
+    for c in chararray: S+= c.decode('utf-8')
+    if strip: S = S.strip()
     return S
-
 
 def pack_c(char,size):
     S = deepcopy(char)
@@ -71,12 +67,12 @@ class SacError(Exception):
     pass
 
 
-class sac(object):
+class Sac(object):
     '''
     A simple sac class
     '''
     
-    def __init__(self,filename=None):
+    def __init__(self,filename=None,datflag=True):
         '''
         Constructor
         Args:
@@ -169,7 +165,7 @@ class sac(object):
         # Read sac file if filename is specified
         if filename is not None:
             assert os.path.exists(filename), filename+' not found'
-            self.read(filename)
+            self.read(filename,datflag)
 
         # Spectrum flag
         self.spec = False
@@ -317,7 +313,7 @@ class sac(object):
         
         # All done
 
-        
+
     def write(self,FILE):
         '''
         Write sac file
@@ -470,6 +466,59 @@ class sac(object):
         # All done
         return nztime
 
+    def getdatetime(self,time_param):
+        '''
+        Get a datetime object from a sac time parameter
+        Args:
+            * time_param: sac time parameter defined as a time 
+                difference (in seconds) with respect to nztime
+                (e.g., o, b, e, t[0], ...)
+        '''
+        # Check that time_param is set
+        assert int(time_param) != -12345, 'Parameter not set'
+        # Get nzdatetime
+        nztime = self.getnzdatetime()
+        # Define dt_o
+        dt_o = timedelta(seconds=int(time_param))
+        # Get otime
+        otime = nztime + dt_o
+        # All done 
+        return otime
+
+    def getodatetime(self):
+        '''
+        Get a origin datetime object
+        '''
+        # All done
+        return self.getdatetime(self.o)
+
+    def getbdatetime(self):
+        '''
+        Get a begin datetime object
+        '''
+        # All done
+        return self.getdatetime(self.b)
+
+    def getedatetime(self):
+        '''
+        Get an end datetime object
+        '''
+        # Recompute end time (just to be sure everything is all right)
+        self.e = self.b + float(self.npts-1) * self.delta
+        # All done
+        return self.getdatetime(self.e)
+
+    def getarrivaldatetimes(self):
+        '''
+        Get a dictionary of arrival time objects
+        '''
+        # Loop on travel times
+        phase_datetimes = {}
+        for i,t in enumerate(self.t):
+            if int(t)!=-12345:
+                phase_datetimes[self.kt[i]] = self.getdatetime(t)
+        # All done
+        return phase_datetimes
 
     def setotime(self,otime):
         '''
@@ -484,7 +533,6 @@ class sac(object):
         self.o  = np.float32((otime-nztime).total_seconds())
 
         # All done
-
         
     def setarrivaltimes(self,phase_dict):
         '''
@@ -510,152 +558,10 @@ class sac(object):
                         
         # All done
 
-
-    def __add__(self, other):
-        '''
-        Addition operation.         
-        other can be:
-          - sacpy.sac object
-          - list or ndarray
-          - real number (float or int)
-        '''        
-
-        # Check if the operation can be done
-        accepted=(self.__class__,int,float,list,np.ndarray)
-        assert isinstance(other,accepted), 'Unsuported type'
-        
-        # Copy current object
-        res  = self.copy()
-        flag = False
-
-        # Adding two sac files
-        if isinstance(other,self.__class__):
-            assert self.npts  == other.npts,  'Header field mismatch: npts'
-            assert self.delta == other.delta, 'Header field mismatch: delta'
-            assert self.b     == other.b,     'Header field mismatch: b'
-            assert self.e     == other.e,     'Header field mismatch: e'          
-            res.depvar += other.depvar
-            flag = True
-
-        # Adding array or list
-        if isinstance(other,(list,np.ndarray)):
-            assert len(other)==self.npts, 'Header field mismatch: npts'
-            res.depvar += other
-            flag = True
-
-        # Adding real number
-        if isinstance(other,(int,float)):
-            res.depvar += other
-            flag = True
-
-        # Re-assign min and max amplitudes
-        res.depmin  = res.depvar.min()
-        res.depmax  = res.depvar.max()
-        
-        # Check that operation was done
-        assert flag, 'Operation could not be completed'
-        
-        # All done
-        return res
-
-    def __sub__(self, other):
-        '''
-        Substraction operation.         
-        other can be:
-          - sacpy.sac object
-          - list or ndarray
-          - real number (float or int)
-        '''        
-
-        # Check if the operation can be done
-        accepted=(self.__class__,int,float,list,np.ndarray)
-        assert isinstance(other,accepted), 'Unsuported type'
-        
-        # Copy current object
-        res  = self.copy()
-        flag = False
-
-        # Adding two sac files
-        if isinstance(other,self.__class__):
-            assert self.npts  == other.npts,  'Header field mismatch: npts'
-            assert self.delta == other.delta, 'Header field mismatch: delta'
-            assert self.b     == other.b,     'Header field mismatch: b'
-            assert self.e     == other.e,     'Header field mismatch: e'          
-            res.depvar -= other.depvar
-            flag = True
-
-        # Adding array or list
-        if isinstance(other,(list,np.ndarray)):
-            assert len(other)==self.npts, 'Header field mismatch: npts'
-            res.depvar -= other
-            flag = True
-
-        # Adding real number
-        if isinstance(other,(int,float)):
-            res.depvar -= other
-            flag = True
-
-        # Re-assign min and max amplitudes
-        res.depmin  = res.depvar.min()
-        res.depmax  = res.depvar.max()
-        
-        # Check that operation was done
-        assert flag, 'Operation could not be completed'
-        
-        # All done
-        return res    
-
-    def __mul__(self, other):
-        '''
-        Multiplication operation.         
-        other can be:
-          - sacpy.sac object
-          - list or ndarray
-          - real number (float or int)
-        '''        
-
-        # Check if the operation can be done
-        accepted=(self.__class__,int,float,list,np.ndarray)
-        assert isinstance(other,accepted), 'Unsuported type'
-        
-        # Copy current object
-        res  = self.copy()
-        flag = False
-
-        # Adding two sac files
-        if isinstance(other,self.__class__):
-            assert self.npts  == other.npts,  'Header field mismatch: npts'
-            assert self.delta == other.delta, 'Header field mismatch: delta'
-            assert self.b     == other.b,     'Header field mismatch: b'
-            assert self.e     == other.e,     'Header field mismatch: e'          
-            res.depvar *= other.depvar
-            flag = True
-
-        # Adding array or list
-        if isinstance(other,(list,np.ndarray)):
-            assert len(other)==self.npts, 'Header field mismatch: npts'
-            res.depvar *= other
-            flag = True
-
-        # Adding real number
-        if isinstance(other,(int,float)):
-            res.depvar *= other
-            flag = True
-
-        # Re-assign min and max amplitudes
-        res.depmin  = res.depvar.min()
-        res.depmax  = res.depvar.max()
-        
-        # Check that operation was done
-        assert flag, 'Operation could not be completed'
-        
-        # All done
-        return res
-
     
     def integrate(self):
         '''
-        Performs integration using the traperoidal rule
+        Integration using the traperoidal rule
         '''
 
         # Integration
@@ -674,6 +580,20 @@ class sac(object):
         # All done
         return
 
+    def derivate(self):
+        '''
+        Derivate using a two point difference operator
+        '''
+        # Two-point derivative
+        self.depvar = (self.depvar[1:]-self.depvar[:-1])/self.delta
+
+        # Adjusting the number of points and begin/end times
+        self.npts -= 1
+        self.b += 0.5 * self.delta
+        self.e = self.b + float(self.npts - 1) * self.delta
+
+        # All done
+
 
     def isempty(self):
         '''
@@ -685,6 +605,12 @@ class sac(object):
         # All done
         return False
 
+    def resetdepmindepmax(self):
+        '''
+        Reset depmin/depmax attributes
+        '''
+        self.depmin = self.depvar.min()
+        self.depmax = self.depvar.max() 
         
     def interpolate(self, delta_new):
         '''
@@ -709,6 +635,9 @@ class sac(object):
         self.npts   = npts_new
         self.delta  = delta_new
 
+        # Reset depmin/depmax
+        self.resetdepmindepmax()
+
         # All done
         return
         
@@ -727,13 +656,13 @@ class sac(object):
         assert not self.isempty(), 'Some sac attributes are missing (e.g., npts, delta, depvar)'
 
         # Check decimation factor
-        assert dec_fac in decim.FACS, 'Incorrect decimation factor'
+        assert dec_fac in decim.FACS, 'Incorrect decimation factor (available: %s)'%(', '.join([str(f) for f in decim.FACS]))
 
         # Init filters
-        fir = {2: decim.FIRfilter(decim.FIRDEC2),
-               3: decim.FIRfilter(decim.FIRDEC3),
-               4: decim.FIRfilter(decim.FIRDEC4),
-               5: decim.FIRfilter(decim.FIRDEC5)}
+        fir = {2: decim.FirFilter(decim.FIRDEC2),
+               3: decim.FirFilter(decim.FIRDEC3),
+               4: decim.FirFilter(decim.FIRDEC4),
+               5: decim.FirFilter(decim.FIRDEC5)}
 
         # Filter cascade
         fir_cascade = decim.FACS[dec_fac]
@@ -745,6 +674,8 @@ class sac(object):
             self.delta *= np.float32(c)
         self.npts = len(self.depvar)
 
+        # Reset depmin/depmax
+        self.resetdepmindepmax()
 
     def filter(self, freq, order=4, btype='lowpass'):
         '''
@@ -769,22 +700,22 @@ class sac(object):
         depvar = signal.sosfilt(sos, self.depvar)
         self.depvar = depvar.astype('float32')
 
+        # Reset depmin/depmax
+        self.resetdepmindepmax()
+
         # All done
         return
 
     def pad(self,tmin = None, tmax = None):
         '''
         Padding data with zeros
-        if tmin < self.b - self.o (beginning), adding zeros at the beginning
-        if tmax > self.e - self.o (end), adding zeros at the end
+        if tmin < self.b (beginning), adding zeros at the beginning
+        if tmax > self.e (end), adding zeros at the end
         '''
-        # Check origin time is assigned
-        assert self.o != -12345., 'Origin time must be assigned'
-        
         # Get trace beginning and end
         self.e = self.b + float(self.npts - 1) * self.delta
-        tb = self.b - self.o
-        te = self.e - self.o
+        tb = self.b
+        te = self.e
 
         # Set the pad width
         nbeg = 0
@@ -795,23 +726,59 @@ class sac(object):
             nend = int(np.ceil((tmax-te)/self.delta))
 
         # Zero padding
-        gout = np.pad(self.depvar,((nbeg,nend),),mode="constant")
+        gout = np.pad(self.depvar,((nbeg,nend),),mode="constant",constant_values=0.)
         self.npts = len(gout)
         self.b = self.b - nbeg * self.delta
         self.e = self.e + nend * self.delta
         self.depvar = gout.copy()
 
+        # Reset depmin/depmax
+        self.resetdepmindepmax()
+
         # All done
         return
 
-    def fft(self):
+
+    def cut(self,beg,end):
+        '''
+        Cut data given beg/end datetime
+        '''
+
+        # Get time vector
+        nztime = self.getnzdatetime()
+        b  = self.b
+        dt = self.delta
+        time = np.arange(self.npts)*dt + b
+
+        # Extract data between beg and end
+        tbeg = (beg-nztime).total_seconds()
+        tend = (end-nztime).total_seconds()
+        i = np.where((time>=tbeg)*(time<=tend))[0]
+
+        # Only
+        self.b    = time[i[0]]
+        self.e    = time[i[-1]]
+        self.npts = len(i)
+        self.depvar = self.depvar[i]
+
+        # Reset depmin/depmax
+        self.resetdepmindepmax()
+
+        # All done
+        return
+
+    def fft(self,n=None):
         '''
         Compute fourier transform and return the seismogram spectrum
         Output: Seismogram spectrum in the frequency domain (type: seismogram)        
+        Args:
+            n: Number of points for the fft (default is npts)
         '''
         spectrum = self.copy()
         spectrum.spec = True
-        spectrum.depvar = np.fft.rfft(self.depvar)        
+        spectrum.depvar = np.fft.rfft(self.depvar,n=n) 
+        if n is not None:
+            spectrum.npts = n
         
         # All done
         return spectrum
@@ -843,10 +810,17 @@ class sac(object):
         Args:
             * PZ: dictionary including 'poles', 'zeros' and 'Const'
         '''
+        # Check that the PZ dictionary is complete
+        assert 'zeros' in PZ, 'zeros key must be specified in the PZ dictionary'
+        assert 'poles' in PZ, 'poles key must be specified in the PZ dictionary'
+        assert 'Const' in PZ, 'Const key must be specified in the PZ dictionary'
+
+        # Evaluate the response in the frequency domain
         s = 2.j*np.pi*self.freq()
         resp = np.ones(s.shape,dtype=np.complex128)*PZ['Const']
         for z in PZ['zeros']: resp *= s-z
         for p in PZ['poles']: resp /= s-p
+
         # All done
         return resp
 
@@ -860,7 +834,7 @@ class sac(object):
         # Trivial dtrend
         self.depvar -= self.depvar[0]+np.arange(npts)*(self.depvar[-1]-self.depvar[0])/(npts-1)
         # Zero padding
-        self.pad(tmax=2*self.e-self.b)
+        self.pad(tmax=self.b+2.*self.npts*self.delta)
         # Evaluate the instrument response from Poles and Zeros
         resp = self.evalresp(PZ)
         # Convolve with the instrument response
@@ -869,14 +843,123 @@ class sac(object):
         self.e    = self.b + float(self.npts)*self.delta
         self.depmin = self.depvar.min()
         self.depmax = self.depvar.max()        
+        # Reset depmin/depmax
+        self.resetdepmindepmax()
+
         # All done
         return
 
-    def time(self):
+    def deconvresp(self,PZ,filtfreq=None):
+        '''
+        Deconvolve with instrument response
+        Args:
+            * PZ: dictionary including 'poles', 'zeros' and 'Const'
+            * filtfreq: list (or array) of 4 frequencies f1<f2<f3<f4 to
+                cope with zero response at zero frequency. It will
+                apply a cosine high-pass cosine taper between f1 and f2 
+                and a low-pass cosine taper between f3 and f4
+        ''' 
+
+        # Zero padding
+        npts = self.npts
+        npts2 = int(2**np.ceil(np.log2(abs(npts))))
+        self.pad(tmax=self.b+npts2*self.delta)
+
+        # Design cosine-tapered filter
+        freq = self.freq()
+        filt = np.ones(freq.shape)
+        if filtfreq is not None:
+            # Check filtfreq input
+            filtfreq=np.array(filtfreq)
+            assert filtfreq.size==4, 'filtfreq must be a list or array including 4 frequencies'
+            assert (np.sort(filtfreq)==filtfreq).all(), 'f1<f2<f3<f4 in filtfreq not verified'
+            f1,f2,f3,f4 = filtfreq
+
+            # Taper bounds
+            i1 = np.where(freq<f1)[0]
+            i2 = np.where((freq>=f1)*(freq<=f2))[0]
+            i3 = np.where((freq>=f3)*(freq<=f4))[0]
+            i4 = np.where(freq>f4)[0]
+            df1 = f2-f1
+            df2 = f4-f3
+
+            # filter
+            filt[i1] *= 0.
+            filt[i4] *= 0.
+            filt[i2] *= 0.5*(1+np.cos(np.pi/df1*(freq[i2]-f1-df1)))
+            filt[i3] *= 0.5*(1+np.cos(np.pi/df2*(freq[i3]-f3)))
+
+        # Evaluate instrument response from Poles and Zeros
+        resp = self.evalresp(PZ)
+
+        # Remove instrument and filter
+        if freq[0] == 0.:
+            resp[0] = 1.
+            filt[0] = 0.
+        F = np.fft.rfft(self.depvar)*(filt/resp)
+        self.depvar = np.fft.irfft(F)[:npts]
+        self.npts = npts
+
+        # Reset depmin/depmax
+        self.resetdepmindepmax()
+    
+        # All done
+        return
+
+    def rmean(self):
+        '''
+        Remove means
+        '''
+        self.depvar -= self.depvar.mean()
+
+        # All done
+        return
+
+    def detrend(self,Npoints=None,poly_order=1):
+        '''
+        Remove linear trend along axis from data
+        Args:
+            * Npoints: (optional) remove linear trend from linear fit only on the first Npoints
+            * poly_order: Polynomial order
+        '''
+        # Linear fit
+        x = self.time()-self.b
+        y = self.depvar
+        if Npoints:
+            x = x[:Npoints]
+            y = self.depvar[:Npoints]
+        p = np.poly1d(np.polyfit(x,y,poly_order))
+
+        # Remove trend
+        self.depvar -= p(self.time()-self.b)
+
+        # Reset depmin/depmax
+        self.resetdepmindepmax()
+        
+        # All done
+        return
+
+    def taper(self,alpha=0.1):
+        '''
+        Applies a symmetric cosine taper to each end of data
+        Args:
+            * alpha: taper width (value between 0. and 1.)
+        '''
+        H = signal.tukey(self.npts,alpha=alpha,sym=True)
+        self.depvar *= H
+        # All done
+        return
+
+    def time(self,datetime_format=False):
         '''
         Returns the time vector of the current data relative to nztime
         '''
         time = np.arange(self.npts)*self.delta + self.b
+        if datetime_format:
+            r = self.getnzdatetime()
+            time = np.array([r+timedelta(seconds=t) for t in time])
+
+        # All done
         return time
 
     def plot(self,ptype=None,xlog=False,ylog=False,**kwargs):
@@ -941,7 +1024,194 @@ class sac(object):
         
         # All done
         return lines    
+
+    def __add__(self, other):
+        '''
+        Addition operation.         
+        other can be:
+          - sacpy.sac object
+          - list or ndarray
+          - real number (float or int)
+        '''        
+
+        # Check if the operation can be done
+        accepted=(self.__class__,int,float,list,np.ndarray,np.float32,np.float64)
+        assert isinstance(other,accepted), 'Unsuported type'
         
+        # Copy current object
+        res  = self.copy()
+        flag = False
+
+        # Adding two sac files
+        if isinstance(other,self.__class__):
+            assert self.npts  == other.npts,  'Header field mismatch: npts'
+            assert self.delta == other.delta, 'Header field mismatch: delta'
+            assert self.b     == other.b,     'Header field mismatch: b'
+            assert self.e     == other.e,     'Header field mismatch: e'          
+            res.depvar += other.depvar
+            flag = True
+
+        # Adding array or list
+        if isinstance(other,(list,np.ndarray)):
+            assert len(other)==self.npts, 'Header field mismatch: npts'
+            res.depvar += other
+            flag = True
+
+        # Adding real number
+        if isinstance(other,(int,float,np.float32,np.float64)):
+            res.depvar += other
+            flag = True
+
+        # Re-assign min and max amplitudes
+        res.depmin  = res.depvar.min()
+        res.depmax  = res.depvar.max()
+        
+        # Check that operation was done
+        assert flag, 'Operation could not be completed'
+        
+        # All done
+        return res
+
+    def __sub__(self, other):
+        '''
+        Substraction operation.         
+        other can be:
+          - sacpy.sac object
+          - list or ndarray
+          - real number (float or int)
+        '''        
+
+        # Check if the operation can be done
+        accepted=(self.__class__,int,float,list,np.ndarray,np.float32,np.float64)
+        assert isinstance(other,accepted), 'Unsuported type'
+        
+        # Copy current object
+        res  = self.copy()
+        flag = False
+
+        # Adding two sac files
+        if isinstance(other,self.__class__):
+            assert self.npts  == other.npts,  'Header field mismatch: npts'
+            assert self.delta == other.delta, 'Header field mismatch: delta'
+            assert self.b     == other.b,     'Header field mismatch: b'
+            assert self.e     == other.e,     'Header field mismatch: e'          
+            res.depvar -= other.depvar
+            flag = True
+
+        # Adding array or list
+        if isinstance(other,(list,np.ndarray)):
+            assert len(other)==self.npts, 'Header field mismatch: npts'
+            res.depvar -= other
+            flag = True
+
+        # Adding real number
+        if isinstance(other,(int,float,np.float32,np.float64)):
+            res.depvar -= other
+
+        # Re-assign min and max amplitudes
+        res.depmin  = res.depvar.min()
+        res.depmax  = res.depvar.max()
+        
+        # Check that operation was done
+        assert flag, 'Operation could not be completed'
+        
+        # All done
+        return res    
+
+    def __mul__(self, other):
+        '''
+        Multiplication operation.         
+        other can be:
+          - sacpy.sac object
+          - list or ndarray
+          - real number (float or int)
+        '''        
+
+        # Check if the operation can be done
+        accepted=(self.__class__,int,float,list,np.ndarray,np.float32,np.float64)
+        assert isinstance(other,accepted), 'Unsuported type'
+        
+        # Copy current object
+        res  = self.copy()
+        flag = False
+
+        # Multiplying two sac files
+        if isinstance(other,self.__class__):
+            assert self.npts  == other.npts,  'Header field mismatch: npts'
+            assert self.delta == other.delta, 'Header field mismatch: delta'
+            assert self.b     == other.b,     'Header field mismatch: b'
+            assert self.e     == other.e,     'Header field mismatch: e'          
+            res.depvar *= other.depvar
+            flag = True
+
+        # Multiplying by an array or a list
+        if isinstance(other,(list,np.ndarray)):
+            assert len(other)==self.npts, 'Header field mismatch: npts'
+            res.depvar *= other
+            flag = True
+
+        # Multiplying by a real number
+        if isinstance(other,(int,float,np.float32,np.float64)):
+            res.depvar *= other
+            flag = True
+
+        # Re-assign min and max amplitudes
+        res.depmin  = res.depvar.min()
+        res.depmax  = res.depvar.max()
+        
+        # Check that operation was done
+        assert flag, 'Operation could not be completed'
+        
+        # All done
+        return res
+
+    def __div__(self, other):
+        '''
+        Multiplication operation.         
+        other can be:
+          - sacpy.sac object
+          - list or ndarray
+          - real number (float or int)
+        ''' 
+
+        # Check if the operation can be done
+        accepted=(self.__class__,int,float,list,np.ndarray,np.float32,np.float64)
+        assert isinstance(other,accepted), 'Unsuported type'
+        
+        # Copy current object
+        res  = self.copy()
+        flag = False
+
+        # Dividing by a sac file
+        if isinstance(other,self.__class__):
+            assert self.npts  == other.npts,  'Header field mismatch: npts'
+            assert self.delta == other.delta, 'Header field mismatch: delta'
+            assert self.b     == other.b,     'Header field mismatch: b'
+            assert self.e     == other.e,     'Header field mismatch: e'          
+            res.depvar /= other.depvar
+            flag = True
+
+        # Dividing by an array or a list
+        if isinstance(other,(list,np.ndarray)):
+            assert len(other)==self.npts, 'Header field mismatch: npts'
+            res.depvar /= other
+            flag = True
+
+        # Dividing by a real number
+        if isinstance(other,(int,float,np.float32,np.float64)):
+            res.depvar /= other
+            flag = True
+
+        # Re-assign min and max amplitudes
+        res.depmin  = res.depvar.min()
+        res.depmax  = res.depvar.max()
+        
+        # Check that operation was done
+        assert flag, 'Operation could not be completed'
+        
+        # All done
+        return res
+
     def copy(self):
         '''
         Returns a copy of the sac object
@@ -961,5 +1231,4 @@ def zero_pad_start(t,sac,t0):
     gout = np.append(0.0*tpad,sac.depvar)
     # all done
     return tout,gout
-
 
