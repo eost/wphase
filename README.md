@@ -25,7 +25,7 @@ If you use the W-phase package for your own research, please cite the following 
 ### Dependencies
 * csh shell
 * gcc, gfortran
-* python2.7 (or later)
+* python2 or python3
 * You have to install numpy, matplotlib, basemap and netCDF4 to run some python scripts which make figures.
 * rdseed
 
