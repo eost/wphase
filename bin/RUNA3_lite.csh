@@ -36,11 +36,10 @@ if ( $#rms_scr != 0 ) set ths = "$rms_scr"
 
 if ( -e SYNTH ) ${RM} -rf SYNTH 
 ${MKDIR} SYNTH; 
-#$EXTRACT
-#if $status exit 1
 $PREPARE
 if $status exit 1
 
+${ECHO} "MT inversions (p2p and rms screening)...  "
 set version = "Version: r252"
 set screening = "Screening: $median"
 set comgfdir  = "GF_PATH: $GF_PATH"
@@ -49,6 +48,7 @@ $ECHO "COMMAND LINE: $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -pdat
 	${my_argv} -comment '$version' -comment '$screening' -comment '$comgfdir'"
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -pdata fort.15.noth $median \
 	${my_argv} -comment "$version" -comment "$screening" -comment "$comgfdir"
+if $status exit 1
 
 ${CP} p_wpinversion.ps p_wpinversion.noth.ps
 ${CP} o_wpinversion o_wpinversion.noth

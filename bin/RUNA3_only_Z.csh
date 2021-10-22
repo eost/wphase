@@ -27,7 +27,7 @@ if ( $#p2p_flag != 0 && $#p2p_yes == 0 ) then
     set median = ""
 else if ( $#p2p_scr != 0 ) then
     set median = "${median} $p2p_scr"
-endif    
+endif
 
 set ths     = "5.0 3.0 0.9"
 set rms_scr = `$GREP ^RMS_SCREENING i_master| $CUT -d':' -f2`
@@ -40,6 +40,7 @@ if $status exit 1
 $PREPARE Z
 if $status exit 1
 
+${ECHO} "MT inversions (p2p and rms screening)...  "
 set version = "Version: r252"
 if ( -e $WPHASE_HOME/.svn/entries ) set version = "${version}`$HEAD -4 $WPHASE_HOME/.svn/entries | $TAIL -1`"
 set screening = "Screening: $median"
@@ -49,6 +50,7 @@ $ECHO "COMMAND LINE: $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -pdat
 	${my_argv} -comment '$version' -comment '$screening' -comment '$comgfdir'"
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -pdata fort.15.noth $median \
 	${my_argv} -comment "$version" -comment "$screening" -comment "$comgfdir"
+if $status exit 1
 
 ${CP} p_wpinversion.ps p_wpinversion.noth.ps
 ${CP} o_wpinversion o_wpinversion.noth

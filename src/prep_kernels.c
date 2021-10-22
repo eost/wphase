@@ -120,8 +120,7 @@ int main(int argc, char **argv)
     flag = 0 ;
     for(i=0;i<ngfcomp;i++)
     {
-        printf("**************************************\n"); 
-        printf("Computing synthetics for M_%s...\n",gfcomp[i]);    
+        printf("Computing synthetics for M_%s.\n",gfcomp[i]);    
         strcpy(path,eq.gf_dir) ;
         strcat(path,"gf_")     ;
         strcat(path,gfcomp[i]) ;

@@ -110,8 +110,7 @@ int main(int argc, char **argv)
     flag = 0 ;
     for(i=0;i<ngfcomp;i++)
     { 
-        printf("**************************************\n"); 
-        printf("Computing synthetics for M_%s...\n",gfcomp[i]);    
+        printf("Computing synthetics for M_%s.\n",gfcomp[i]);    
         strcpy(path,eq.gf_dir) ;
         strcat(path,"gf_")     ;
         strcat(path,gfcomp[i]) ;
@@ -154,7 +153,7 @@ int main(int argc, char **argv)
             strcat(sacfile,".bp") ;  /* Save SAC after bandpass filtering */
             save_gf_sac(sacfile,stats[jstat],nets[jstat],"LHZ",&stlats[jstat],&stlons[jstat],&hdr,x_conv) ;
         }
-        printf("\n");
+        printf("\n"); 
     }
     /* Freeing memory */
     free((void*)b1) ;

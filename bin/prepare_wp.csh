@@ -32,6 +32,7 @@ if ( -e ${DATA} ) $RM -rf ${DATA}
 ${MKDIR} ${DATA}
 ${MKDIR} -p ${LOG}
 ###############################################
+${ECHO} "Decimate to 1sps ...                     ( >! ${LOG}/_log_decimate )"
 foreach CMP ($CMPS)
     ${CP} -f ${DATA_org}/SAC_PZs_*_*_??${CMP}_* ${DATA}
     ${SACLST} kcmpnm f ${DATA_org}/*.SAC | ${EXPAND} | ${GREP} " ..${CMP}" | ${CUT} -d' ' -f1 | \
@@ -39,23 +40,26 @@ foreach CMP ($CMPS)
 end
 ${LS} ${DATA}/*.SAC >! ${DATA}/_sac_files_list
 
-$TRIM_SAC_FILES i_master ${DATA}/_sac_files_list scr_dat_fil_list $trim_flag # Use of "-u" will allow only one network per-channel
+########################
+# Trim SAC files
+${ECHO} "Trim SAC files...                        ( >& ${LOG}/_log_trim_sac_files )"
+$TRIM_SAC_FILES i_master ${DATA}/_sac_files_list scr_dat_fil_list $trim_flag >& ${LOG}/_log_trim_sac_files # Use of "-u" waill allow only one network per-channel
 
 ########################
 # Responses Lookup table
-${ECHO} "Creating the responses lookup table ( >! ${LOG}/_log_resps_lookup_table )"
+${ECHO} "Creating the responses lookup table...   ( >& ${LOG}/_log_resps_lookup_table )"
 ${LS} -1 ${DATA}/SAC_PZs* >! ${DATA}/pz_fil_list
-$MAKE_RESP_TABLE ${DATA}/pz_fil_list i_master coeffs_rec_lut >! ${LOG}/_log_resps_lookup_table
+$MAKE_RESP_TABLE ${DATA}/pz_fil_list i_master coeffs_rec_lut >& ${LOG}/_log_resps_lookup_table
 
 ################################################
 # deconvolution and filtering                  #
-${ECHO} "Data deconvolution and filter...                   ( >! ${LOG}/_log_dec_filt )"
-$REC_DEC_FILT coeffs_rec_lut i_master scr_dat_fil_list dec_bp_dat_fil_list >! ${LOG}/_log_dec_filt
+${ECHO} "Data deconvolution and filter...         ( >& ${LOG}/_log_dec_filt )"
+$REC_DEC_FILT coeffs_rec_lut i_master scr_dat_fil_list dec_bp_dat_fil_list >& ${LOG}/_log_dec_filt
 
 ################################################
 # Synthetics preparatio:convolution and filter #
-${ECHO} "Synthetics convolution and filter...  "
-${PREP_KERNELS} scr_dat_fil_list l
+${ECHO} "Synthetics convolution and filter...     ( >! ${LOG}/_log_prep_kernels ) "
+${PREP_KERNELS} scr_dat_fil_list l >! ${LOG}/_log_prep_kernel
 if $status exit(1)
 
 ################################################

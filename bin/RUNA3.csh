@@ -1,6 +1,6 @@
 #!/bin/csh -f
 #
-# W phase package - RUNA3  (median and rms screening)
+# W phase package - RUNA3 (median and rms screening)
 #
 # Zacharie Duputel, Luis Rivera and Hiroo Kanamori
 #
@@ -41,6 +41,7 @@ if $status exit 1
 $PREPARE
 if $status exit 1
 
+${ECHO} "MT inversions (p2p and rms screening)...  "
 set version = "Version: r252"
 set screening = "Screening: $median"
 set comgfdir  = "GF_PATH: $GF_PATH"

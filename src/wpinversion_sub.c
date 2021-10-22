@@ -1671,9 +1671,10 @@ void screen_rms(int *nsac, char **data_name, double **data, double ***G, sachdr 
         }
         else
         {
-            fprintf(stderr, "**** Rejected trace (rms exceed the threshold): %s\n", data_name[j]) ;
             if (o_log != NULL)
                 fprintf(o_log, "**** Rejected trace (rms exceed the threshold): %s\n", data_name[j]) ;
+            else
+                fprintf(stderr, "**** Rejected trace (rms exceed the threshold): %s\n", data_name[j]) ;
             free((void*)data_name[j]) ;
             free((void*)data[j])      ;
             free_G(G+j)               ;
@@ -1704,11 +1705,10 @@ void screen_ratio(int *nsac,char **data_name,double **data,double ***G,sachdr *h
         }
         else
         {
-            fprintf(stderr, "**** Rejected trace (rms ratio exceed the threshold): %s\n", 
-                            data_name[j]) ;
             if (o_log != NULL)
-                fprintf(o_log, "**** Rejected trace (rms ratio exceed the threshold): %s\n", 
-                            data_name[j]) ;
+                fprintf(o_log, "**** Rejected trace (rms ratio exceed the threshold): %s\n", data_name[j]) ;
+            else
+                fprintf(stderr, "**** Rejected trace (rms ratio exceed the threshold): %s\n", data_name[j]) ;
             free((void*)data_name[j]) ;
             free((void*)data[j])      ;
             free_G(G+j)               ;
@@ -1752,10 +1752,10 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
                   }
         else 
                   {
-                    fprintf(stderr,"**** Rejected trace (p2p or avg out of bounds): %s\n", data_name[j])  ; 
                     if (o_log != NULL)
-                          fprintf(o_log,"**** Rejected trace (p2p or avg out of bounds): %s\n",
-                                          data_name[j])  ; 
+                          fprintf(o_log,"**** Rejected trace (p2p or avg out of bounds): %s\n", data_name[j])  ; 
+                    else
+                        fprintf(stderr,"**** Rejected trace (p2p or avg out of bounds): %s\n", data_name[j])  ; 
                     free((void*)data_name[j]);
                     free((void*)data[j])     ;
                     free_G(G+j)              ;
