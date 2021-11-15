@@ -284,8 +284,8 @@ def main(argv):
         # Plot trace
         ax = plt.subplot(nl,nc,count)
         plt.plot(t1,sacdata.depvar*1000.,'k')
-        plt.plot(t2,sacsynt.depvar*1000.,'r-')
-        plt.plot([wtb,wte],[0.,0.],'ro')
+        plt.plot(t2,sacsynt.depvar*1000.,'r-',alpha=0.8)
+        plt.plot([wtb,wte],[0.,0.],'bo',alpha=0.7)
         # Axes limits
         B=wtb-150.0
         if B<0:
