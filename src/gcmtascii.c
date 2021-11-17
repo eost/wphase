@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
   // GCMT LIKE
   // printf("%s %s, Mw=%4.2f\n\n",buffer_time,tRegion,Mw) ;                       
   // CPPT LIKE
-  printf("Mw=%3.1f, %s\n",Mw,tRegion) ;
+  printf("Mw=%4.2f, %s\n",Mw,tRegion) ;
   printf("Event Time: %s\n",buffer_time) ;
   printf("Epicenter : %s %s %4.1fkm\n",pdela,pdelo,eq.pde_evdp);
   printf("Centroid  : %s %s %4.1fkm\n\n",cenla,cenlo,eq.evdp);
