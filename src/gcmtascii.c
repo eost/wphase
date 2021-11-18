@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
   nlength=(int)(sizeof(Network) / 3);
 
   while ( fscanf(f,"%s %*f %*f %*f %*f %*f %*f %*f %*f %*f %*f %*f %*f\n",str) != EOF ) {
-    sscanf(str+28,"%[a-zA-Z].%[a-zA-Z0-9].",tmp,tmp2);
+    sscanf(str+28,"%[a-zA-Z0-9].%[a-zA-Z0-9].",tmp,tmp2);
     if ( i == 0 ) { 
       strncat(Network[0],tmp,3);
       strcpy(stat,tmp2);
