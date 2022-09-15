@@ -109,7 +109,9 @@ void   vn2sdr(double *vn, double *vs, double *s, double *d, double *r);
 
 int main(int argc, char *argv[])
 {
-  int    buildtime,i, p;
+  int    buildtime, i, p;
+  int stat_count=0;
+  int phase_count=0;
   double s1, d1, r1, s2, d2, r2, plg[3], azm[3] ;
   double *eval3, **evec3, M0, Mw, scale         ;
   char pdela[8], pdelo[9], cenla[8],cenlo[9]    ;
@@ -123,7 +125,8 @@ int main(int argc, char *argv[])
   char buffer_time [60],buffer_data [60];
   // Get Stations list variables
   char Network[][3] = { "" , "" , "" , "" , "", "" , "", "", ""};
-  char tmp[2], str[80];
+  char tmp[3], str[80];
+  char tmp2[6],stat[6];
   FILE *f;
   char AgencyID[5];
   int count,k,n,nlength;
@@ -160,20 +163,20 @@ int main(int argc, char *argv[])
   free((void*)keys[0]) ;
   free((void**) keys ) ;
   /* Create time oject */
-    //  -- created time -- 
-    t=gmtime(&now);
-    //  -- seism time --
-  	evt_time.tm_year = eq.ot_ye-1900;
-	evt_time.tm_mon = eq.ot_mo-1; // should test over other OS
-	evt_time.tm_mday = eq.ot_dm;
-	evt_time.tm_hour = eq.ot_ho;
-	evt_time.tm_min = eq.ot_mi;
-	evt_time.tm_sec = eq.ot_se;
-	evt_time.tm_isdst = 0;
-	// GCMT LIKE
-	// strftime (buffer_time,60,"%B %d, %Y",&evt_time);
-	// CPPT LIKE
-	strftime (buffer_time,60,"%F %H:%M:%S UTC",&evt_time);
+  //  -- created time -- 
+  t=gmtime(&now);
+  //  -- seism time --
+  evt_time.tm_year = eq.ot_ye-1900;
+  evt_time.tm_mon = eq.ot_mo-1; // should test over other OS
+  evt_time.tm_mday = eq.ot_dm;
+  evt_time.tm_hour = eq.ot_ho;
+  evt_time.tm_min = eq.ot_mi;
+  evt_time.tm_sec = eq.ot_se;
+  evt_time.tm_isdst = 0;
+  // GCMT LIKE
+  // strftime (buffer_time,60,"%B %d, %Y",&evt_time);
+  // CPPT LIKE
+  strftime (buffer_time,60,"%F %H:%M:%S UTC",&evt_time);
 	
   /* Best double couple solution */
   // Moment tensor values are divide by POW (defined at 1E+28) when read from cmtfile
@@ -188,12 +191,12 @@ int main(int argc, char *argv[])
       scale  = evec3[1][i]*evec3[1][i] + evec3[2][i]*evec3[2][i] ;
       plg[i] = atan2(-evec3[0][i],sqrt(scale))/DEG2RAD;
       if(plg[i]<0.0)
-		{
-		  plg[i] *= -1. ;
-		  azm[i] += 180.;
-		}
-	  azm[i] = fmod(azm[i], 360.);
+	{
+	  plg[i] *= -1. ;
+	  azm[i] += 180.;
 	}
+      azm[i] = fmod(azm[i], 360.);
+    }
   
   /* Scale Seismic moment        */
   scale = 0. ;
@@ -209,50 +212,50 @@ int main(int argc, char *argv[])
 
 
   /* Get Network of stations used for moment tensor solution    */
-   if (( f=fopen(argv[2],"r"))==NULL)
+  if (( f=fopen(argv[2],"r"))==NULL)
     {
       fprintf (stderr, "ERROR (read) : opening file: %s \n", argv[2]) ;
       exit (1) ;
     }
-   i=0;
-   n=0;
-   int stat_count=0;
-   int phase_count=0;
-   char tmp2[6],stat[6];
-   nlength=(int)(sizeof(Network) / 3);
+  i=0;
+  n=0;
+  
+  nlength=(int)(sizeof(Network) / 3);
 
-   while ( fscanf(f,"%s %*f %*f %*f %*f %*f %*f %*f %*f %*f %*f %*f %*f\n",str) != EOF ) 
-   {	sscanf(str+28,"%[a-zA-Z].%[a-zA-Z0-9].",tmp,tmp2);
-		if ( i == 0 )  
-		{  	strncat(Network[0],tmp,2);
-			strcpy(stat,tmp2);
-			stat_count++;
-			n++;
-		}
-		else if (strcmp(stat,tmp2) != 0) {
-			stat_count++ ;
-			strcpy(stat,tmp2);}
-		if ( i != 0 && n < nlength) 
-		{   count=0;
-			for ( k=0 ; k<nlength ; k++ ) 
-			{   if (strncmp(Network[k],tmp,3) == 0)  count++;
-			}
-			if ( count == 0 ) 
-			{	strncat(Network[n],tmp,2);
-				n++;
-			}
-		}
-		
-	i++;
-	}	
-   phase_count = i;
+  while ( fscanf(f,"%s %*f %*f %*f %*f %*f %*f %*f %*f %*f %*f %*f %*f\n",str) != EOF ) {
+    sscanf(str+28,"%[a-zA-Z0-9].%[a-zA-Z0-9].",tmp,tmp2);
+    if ( i == 0 ) { 
+      strncat(Network[0],tmp,3);
+      strcpy(stat,tmp2);
+      stat_count++;
+      n++;
+    }
+    else if (strcmp(stat,tmp2) != 0) {
+      stat_count++ ;
+      strcpy(stat,tmp2);
+    }
+    if ( i != 0 && n < nlength) {
+      count=0;
+      for ( k=0 ; k<nlength ; k++ ) 
+	if (strncmp(Network[k],tmp,3) == 0)  count++;
+      
+      if ( count == 0 ) { 
+	strncat(Network[n],tmp,3);
+	n++;
+      }
+    }
+    i++;
+  }	
+  phase_count = i;
    
-   fclose(f); 
-   sprintf(buffer_data,"DATA:");
-	for ( k=0 ; k<nlength ; k++ ) {
-		strcat(buffer_data," ");
-		strcat(buffer_data,Network[k]);}
-
+  fclose(f); 
+  sprintf(buffer_data,"DATA:");
+  
+  for ( k=0 ; k<nlength ; k++ ) {
+    strcat(buffer_data," ");
+    strcat(buffer_data,Network[k]);
+  }
+  
   /* Display as GCMT bulletin format     */
   format_latlon(eq.pde_evla, eq.pde_evlo, pdela, pdelo,3);
   format_latlon(eq.evla, eq.evlo, cenla, cenlo,3);
@@ -260,7 +263,7 @@ int main(int argc, char *argv[])
   // GCMT LIKE
   // printf("%s %s, Mw=%4.2f\n\n",buffer_time,tRegion,Mw) ;                       
   // CPPT LIKE
-  printf("Mw=%3.1f, %s\n",Mw,tRegion) ;
+  printf("Mw=%4.2f, %s\n",Mw,tRegion) ;
   printf("Event Time: %s\n",buffer_time) ;
   printf("Epicenter : %s %s %4.1fkm\n",pdela,pdelo,eq.pde_evdp);
   printf("Centroid  : %s %s %4.1fkm\n\n",cenla,cenlo,eq.evdp);
