@@ -29,5 +29,5 @@ foreach seed ($seeds)
         ${ECHO} "Error: seed file $seed not available"
         exit 1
     endif
-    ${RDSEED} -dp -z 3 -q ${DATA} -f ${seed} >>& ${LOG}/_log_rdseed
+    ${RDSEED} -dp -q ${DATA} -f ${seed} >>& ${LOG}/_log_rdseed
 end
