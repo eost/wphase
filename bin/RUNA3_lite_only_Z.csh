@@ -35,7 +35,7 @@ ${MKDIR} SYNTH;
 $PREPARE Z
 if $status exit 1
 
-set version = "Version: r252"
+set version = "Version: r253"
 set screening = "Screening: $median"
 set comgfdir  = "GF_PATH: $GF_PATH"
 

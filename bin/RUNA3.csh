@@ -42,7 +42,7 @@ $PREPARE
 if $status exit 1
 
 ${ECHO} "MT inversions (p2p and rms screening)...  "
-set version = "Version: r252"
+set version = "Version: r253"
 set screening = "Screening: $median"
 set comgfdir  = "GF_PATH: $GF_PATH"
 
