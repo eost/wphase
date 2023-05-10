@@ -111,7 +111,7 @@ GF_PATH = os.path.expandvars('$GF_PATH')
 print('GF_PATH is %s'%(GF_PATH))
 
 # Code version
-VERSION = 'Version: r252'
+VERSION = 'Version: r253'
 
 # Path to binaries
 WPBIN = WPHOME+'bin/'
