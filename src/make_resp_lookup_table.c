@@ -103,11 +103,11 @@ int main(int argc, char *argv[])
         pzfile2id(pzfilename, id, &ierror) ;
         if (!ierror)
         {
-            w0 = 2*M_PI*f0              ;
-            a1 = 1./dt                  ;
-            a2 = -2.*(a1+h*w0)/g        ;
-            a3 = (a1+2*h*w0+w0*w0*dt)/g ; 
-            a1 = a1/g                   ;
+            w0 = 2.*M_PI*f0              ;
+            a1 = 1./dt                   ;
+            a2 = -2.*(a1+h*w0)/g         ;
+            a3 = (a1+2.*h*w0+w0*w0*dt)/g ; 
+            a1 = a1/g                    ;
             if (isfinite(a1) && isfinite(a2) && isfinite(a3))
                 fprintf (out, "%-14s%18.9e%18.9e%18.9e\n", id, a1, a2, a3) ; 
             else 
@@ -373,18 +373,18 @@ complex pz2res (double w, int nz, complex *zr, int np, complex *pl, double sg)
 /*                     pl : poles (np values)                */
 /*                     sg : constant value                   */
 /*                                                           */
-/* Output parameters : y  : velocity-response (nf doubles)   */
+/* Output parameters : y  : amp  vel-response (nf doubles)   */
 /*                     yl : log10(y) (nf floats)             */
 /*                                                           */
 void compresp (int nf, double *f, int nz, complex *zr, int np, complex *pl, double sg, double **y, float **yl)
 {
     int     i ;
     double  w ;
-    (*y)  = double_alloc(nf) ;
-    (*yl) = float_alloc(nf) ;
+    (*y)   = double_alloc(nf) ;
+    (*yl)  = float_alloc(nf) ;
     for ( i=0; i<nf; i++ )
     {
-        w     = 2*M_PI*f[i] ;
+        w        = 2.*M_PI*f[i] ;
         (*y)[i]  = cabs(pz2res (w, nz, zr, np, pl, sg)) ;
         (*yl)[i] = (float)log10((*y)[i]) ;
     }
@@ -410,14 +410,14 @@ void firstparams(double fref, double fl, double nz, complex *zr, double np, comp
 {
     double  w0, w, amp01;
     /* Compute the (a priori) gain factor at the reference frequency */
-    w0           = 2*M_PI*fref ;
+    w0           = 2.*M_PI*fref ;
     *gain_factor = cabs(pz2res (w0, nz, zr, np, pl, sg)) ;
     /* Compute the first approximation of fc */
-    w     = 2*M_PI*fl ;
+    w     = 2.*M_PI*fl ;
     amp01 = cabs(pz2res (w, nz, zr, np, pl, sg)) ;
     *fc   = fl*sqrt((*gain_factor)/amp01) ;
     /* Compute the first approximation of h */
-    w     = 2*M_PI*(*fc) ;
+    w     = 2.*M_PI*(*fc) ;
     amp01 = cabs(pz2res (w, nz, zr, np, pl, sg)) ;
     *h    = (*gain_factor)/(2.*amp01) ;  
 }
@@ -437,21 +437,19 @@ void firstparams(double fref, double fl, double nz, complex *zr, double np, comp
 double rmsestimates(double gain_factor, double fc, double h, int nf, double *f, double *y) 
 {
     int     i ;
-    double  s2, *yc, w, wc;
-    complex num, den;
+    double  s2, w, wc;
+    complex num, den, tmp;
     wc = 2.*M_PI*fc ;
-    yc = double_alloc(nf) ;
     s2 = 0. ;
     for (i=0; i<nf; i++)
     {
-        w     = 2.*M_PI*f[i] ;
-        num   = -w*w ;
-        den   = num + 2.*h*wc*w*_Complex_I + wc*wc ;
-        yc[i] = gain_factor * cabs(num/den); /* inverted velocity-response */
-        s2 = s2 + (y[i]/yc[i] - 1.)*(y[i]/yc[i] - 1.) ;         
+        w   = 2.*M_PI*f[i] ;
+        num = -w*w ;
+        den = num + 2.*h*wc*w*_Complex_I + wc*wc ;
+        tmp = gain_factor*num/den;
+        s2  = s2 + pow(fabs(y[i])/cabs(tmp) - 1.,2.);
     }
-    s2 = sqrt(s2/(double)(nf-1)) ; 
-    free(yc);
+    s2 = sqrt(s2/(double)(nf-1)) ;
     return s2 ;
 }
 
@@ -479,8 +477,9 @@ void plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf
 {
     int     i, nz, np, mp, mv, ip, ib[3], idvt, icon, iquit, iprnt;
     double  *f, *y, sg;
-    float   *yl,*x,*b;
-    complex *zr, *pl;
+    double  ph_pz, ph_fhg, phase_tolerance, wh;
+    float   *yl,*x,*b,dphi;
+    complex *zr, *pl, resp;
 
     *ierror = 0 ;
 
@@ -523,7 +522,7 @@ void plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf
     else
     {
         fprintf(stderr,"WARNING (make_resp_lookup_table): Non-Finite a priori GF, fc or h\n");
-        fprintf(stderr,"          pz : %s ; GF=%e ; fc=%e ; h=%e\n",pzfilename, *gain_factor, *fc,*h)     ;
+        fprintf(stderr,"          pz : %s ; GF=%e ; fc=%e ; h=%e\n",pzfilename, *gain_factor, *fc,*h) ;
         *ierror = 1;
         return;
     }
@@ -537,6 +536,34 @@ void plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf
     *fc          = (double)b[1] ;
     *h           = (double)b[2] ;
   
+    /* **** phase ****  */
+    phase_tolerance = 0.3;
+
+    /*     pz_file  */
+    wh    = 2.*M_PI*fh;
+    resp  = pz2res (wh, nz, zr, np, pl, sg);
+    ph_pz = atan2(cimag(resp), creal(resp));
+    printf("sg: %+12.4g  real: %+12.4g     imag:  %+12.4g\n", sg, creal(resp), cimag(resp)); //
+    /*     2nd order:  fc, h, gain */
+    ph_fhg = atan2(2.*(*h)*fh*(*fc), pow(fh,2.)-pow(*fc,2.));
+
+    /* */
+    dphi = fmod(ph_pz - ph_fhg + 3.*M_PI, 2.*M_PI) - M_PI ;
+    if      (fabs(dphi)      < phase_tolerance)
+      {
+        printf(" (0) ph_pz=%6.3lf, ph_fhg=%6.3lf, gain=%12.4g\n", ph_pz, ph_fhg, *gain_factor);
+      }
+    else if (fabs(dphi-M_PI) < phase_tolerance)
+      {
+        *gain_factor *= -1.;
+        printf("(pi) ph_pz=%6.3lf, ph_fhg=%6.3lf, gain=%12.4g\n", ph_pz, ph_fhg, *gain_factor);
+      }
+    else
+      {
+        *ierror = 2;
+        printf("ph_pz%6.3lf, ph_fhg%6.3lf, gain=%23.4g\n", ph_pz, ph_fhg, 0.);
+      }
+
     /* RMS estimates */
     *s2 = rmsestimates(*gain_factor, *fc, *h, nf, f, y) ;
     printf(" lsq :  GF, fc, h and rms =    %.7e  %.7e  %.7f      %.7e\n",*gain_factor,*fc,*h,*s2);
