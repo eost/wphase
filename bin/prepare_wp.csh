@@ -36,7 +36,7 @@ ${ECHO} "Decimate to 1sps ...                     ( >! ${LOG}/_log_decimate )"
 foreach CMP ($CMPS)
     ${CP} -f ${DATA_org}/SAC_PZs_*_*_??${CMP}_* ${DATA}
     ${SACLST} kcmpnm f ${DATA_org}/*.SAC | ${EXPAND} | ${GREP} " ..${CMP}" | ${CUT} -d' ' -f1 | \
-	$XARGS -n 1 -I {} ${DECIMATE} {} ${DATA} >! ${LOG}/_log_decimate
+	$XARGS -I {} ${DECIMATE} {} ${DATA} >! ${LOG}/_log_decimate
 end
 ${LS} ${DATA}/*.SAC >! ${DATA}/_sac_files_list
 
