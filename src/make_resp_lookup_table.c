@@ -601,7 +601,7 @@ void pzfile2id(char *pzfile, char *id, int *ierror)
         }
     }
 
-    if (k == 7)
+    if (k >= 6)
     {
         i = 1 ; 
         pzfile+= ksep[0]+1 ;
