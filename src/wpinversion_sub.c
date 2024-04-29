@@ -2611,6 +2611,8 @@ void xy_gridsearch(int nsac,int M, int nd,double *dv,double *tv, sachdr *hd_synt
     k     = find_dep(gfdep,eq->evdp,ndep);
     l     = find_dep(gfdep,opt->mindep,ndep);
     eq->evdp = gfdep[k]; /* Re-define centroid depth */
+    if(eq->evdp<gfdep[l])
+        eq->evdp = gfdep[l];
     if (IZ[0]<l)
         IZ[0] = l;
     if ((k%2) != (IZ[0]%2)) 
