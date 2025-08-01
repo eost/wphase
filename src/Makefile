@@ -39,8 +39,9 @@ fnamelen    = 128   # max. nb of chars in file names
 lineslen    = 256   # max. nb of chars per line in text files
 idlen       = 16    # len of station id
 
-OPTFLAG  = -fopenmp -D__GFS_01D__=1
+#OPTFLAG  = -D__GFS_01D__=1
 #OPTFLAG  = -fopenmp -D__GFS_005D__=1 -D__IDISTMIN__=50 -D__IDISTMAX__=12000
+OPTFLAG  = -D__GFS_005K__=1 -D__IDISTMIN__=50 -D__IDISTMAX__=9500
 
 CFLAGS   = -O2 -Wall -D__LEN_SIG__=$(datalen) \
 	   -D__FSIZE__=$(fnamelen) -D__IDSIZE__=$(idlen)\

@@ -69,11 +69,17 @@ void get_prefix(double cmt_dep, double xdeg, char *best_segm1, char *best_segm2,
     ifac = 1000.;
     idist = (int)floor((100.0*xdeg+2.5)/5.)*50;
     #else
+    //Add option to uses GFs database in km
+    #ifdef __GFS_005K__
+    ifac = 1000.;// For scaling and consistency with GFs
+    idist = (int)floor(0.25 + xdeg * 22) * 5 * 10; //Interpolation every 5 km
+    #else
     ifac = 10.;
     idist = 2*(int)floor(5.*xdeg)+1;
     #endif 
     #endif 
     #endif 
+    #endif
 
     idistmin = 1;
     idistmax = 899;
@@ -91,7 +97,7 @@ void get_prefix(double cmt_dep, double xdeg, char *best_segm1, char *best_segm2,
     }
     if (idist > idistmax) 
     {
-        fprintf(stderr, "Warning distance too big!;  using 89.9 deg\n");
+        fprintf(stderr, "Warning distance too big!; %.1f deg instead.\n", idistmax);
         idist = idistmax;
     } 
     /* ############################################################### */
