@@ -71,7 +71,7 @@ void get_prefix(double cmt_dep, double xdeg, char *best_segm1, char *best_segm2,
     #else
     //Add option to uses GFs database in km
     #ifdef __GFS_005K__
-    ifac = 1000.;// For scaling and consistency with GFs
+    ifac = 10.;// For scaling and consistency with GFs
     idist = (int)floor(0.25 + xdeg * 22) * 5 * 10; //Interpolation every 5 km
     #else
     ifac = 10.;
